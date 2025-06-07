@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Zap, Brain, FileText, MessageSquare, Mail, Quote } from 'lucide-react';
+import { Zap, Brain, FileText, MessageSquare, Mail, Quote, Loader2, Sparkles } from 'lucide-react';
 import { WebinarData } from '../App';
 
 interface ProcessingViewProps {
@@ -14,32 +14,32 @@ const ProcessingView: React.FC<ProcessingViewProps> = ({ webinarData }) => {
     {
       icon: <FileText className="w-6 h-6" />,
       title: "Transcribing Audio",
-      description: "Converting your webinar to text using AI",
-      color: "from-teal-500 to-cyan-500"
+      description: "Converting your webinar to text using advanced AI",
+      status: "Analyzing audio patterns and speech recognition..."
     },
     {
       icon: <Brain className="w-6 h-6" />,
       title: "Analyzing Content",
-      description: "Understanding key themes and insights",
-      color: "from-emerald-500 to-teal-500"
+      description: "Understanding key themes, insights, and messaging",
+      status: "Extracting valuable insights and key takeaways..."
     },
     {
       icon: <MessageSquare className="w-6 h-6" />,
       title: "Creating LinkedIn Posts",
       description: "Crafting engaging social media content",
-      color: "from-violet-500 to-purple-500"
+      status: "Writing compelling posts for professional networks..."
     },
     {
       icon: <Mail className="w-6 h-6" />,
       title: "Writing Email Copy",
       description: "Generating personalized email sequences",
-      color: "from-orange-500 to-red-500"
+      status: "Crafting nurture emails for your funnel stage..."
     },
     {
       icon: <Quote className="w-6 h-6" />,
       title: "Designing Quote Cards",
       description: "Creating shareable visual content",
-      color: "from-cyan-500 to-blue-500"
+      status: "Generating quote cards and visual assets..."
     }
   ];
 
@@ -71,88 +71,107 @@ const ProcessingView: React.FC<ProcessingViewProps> = ({ webinarData }) => {
   }, [steps.length]);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <div className="text-center mb-12">
-        <div className="w-20 h-20 bg-gradient-to-r from-teal-500 via-violet-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
-          <Zap className="w-10 h-10 text-white animate-pulse" />
-        </div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Remixing Your Webinar Into Campaign Magic...
-        </h1>
-        <p className="text-xl text-gray-600 mb-8">
-          Our AI is analyzing "{webinarData.description}" for {webinarData.persona.toLowerCase()}
-        </p>
+    <div className="bg-gray-50 min-h-screen py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12 animate-fade-in">
+          <div className="w-20 h-20 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl animate-pulse-soft">
+            <Sparkles className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+            Remixing Your Webinar Into Campaign Magic...
+          </h1>
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            Our AI is analyzing <span className="font-semibold text-blue-600">"{webinarData.description}"</span> for <span className="font-semibold text-indigo-600">{webinarData.persona.toLowerCase()}</span> teams
+          </p>
 
-        {/* Progress Bar */}
-        <div className="w-full bg-gray-200 rounded-full h-4 mb-8 shadow-inner">
-          <div 
-            className="bg-gradient-to-r from-teal-500 via-violet-500 to-orange-500 h-4 rounded-full transition-all duration-300 ease-out shadow-lg"
-            style={{ width: `${progress}%` }}
-          ></div>
+          {/* Progress Bar */}
+          <div className="max-w-2xl mx-auto mb-8">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-gray-700">Processing Progress</span>
+              <span className="text-sm font-bold text-blue-600">{progress}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3 shadow-inner">
+              <div 
+                className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 h-3 rounded-full transition-all duration-300 ease-out shadow-lg"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+          </div>
         </div>
-        <p className="text-lg font-medium text-gray-700">{progress}% Complete</p>
-      </div>
 
-      {/* Processing Steps */}
-      <div className="space-y-6">
-        {steps.map((step, index) => (
-          <div
-            key={index}
-            className={`flex items-center p-6 rounded-2xl border-2 transition-all duration-500 ${
-              index <= currentStep
-                ? 'border-emerald-200 bg-gradient-to-r from-emerald-50/50 to-teal-50/50 shadow-lg'
-                : index === currentStep + 1
-                ? 'border-teal-200 bg-gradient-to-r from-teal-50/50 to-cyan-50/50 animate-pulse shadow-lg'
-                : 'border-gray-200 bg-gray-50/50'
-            }`}
-          >
+        {/* Processing Steps */}
+        <div className="space-y-4 mb-16">
+          {steps.map((step, index) => (
             <div
-              className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center mr-6 transition-all duration-500 shadow-lg ${
+              key={index}
+              className={`card p-6 transition-all duration-500 border-2 ${
                 index <= currentStep
-                  ? `bg-gradient-to-r from-emerald-500 to-teal-500 text-white`
+                  ? 'border-success-200 bg-gradient-to-r from-success-50 to-mint-50 shadow-lg'
                   : index === currentStep + 1
-                  ? `bg-gradient-to-r ${step.color} text-white`
-                  : 'bg-gray-300 text-gray-500'
+                  ? 'border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg animate-pulse-soft'
+                  : 'border-gray-200 bg-white'
               }`}
             >
-              {step.icon}
-            </div>
-            <div className="flex-grow">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                {step.title}
-              </h3>
-              <p className="text-gray-600">{step.description}</p>
-            </div>
-            {index <= currentStep && (
-              <div className="flex-shrink-0">
-                <div className="w-6 h-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center shadow-lg">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
+              <div className="flex items-center">
+                <div
+                  className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center mr-6 transition-all duration-500 shadow-lg ${
+                    index <= currentStep
+                      ? 'bg-gradient-to-r from-success-500 to-mint-500 text-white'
+                      : index === currentStep + 1
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
+                      : 'bg-gray-200 text-gray-500'
+                  }`}
+                >
+                  {index === currentStep + 1 ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : (
+                    step.icon
+                  )}
                 </div>
+                <div className="flex-grow">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    {step.title}
+                  </h3>
+                  <p className="text-gray-600 mb-1">{step.description}</p>
+                  {index === currentStep + 1 && (
+                    <p className="text-sm text-blue-600 font-medium animate-pulse">
+                      {step.status}
+                    </p>
+                  )}
+                </div>
+                {index <= currentStep && (
+                  <div className="flex-shrink-0">
+                    <div className="w-6 h-6 bg-gradient-to-r from-success-500 to-mint-500 rounded-full flex items-center justify-center shadow-lg">
+                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        ))}
-      </div>
+            </div>
+          ))}
+        </div>
 
-      {/* Fun Facts */}
-      <div className="mt-16 bg-gradient-to-r from-teal-100/50 via-violet-100/50 to-orange-100/50 rounded-3xl p-8 backdrop-blur-sm border border-white/20">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4 text-center">
-          💡 Did you know?
-        </h3>
-        <div className="grid md:grid-cols-3 gap-6 text-center">
-          <div>
-            <p className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent mb-2">73%</p>
-            <p className="text-sm text-gray-600">of marketers say AI saves them 2+ hours per week</p>
-          </div>
-          <div>
-            <p className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent mb-2">6x</p>
-            <p className="text-sm text-gray-600">faster content creation with AI assistance</p>
-          </div>
-          <div>
-            <p className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-2">94%</p>
-            <p className="text-sm text-gray-600">report improved content consistency</p>
+        {/* Fun Facts */}
+        <div className="card p-8 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100">
+          <h3 className="text-xl font-semibold text-gray-900 mb-6 text-center flex items-center justify-center">
+            <Sparkles className="w-5 h-5 mr-2 text-blue-600" />
+            Did you know?
+          </h3>
+          <div className="grid md:grid-cols-3 gap-6 text-center">
+            <div className="p-4">
+              <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">73%</p>
+              <p className="text-sm text-gray-600">of marketers say AI saves them 2+ hours per week on content creation</p>
+            </div>
+            <div className="p-4">
+              <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">6x</p>
+              <p className="text-sm text-gray-600">faster content creation with AI assistance compared to manual methods</p>
+            </div>
+            <div className="p-4">
+              <p className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">94%</p>
+              <p className="text-sm text-gray-600">report improved content consistency across marketing channels</p>
+            </div>
           </div>
         </div>
       </div>

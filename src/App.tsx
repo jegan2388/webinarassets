@@ -40,7 +40,7 @@ function App() {
     setWebinarData(data);
     setCurrentStep('processing');
     
-    // Simulate API processing
+    // Simulate AI processing
     setTimeout(() => {
       const mockAssets: GeneratedAsset[] = [
         {
@@ -116,7 +116,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100">
+    <div className="min-h-screen bg-gray-50">
       {renderCurrentStep()}
     </div>
   );

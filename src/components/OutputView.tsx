@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check } from 'lucide-react';
+import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink } from 'lucide-react';
 import { GeneratedAsset } from '../App';
 
 interface OutputViewProps {
@@ -64,75 +64,76 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, onBack, onViewPricing }
     }
   };
 
-  const getAssetGradient = (type: string) => {
+  const getAssetColor = (type: string) => {
     switch (type.toLowerCase()) {
       case 'linkedin post':
-        return 'from-teal-500 to-cyan-500';
+        return 'border-blue-200 bg-blue-50';
       case 'email snippet':
-        return 'from-emerald-500 to-teal-500';
+        return 'border-mint-200 bg-mint-50';
       case 'quote card':
-        return 'from-violet-500 to-purple-500';
+        return 'border-indigo-200 bg-indigo-50';
       case 'sales snippet':
-        return 'from-orange-500 to-red-500';
+        return 'border-orange-200 bg-orange-50';
       default:
-        return 'from-gray-500 to-gray-600';
+        return 'border-gray-200 bg-gray-50';
     }
   };
 
   const renderQuoteCard = (content: string) => (
-    <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-pink-600 text-white p-6 rounded-2xl shadow-2xl">
-      <div className="text-4xl mb-4">"</div>
-      <p className="text-lg font-medium leading-relaxed mb-4">{content}</p>
-      <div className="text-sm opacity-80">— Your Webinar Insights</div>
+    <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white p-8 rounded-2xl shadow-2xl">
+      <div className="text-6xl mb-4 opacity-50">"</div>
+      <p className="text-lg font-medium leading-relaxed mb-6">{content}</p>
+      <div className="text-sm opacity-80 font-medium">— Your Webinar Insights</div>
     </div>
   );
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <button
-        onClick={onBack}
-        className="flex items-center space-x-2 text-gray-600 hover:text-teal-600 mb-8 transition-colors"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        <span>Start over</span>
-      </button>
+    <div className="bg-gray-50 min-h-screen py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <button
+          onClick={onBack}
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-8 transition-colors group"
+        >
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <span>Start over</span>
+        </button>
 
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          🎉 Your Marketing Assets Are Ready!
-        </h1>
-        <p className="text-xl text-gray-600 mb-8">
-          {assets.length} campaign-ready assets generated from your webinar
-        </p>
-        
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button
-            onClick={handleDownloadAll}
-            className="bg-gradient-to-r from-teal-600 to-cyan-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:from-teal-700 hover:to-cyan-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center space-x-2 justify-center transform hover:scale-105"
-          >
-            <Download className="w-5 h-5" />
-            <span>Download All Assets</span>
-          </button>
-          <button
-            onClick={onViewPricing}
-            className="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-2xl font-semibold text-lg hover:border-violet-400 hover:bg-violet-50 hover:text-violet-700 transition-all duration-300 flex items-center space-x-2 justify-center"
-          >
-            <RefreshCw className="w-5 h-5" />
-            <span>Unlock More Remixes</span>
-          </button>
+        <div className="text-center mb-12 animate-fade-in">
+          <div className="w-16 h-16 bg-gradient-to-r from-success-500 to-mint-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <Check className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+            🎉 Your Marketing Assets Are Ready!
+          </h1>
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            <span className="font-semibold text-blue-600">{assets.length} campaign-ready assets</span> generated from your webinar and tailored for your audience
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={handleDownloadAll}
+              className="btn-primary text-lg px-8 py-4 flex items-center space-x-2 justify-center"
+            >
+              <Download className="w-5 h-5" />
+              <span>Download All Assets</span>
+            </button>
+            <button
+              onClick={onViewPricing}
+              className="btn-secondary text-lg px-8 py-4 flex items-center space-x-2 justify-center"
+            >
+              <RefreshCw className="w-5 h-5" />
+              <span>Unlock More Remixes</span>
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Assets Grid */}
-      <div className="grid lg:grid-cols-2 gap-8 mb-16">
-        {assets.map((asset) => (
-          <div key={asset.id} className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden hover:shadow-2xl transition-all duration-300">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
+        {/* Assets Grid */}
+        <div className="grid lg:grid-cols-2 gap-6 mb-16">
+          {assets.map((asset) => (
+            <div key={asset.id} className={`card p-6 border-2 ${getAssetColor(asset.type)} hover:shadow-lg transition-all duration-200`}>
+              <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-3">
-                  <div className={`w-12 h-12 bg-gradient-to-r ${getAssetGradient(asset.type)} rounded-2xl flex items-center justify-center text-white text-xl shadow-lg`}>
-                    {getAssetIcon(asset.type)}
-                  </div>
+                  <div className="text-2xl">{getAssetIcon(asset.type)}</div>
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">{asset.type}</h3>
                     <p className="text-sm text-gray-600">{asset.title}</p>
@@ -140,21 +141,21 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, onBack, onViewPricing }
                 </div>
                 <button
                   onClick={() => handleCopyToClipboard(asset.content, asset.id)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
                     copiedAsset === asset.id
-                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-gradient-to-r from-success-500 to-mint-500 text-white shadow-lg'
+                      : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'
                   }`}
                 >
                   {copiedAsset === asset.id ? (
                     <>
-                      <Check className="w-4 h-4 inline mr-1" />
-                      Copied!
+                      <Check className="w-4 h-4" />
+                      <span>Copied!</span>
                     </>
                   ) : (
                     <>
-                      <Copy className="w-4 h-4 inline mr-1" />
-                      Copy
+                      <Copy className="w-4 h-4" />
+                      <span>Copy</span>
                     </>
                   )}
                 </button>
@@ -163,98 +164,116 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, onBack, onViewPricing }
               {asset.type === 'Quote Card' ? (
                 <div className="space-y-4">
                   {renderQuoteCard(asset.content)}
-                  <p className="text-sm text-gray-600">
-                    Share this visual quote on social media or use in presentations
+                  <p className="text-sm text-gray-600 bg-white p-3 rounded-lg border border-gray-200">
+                    💡 <strong>Usage tip:</strong> Share this visual quote on social media, use in presentations, or include in email newsletters
                   </p>
                 </div>
               ) : (
-                <div className="bg-gray-50/80 rounded-2xl p-4">
+                <div className="bg-white rounded-xl p-4 border border-gray-200">
                   <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium leading-relaxed">
                     {asset.content}
                   </pre>
                 </div>
               )}
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Usage Tips */}
-      <div className="bg-gradient-to-r from-teal-100/50 via-violet-100/50 to-orange-100/50 rounded-3xl p-8 mb-16 backdrop-blur-sm border border-white/20">
-        <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-          💡 How to Use Your Assets
-        </h3>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="text-center">
-            <div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-              <Share2 className="w-6 h-6 text-white" />
-            </div>
-            <h4 className="font-semibold text-gray-900 mb-2">LinkedIn Posts</h4>
-            <p className="text-sm text-gray-600">Post 2-3 times per week with webinar insights</p>
-          </div>
-          <div className="text-center">
-            <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-              <Mail className="w-6 h-6 text-white" />
-            </div>
-            <h4 className="font-semibold text-gray-900 mb-2">Email Nurture</h4>
-            <p className="text-sm text-gray-600">Send to webinar attendees and leads</p>
-          </div>
-          <div className="text-center">
-            <div className="w-12 h-12 bg-gradient-to-r from-violet-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-              <Copy className="w-6 h-6 text-white" />
-            </div>
-            <h4 className="font-semibold text-gray-900 mb-2">Sales Snippets</h4>
-            <p className="text-sm text-gray-600">Personalize for prospect outreach</p>
-          </div>
-          <div className="text-center">
-            <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-              <RefreshCw className="w-6 h-6 text-white" />
-            </div>
-            <h4 className="font-semibold text-gray-900 mb-2">Repurpose</h4>
-            <p className="text-sm text-gray-600">Adapt for different campaigns and channels</p>
-          </div>
+          ))}
         </div>
-      </div>
 
-      {/* Email Capture Modal */}
-      {showEmailCapture && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl max-w-md w-full p-8 shadow-2xl border border-white/20">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              Get Your Assets Delivered
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Enter your email to download all assets and get tips on using them effectively.
-            </p>
-            
-            <form onSubmit={handleEmailSubmit}>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent mb-4 transition-all duration-300"
-                required
-              />
-              <div className="flex space-x-3">
-                <button
-                  type="submit"
-                  className="flex-1 bg-gradient-to-r from-teal-600 to-cyan-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all duration-300 shadow-lg"
-                >
-                  Download Assets
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowEmailCapture(false)}
-                  className="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
+        {/* Usage Tips */}
+        <div className="card p-8 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100 mb-16">
+          <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center flex items-center justify-center">
+            <Sparkles className="w-6 h-6 mr-2 text-blue-600" />
+            How to Use Your Assets
+          </h3>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="text-center p-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <Share2 className="w-6 h-6 text-white" />
               </div>
-            </form>
+              <h4 className="font-semibold text-gray-900 mb-2">LinkedIn Posts</h4>
+              <p className="text-sm text-gray-600">Post 2-3 times per week with webinar insights to build thought leadership</p>
+            </div>
+            <div className="text-center p-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-mint-500 to-mint-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <Mail className="w-6 h-6 text-white" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-2">Email Nurture</h4>
+              <p className="text-sm text-gray-600">Send to webinar attendees and leads in your nurture sequences</p>
+            </div>
+            <div className="text-center p-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <Copy className="w-6 h-6 text-white" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-2">Sales Snippets</h4>
+              <p className="text-sm text-gray-600">Personalize for prospect outreach and follow-up conversations</p>
+            </div>
+            <div className="text-center p-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <RefreshCw className="w-6 h-6 text-white" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-2">Repurpose</h4>
+              <p className="text-sm text-gray-600">Adapt for different campaigns, channels, and audience segments</p>
+            </div>
           </div>
         </div>
-      )}
+
+        {/* Next Steps */}
+        <div className="card p-8 text-center">
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">
+            Want More Assets From This Webinar?
+          </h3>
+          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+            Unlock additional asset types, custom branding, and advanced AI features with our Pro plan
+          </p>
+          <button
+            onClick={onViewPricing}
+            className="btn-primary inline-flex items-center space-x-2"
+          >
+            <span>View Pricing Plans</span>
+            <ExternalLink className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Email Capture Modal */}
+        {showEmailCapture && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="card max-w-md w-full p-8 bg-white">
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                Get Your Assets Delivered
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Enter your email to download all assets and receive tips on using them effectively in your campaigns.
+              </p>
+              
+              <form onSubmit={handleEmailSubmit}>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className="input-field mb-4"
+                  required
+                />
+                <div className="flex space-x-3">
+                  <button
+                    type="submit"
+                    className="flex-1 btn-primary"
+                  >
+                    Download Assets
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowEmailCapture(false)}
+                    className="btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
