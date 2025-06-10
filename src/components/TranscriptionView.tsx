@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { Upload, FileAudio, Clock, Download, Copy, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, FileAudio, Clock, Download, Copy, Check, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
 import { transcribeAudio, formatTranscript, TranscriptionResult } from '../services/transcription';
 
-const TranscriptionView: React.FC = () => {
+interface TranscriptionViewProps {
+  onBack: () => void;
+}
+
+const TranscriptionView: React.FC<TranscriptionViewProps> = ({ onBack }) => {
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<TranscriptionResult | null>(null);
@@ -77,6 +81,14 @@ const TranscriptionView: React.FC = () => {
   return (
     <div className="bg-gray-50 min-h-screen py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <button
+          onClick={onBack}
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-8 transition-colors group"
+        >
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <span>Back to home</span>
+        </button>
+
         {/* Header */}
         <div className="text-center mb-12">
           <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">

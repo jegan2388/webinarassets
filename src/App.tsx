@@ -24,7 +24,7 @@ export interface GeneratedAsset {
 }
 
 function App() {
-  const [currentStep, setCurrentStep] = useState<'landing' | 'upload' | 'processing' | 'output' | 'pricing' | 'transcription'>('transcription');
+  const [currentStep, setCurrentStep] = useState<'landing' | 'upload' | 'processing' | 'output' | 'pricing' | 'transcription'>('landing');
   const [webinarData, setWebinarData] = useState<WebinarData>({
     description: '',
     persona: '',
@@ -99,10 +99,14 @@ function App() {
     setCurrentStep('pricing');
   };
 
+  const handleViewTranscription = () => {
+    setCurrentStep('transcription');
+  };
+
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 'landing':
-        return <LandingPage onStartUpload={handleStartUpload} onViewPricing={handleViewPricing} />;
+        return <LandingPage onStartUpload={handleStartUpload} onViewPricing={handleViewPricing} onViewTranscription={handleViewTranscription} />;
       case 'upload':
         return <UploadForm onSubmit={handleFormSubmit} onBack={handleBackToLanding} />;
       case 'processing':
@@ -112,9 +116,9 @@ function App() {
       case 'pricing':
         return <PricingSection onBack={handleBackToLanding} />;
       case 'transcription':
-        return <TranscriptionView />;
+        return <TranscriptionView onBack={handleBackToLanding} />;
       default:
-        return <LandingPage onStartUpload={handleStartUpload} onViewPricing={handleViewPricing} />;
+        return <LandingPage onStartUpload={handleStartUpload} onViewPricing={handleViewPricing} onViewTranscription={handleViewTranscription} />;
     }
   };
 

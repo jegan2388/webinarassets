@@ -1,12 +1,13 @@
 import React from 'react';
-import { Upload, Zap, Target, Mail, MessageSquare, Quote, TrendingUp, ArrowRight, Play, Sparkles, Users, Clock } from 'lucide-react';
+import { Upload, Zap, Target, Mail, MessageSquare, Quote, TrendingUp, ArrowRight, Play, Sparkles, Users, Clock, FileAudio } from 'lucide-react';
 
 interface LandingPageProps {
   onStartUpload: () => void;
   onViewPricing: () => void;
+  onViewTranscription: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing, onViewTranscription }) => {
   const features = [
     {
       icon: <MessageSquare className="w-6 h-6 text-blue-600" />,
@@ -72,12 +73,21 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing 
             </div>
             <span className="text-xl font-bold text-gray-900">WebinarRemix</span>
           </div>
-          <button
-            onClick={onViewPricing}
-            className="text-gray-600 hover:text-gray-900 font-medium transition-colors px-4 py-2 rounded-lg hover:bg-white"
-          >
-            Pricing
-          </button>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={onViewTranscription}
+              className="text-gray-600 hover:text-gray-900 font-medium transition-colors px-4 py-2 rounded-lg hover:bg-white flex items-center space-x-2"
+            >
+              <FileAudio className="w-4 h-4" />
+              <span>Transcriber</span>
+            </button>
+            <button
+              onClick={onViewPricing}
+              className="text-gray-600 hover:text-gray-900 font-medium transition-colors px-4 py-2 rounded-lg hover:bg-white"
+            >
+              Pricing
+            </button>
+          </div>
         </nav>
 
         {/* Hero Section */}
@@ -108,9 +118,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing 
                 <span>Upload Your Webinar</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button className="btn-secondary text-lg px-8 py-4 flex items-center space-x-2">
-                <Play className="w-5 h-5" />
-                <span>Try With Demo Video</span>
+              <button 
+                onClick={onViewTranscription}
+                className="btn-secondary text-lg px-8 py-4 flex items-center space-x-2"
+              >
+                <FileAudio className="w-5 h-5" />
+                <span>Try Transcriber First</span>
               </button>
             </div>
 
