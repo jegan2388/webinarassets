@@ -1,11 +1,5 @@
 import OpenAI from 'openai';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true // Note: In production, this should be done server-side
-});
-
 export interface TranscriptionResult {
   text: string;
   duration?: number;
@@ -16,6 +10,20 @@ export interface TranscriptionResult {
     text: string;
   }>;
 }
+
+// Initialize OpenAI client only when needed
+const getOpenAIClient = (): OpenAI => {
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  
+  if (!apiKey) {
+    throw new Error('OpenAI API key not configured. Please add your API key to continue.');
+  }
+  
+  return new OpenAI({
+    apiKey: apiKey,
+    dangerouslyAllowBrowser: true // Note: In production, this should be done server-side
+  });
+};
 
 export const transcribeAudio = async (file: File): Promise<TranscriptionResult> => {
   try {
@@ -32,6 +40,9 @@ export const transcribeAudio = async (file: File): Promise<TranscriptionResult> 
     if (file.size > maxSize) {
       throw new Error('File too large. Please upload files smaller than 25MB.');
     }
+
+    // Initialize OpenAI client only when transcribing
+    const openai = getOpenAIClient();
 
     // Call OpenAI Whisper API
     const response = await openai.audio.transcriptions.create({
