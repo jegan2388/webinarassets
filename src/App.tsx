@@ -4,6 +4,7 @@ import UploadForm from './components/UploadForm';
 import ProcessingView from './components/ProcessingView';
 import OutputView from './components/OutputView';
 import PricingSection from './components/PricingSection';
+import TranscriptionView from './components/TranscriptionView';
 
 export interface WebinarData {
   file?: File;
@@ -23,7 +24,7 @@ export interface GeneratedAsset {
 }
 
 function App() {
-  const [currentStep, setCurrentStep] = useState<'landing' | 'upload' | 'processing' | 'output' | 'pricing'>('landing');
+  const [currentStep, setCurrentStep] = useState<'landing' | 'upload' | 'processing' | 'output' | 'pricing' | 'transcription'>('transcription');
   const [webinarData, setWebinarData] = useState<WebinarData>({
     description: '',
     persona: '',
@@ -110,6 +111,8 @@ function App() {
         return <OutputView assets={generatedAssets} onBack={handleBackToLanding} onViewPricing={handleViewPricing} />;
       case 'pricing':
         return <PricingSection onBack={handleBackToLanding} />;
+      case 'transcription':
+        return <TranscriptionView />;
       default:
         return <LandingPage onStartUpload={handleStartUpload} onViewPricing={handleViewPricing} />;
     }
