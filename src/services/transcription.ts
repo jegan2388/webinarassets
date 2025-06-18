@@ -25,6 +25,57 @@ const getOpenAIClient = (): OpenAI => {
   });
 };
 
+// Common hallucination patterns to filter out
+const HALLUCINATION_PATTERNS = [
+  /you're going to die/gi,
+  /i'm going to kill you/gi,
+  /i'll kill/gi,
+  /destroy you/gi,
+  /thank you for watching/gi,
+  /please subscribe/gi,
+  /like and subscribe/gi,
+  /don't forget to/gi,
+  /see you next time/gi,
+  /bye bye/gi,
+  /goodbye/gi,
+  /(\w+)\s+\1\s+\1\s+\1/gi, // Repetitive words (4+ times)
+];
+
+const cleanTranscription = (text: string): string => {
+  let cleaned = text;
+  
+  // Remove common hallucination patterns
+  HALLUCINATION_PATTERNS.forEach(pattern => {
+    cleaned = cleaned.replace(pattern, '');
+  });
+  
+  // Remove excessive repetition of phrases
+  cleaned = cleaned.replace(/(.{10,}?)\1{3,}/gi, '$1');
+  
+  // Remove lines that are mostly repetitive
+  const lines = cleaned.split('\n');
+  const filteredLines = lines.filter(line => {
+    const words = line.trim().split(/\s+/);
+    if (words.length < 3) return true;
+    
+    // Check if more than 60% of words are the same
+    const wordCounts = words.reduce((acc, word) => {
+      acc[word.toLowerCase()] = (acc[word.toLowerCase()] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const maxCount = Math.max(...Object.values(wordCounts));
+    const repetitionRatio = maxCount / words.length;
+    
+    return repetitionRatio < 0.6;
+  });
+  
+  // Clean up extra whitespace
+  cleaned = filteredLines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  
+  return cleaned;
+};
+
 export const transcribeAudio = async (file: File): Promise<TranscriptionResult> => {
   try {
     console.log('Starting transcription for file:', file.name);
@@ -44,26 +95,38 @@ export const transcribeAudio = async (file: File): Promise<TranscriptionResult> 
     // Initialize OpenAI client only when transcribing
     const openai = getOpenAIClient();
 
-    // Call OpenAI Whisper API
+    // Call OpenAI Whisper API with optimized parameters to reduce hallucinations
     const response = await openai.audio.transcriptions.create({
       file: file,
       model: 'whisper-1',
-      language: 'en', // You can make this dynamic later
+      language: 'en', // Specifying language helps reduce hallucinations
       response_format: 'verbose_json', // Get timestamps and metadata
-      temperature: 0.2 // Lower temperature for more consistent results
+      temperature: 0, // Set to 0 for most deterministic output
+      prompt: "This is a professional webinar or business presentation. Please transcribe accurately without adding any extra content." // Prompt to guide the model
     });
 
     console.log('Transcription completed successfully');
 
+    // Clean the transcription to remove hallucinations
+    const cleanedText = cleanTranscription(response.text);
+    
+    // Also clean segments if available
+    const cleanedSegments = response.segments?.map(segment => ({
+      start: segment.start,
+      end: segment.end,
+      text: cleanTranscription(segment.text)
+    })).filter(segment => segment.text.trim().length > 0);
+
+    // If the cleaned text is too short compared to original, warn the user
+    if (cleanedText.length < response.text.length * 0.3) {
+      console.warn('Significant content was filtered out due to potential hallucinations');
+    }
+
     return {
-      text: response.text,
+      text: cleanedText,
       duration: response.duration,
       language: response.language,
-      segments: response.segments?.map(segment => ({
-        start: segment.start,
-        end: segment.end,
-        text: segment.text
-      }))
+      segments: cleanedSegments
     };
 
   } catch (error) {
