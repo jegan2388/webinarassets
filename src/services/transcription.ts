@@ -76,6 +76,79 @@ const cleanTranscription = (text: string): string => {
   return cleaned;
 };
 
+// Intelligent segment merging to handle dramatic pauses vs meaningful breaks
+const mergeSegments = (segments: Array<{ start: number; end: number; text: string }>): Array<{ start: number; end: number; text: string }> => {
+  if (!segments || segments.length === 0) return [];
+  
+  const merged: Array<{ start: number; end: number; text: string }> = [];
+  let currentSegment = { ...segments[0] };
+  
+  for (let i = 1; i < segments.length; i++) {
+    const segment = segments[i];
+    const timeBetween = segment.start - currentSegment.end;
+    const currentText = currentSegment.text.trim();
+    const nextText = segment.text.trim();
+    
+    // Skip empty segments
+    if (!nextText) continue;
+    
+    // Conditions for merging segments:
+    const shouldMerge = (
+      // Very short pause (likely dramatic pause within sentence)
+      timeBetween < 1.5 ||
+      
+      // Current segment is very short (likely incomplete thought)
+      currentText.length < 15 ||
+      
+      // Current segment doesn't end with sentence-ending punctuation and pause is short
+      (timeBetween < 3 && !currentText.match(/[.!?]$/)) ||
+      
+      // Next segment starts with lowercase (continuation of sentence)
+      (timeBetween < 4 && nextText.match(/^[a-z]/)) ||
+      
+      // Current segment ends with comma, "and", "but", etc. (continuation words)
+      (timeBetween < 5 && currentText.match(/[,;:]$|and$|but$|or$|so$|then$|now$/i)) ||
+      
+      // Both segments are very short (likely fragmented speech)
+      (currentText.length < 30 && nextText.length < 30 && timeBetween < 4)
+    );
+    
+    if (shouldMerge) {
+      // Merge with current segment
+      currentSegment.text = currentText + ' ' + nextText;
+      currentSegment.end = segment.end;
+    } else {
+      // Start new segment
+      merged.push(currentSegment);
+      currentSegment = { ...segment };
+    }
+  }
+  
+  // Add the last segment
+  merged.push(currentSegment);
+  
+  // Final cleanup: merge any remaining very short segments
+  const finalMerged: Array<{ start: number; end: number; text: string }> = [];
+  let current = merged[0];
+  
+  for (let i = 1; i < merged.length; i++) {
+    const next = merged[i];
+    const timeBetween = next.start - current.end;
+    
+    // Merge if current segment is very short and pause isn't too long
+    if (current.text.trim().length < 20 && timeBetween < 8) {
+      current.text = current.text.trim() + ' ' + next.text.trim();
+      current.end = next.end;
+    } else {
+      finalMerged.push(current);
+      current = next;
+    }
+  }
+  finalMerged.push(current);
+  
+  return finalMerged.filter(seg => seg.text.trim().length > 0);
+};
+
 export const transcribeAudio = async (file: File): Promise<TranscriptionResult> => {
   try {
     console.log('Starting transcription for file:', file.name);
@@ -110,12 +183,22 @@ export const transcribeAudio = async (file: File): Promise<TranscriptionResult> 
     // Clean the transcription to remove hallucinations
     const cleanedText = cleanTranscription(response.text);
     
-    // Also clean segments if available
-    const cleanedSegments = response.segments?.map(segment => ({
-      start: segment.start,
-      end: segment.end,
-      text: cleanTranscription(segment.text)
-    })).filter(segment => segment.text.trim().length > 0);
+    // Clean and merge segments intelligently
+    let cleanedSegments: Array<{ start: number; end: number; text: string }> | undefined;
+    
+    if (response.segments && response.segments.length > 0) {
+      // First clean individual segments
+      const initialCleanedSegments = response.segments
+        .map(segment => ({
+          start: segment.start,
+          end: segment.end,
+          text: cleanTranscription(segment.text)
+        }))
+        .filter(segment => segment.text.trim().length > 0);
+      
+      // Then merge segments intelligently
+      cleanedSegments = mergeSegments(initialCleanedSegments);
+    }
 
     // If the cleaned text is too short compared to original, warn the user
     if (cleanedText.length < response.text.length * 0.3) {
