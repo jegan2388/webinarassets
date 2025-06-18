@@ -13,6 +13,7 @@ const TranscriptionView: React.FC<TranscriptionViewProps> = ({ onBack }) => {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [showTimestamps, setShowTimestamps] = useState(true);
 
   const handleFileUpload = (selectedFile: File) => {
     setFile(selectedFile);
@@ -57,7 +58,10 @@ const TranscriptionView: React.FC<TranscriptionViewProps> = ({ onBack }) => {
     if (!result) return;
     
     try {
-      await navigator.clipboard.writeText(result.text);
+      const textToCopy = showTimestamps && result.segments 
+        ? formatTranscript(result) 
+        : result.text;
+      await navigator.clipboard.writeText(textToCopy);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -68,7 +72,9 @@ const TranscriptionView: React.FC<TranscriptionViewProps> = ({ onBack }) => {
   const handleDownload = () => {
     if (!result || !file) return;
 
-    const formattedText = formatTranscript(result);
+    const formattedText = showTimestamps && result.segments 
+      ? formatTranscript(result) 
+      : result.text;
     const blob = new Blob([formattedText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -76,6 +82,39 @@ const TranscriptionView: React.FC<TranscriptionViewProps> = ({ onBack }) => {
     a.download = `${file.name.split('.')[0]}-transcript.txt`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const renderTranscript = () => {
+    if (!result) return null;
+
+    if (showTimestamps && result.segments && result.segments.length > 0) {
+      return (
+        <div className="space-y-3">
+          {result.segments.map((segment, index) => (
+            <div key={index} className="flex space-x-4 p-3 hover:bg-gray-100 rounded-lg transition-colors">
+              <div className="flex-shrink-0 w-20 text-xs font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                {formatTime(segment.start)}
+              </div>
+              <div className="flex-1 text-sm text-gray-800 leading-relaxed">
+                {segment.text.trim()}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <pre className="whitespace-pre-wrap text-sm text-gray-800 leading-relaxed font-medium">
+        {result.text}
+      </pre>
+    );
   };
 
   return (
@@ -231,7 +270,20 @@ const TranscriptionView: React.FC<TranscriptionViewProps> = ({ onBack }) => {
             <div className="card p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-semibold text-gray-900">Transcript</h3>
-                <div className="flex space-x-3">
+                <div className="flex items-center space-x-3">
+                  {result.segments && result.segments.length > 0 && (
+                    <button
+                      onClick={() => setShowTimestamps(!showTimestamps)}
+                      className={`px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        showTimestamps
+                          ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                          : 'bg-gray-100 text-gray-600 border border-gray-200'
+                      }`}
+                    >
+                      <Clock className="w-3 h-3 inline mr-1" />
+                      {showTimestamps ? 'Hide' : 'Show'} Timestamps
+                    </button>
+                  )}
                   <button
                     onClick={handleCopy}
                     className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
@@ -254,9 +306,7 @@ const TranscriptionView: React.FC<TranscriptionViewProps> = ({ onBack }) => {
               </div>
               
               <div className="bg-gray-50 rounded-xl p-4 max-h-96 overflow-y-auto">
-                <pre className="whitespace-pre-wrap text-sm text-gray-800 leading-relaxed font-medium">
-                  {result.text}
-                </pre>
+                {renderTranscript()}
               </div>
             </div>
 
