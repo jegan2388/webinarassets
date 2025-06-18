@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Upload, ArrowLeft, Link, Check, FileVideo, Youtube, Users, Target, Sparkles, MessageSquare, Mail, Quote } from 'lucide-react';
+import { Upload, ArrowLeft, Link, Check, FileVideo, Youtube, Users, Target, Sparkles, MessageSquare, Mail, Quote, AlertCircle } from 'lucide-react';
 import { WebinarData } from '../App';
 
 interface UploadFormProps {
   onSubmit: (data: WebinarData) => void;
   onBack: () => void;
+  error?: string | null;
 }
 
-const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack }) => {
+const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, error }) => {
   const [formData, setFormData] = useState<WebinarData>({
     description: '',
     persona: '',
@@ -92,6 +93,19 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack }) => {
           <span>Back to home</span>
         </button>
 
+        {/* Error Message */}
+        {error && (
+          <div className="card p-6 border-red-200 bg-red-50 mb-8">
+            <div className="flex items-center space-x-3">
+              <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-red-900">Processing Failed</h3>
+                <p className="text-red-700 text-sm mt-1">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="card p-8 lg:p-12">
           <div className="mb-10 text-center">
             <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -136,7 +150,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack }) => {
                 >
                   <Youtube className="w-5 h-5 mb-2" />
                   <div className="font-medium">YouTube Link</div>
-                  <div className="text-sm text-gray-600">Paste any YouTube URL</div>
+                  <div className="text-sm text-gray-600">Coming soon - use file upload</div>
                 </button>
               </div>
             </div>
@@ -195,7 +209,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack }) => {
             ) : (
               <div>
                 <label htmlFor="youtube-url" className="block text-sm font-semibold text-gray-900 mb-4">
-                  YouTube URL
+                  YouTube URL (Coming Soon)
                 </label>
                 <div className="relative">
                   <Youtube className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -204,10 +218,14 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack }) => {
                     id="youtube-url"
                     value={formData.youtubeUrl || ''}
                     onChange={(e) => setFormData(prev => ({ ...prev, youtubeUrl: e.target.value }))}
-                    placeholder="https://www.youtube.com/watch?v=..."
+                    placeholder="YouTube processing coming soon - please use file upload"
                     className="input-field pl-12"
+                    disabled
                   />
                 </div>
+                <p className="text-sm text-gray-500 mt-2">
+                  YouTube URL processing requires backend integration. Please upload a file for now.
+                </p>
               </div>
             )}
 
@@ -309,6 +327,22 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack }) => {
                 ))}
               </div>
             </div>
+
+            {/* API Key Notice */}
+            {!import.meta.env.VITE_OPENAI_API_KEY && (
+              <div className="card p-6 border-yellow-200 bg-yellow-50">
+                <div className="flex items-center space-x-3">
+                  <AlertCircle className="w-6 h-6 text-yellow-600 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-semibold text-yellow-900">API Key Required</h3>
+                    <p className="text-yellow-700 text-sm mt-1">
+                      Add your OpenAI API key to the environment variables to enable asset generation.
+                      Create a <code>.env</code> file with: <code>VITE_OPENAI_API_KEY=your_key_here</code>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Submit Button */}
             <div className="pt-6">

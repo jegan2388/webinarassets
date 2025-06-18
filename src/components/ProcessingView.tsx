@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Zap, Brain, FileText, MessageSquare, Mail, Quote, Loader2, Sparkles } from 'lucide-react';
+import { Zap, Brain, FileText, MessageSquare, Mail, Quote, Loader2, Sparkles, AlertCircle } from 'lucide-react';
 import { WebinarData } from '../App';
 
 interface ProcessingViewProps {
   webinarData: WebinarData;
+  currentStep?: string;
+  progress?: number;
 }
 
-const ProcessingView: React.FC<ProcessingViewProps> = ({ webinarData }) => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [progress, setProgress] = useState(0);
+const ProcessingView: React.FC<ProcessingViewProps> = ({ 
+  webinarData, 
+  currentStep = '', 
+  progress = 0 
+}) => {
+  const [displayProgress, setDisplayProgress] = useState(0);
 
   const steps = [
     {
@@ -37,38 +42,36 @@ const ProcessingView: React.FC<ProcessingViewProps> = ({ webinarData }) => {
     },
     {
       icon: <Quote className="w-6 h-6" />,
-      title: "Designing Quote Cards",
-      description: "Creating shareable visual content",
-      status: "Generating quote cards and visual assets..."
+      title: "Finalizing Assets",
+      description: "Creating shareable visual content and sales snippets",
+      status: "Generating quote cards and sales materials..."
     }
   ];
 
+  // Smooth progress animation
   useEffect(() => {
     const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
+      setDisplayProgress(prev => {
+        if (prev < progress) {
+          return Math.min(prev + 1, progress);
         }
-        return prev + 2;
+        return prev;
       });
-    }, 60);
+    }, 50);
 
-    const stepInterval = setInterval(() => {
-      setCurrentStep(prev => {
-        if (prev >= steps.length - 1) {
-          clearInterval(stepInterval);
-          return steps.length - 1;
-        }
-        return prev + 1;
-      });
-    }, 600);
+    return () => clearInterval(interval);
+  }, [progress]);
 
-    return () => {
-      clearInterval(interval);
-      clearInterval(stepInterval);
-    };
-  }, [steps.length]);
+  // Determine current step index based on progress
+  const getCurrentStepIndex = () => {
+    if (progress < 20) return 0;
+    if (progress < 40) return 1;
+    if (progress < 60) return 2;
+    if (progress < 80) return 3;
+    return 4;
+  };
+
+  const currentStepIndex = getCurrentStepIndex();
 
   return (
     <div className="bg-gray-50 min-h-screen py-8">
@@ -88,15 +91,27 @@ const ProcessingView: React.FC<ProcessingViewProps> = ({ webinarData }) => {
           <div className="max-w-2xl mx-auto mb-8">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium text-gray-700">Processing Progress</span>
-              <span className="text-sm font-bold text-blue-600">{progress}%</span>
+              <span className="text-sm font-bold text-blue-600">{displayProgress}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3 shadow-inner">
               <div 
                 className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 h-3 rounded-full transition-all duration-300 ease-out shadow-lg"
-                style={{ width: `${progress}%` }}
+                style={{ width: `${displayProgress}%` }}
               ></div>
             </div>
           </div>
+
+          {/* Current Step Status */}
+          {currentStep && (
+            <div className="max-w-2xl mx-auto mb-8">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div className="flex items-center justify-center space-x-3">
+                  <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                  <span className="text-blue-800 font-medium">{currentStep}</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Processing Steps */}
@@ -105,9 +120,9 @@ const ProcessingView: React.FC<ProcessingViewProps> = ({ webinarData }) => {
             <div
               key={index}
               className={`card p-6 transition-all duration-500 border-2 ${
-                index <= currentStep
+                index < currentStepIndex
                   ? 'border-success-200 bg-gradient-to-r from-success-50 to-mint-50 shadow-lg'
-                  : index === currentStep + 1
+                  : index === currentStepIndex
                   ? 'border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg animate-pulse-soft'
                   : 'border-gray-200 bg-white'
               }`}
@@ -115,14 +130,14 @@ const ProcessingView: React.FC<ProcessingViewProps> = ({ webinarData }) => {
               <div className="flex items-center">
                 <div
                   className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center mr-6 transition-all duration-500 shadow-lg ${
-                    index <= currentStep
+                    index < currentStepIndex
                       ? 'bg-gradient-to-r from-success-500 to-mint-500 text-white'
-                      : index === currentStep + 1
+                      : index === currentStepIndex
                       ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
                       : 'bg-gray-200 text-gray-500'
                   }`}
                 >
-                  {index === currentStep + 1 ? (
+                  {index === currentStepIndex ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
                     step.icon
@@ -133,13 +148,13 @@ const ProcessingView: React.FC<ProcessingViewProps> = ({ webinarData }) => {
                     {step.title}
                   </h3>
                   <p className="text-gray-600 mb-1">{step.description}</p>
-                  {index === currentStep + 1 && (
+                  {index === currentStepIndex && (
                     <p className="text-sm text-blue-600 font-medium animate-pulse">
-                      {step.status}
+                      {currentStep || step.status}
                     </p>
                   )}
                 </div>
-                {index <= currentStep && (
+                {index < currentStepIndex && (
                   <div className="flex-shrink-0">
                     <div className="w-6 h-6 bg-gradient-to-r from-success-500 to-mint-500 rounded-full flex items-center justify-center shadow-lg">
                       <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -153,11 +168,32 @@ const ProcessingView: React.FC<ProcessingViewProps> = ({ webinarData }) => {
           ))}
         </div>
 
-        {/* Fun Facts */}
-        <div className="card p-8 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100">
+        {/* Selected Assets Preview */}
+        <div className="card p-8 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100 mb-16">
           <h3 className="text-xl font-semibold text-gray-900 mb-6 text-center flex items-center justify-center">
             <Sparkles className="w-5 h-5 mr-2 text-blue-600" />
-            Did you know?
+            Generating Your Selected Assets
+          </h3>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {webinarData.selectedAssets.map((asset, index) => (
+              <div key={index} className="bg-white p-4 rounded-xl border border-gray-200 text-center">
+                <div className="text-2xl mb-2">
+                  {asset.includes('LinkedIn') ? '💼' : 
+                   asset.includes('Email') ? '📧' : 
+                   asset.includes('Quote') ? '💬' : 
+                   asset.includes('Sales') ? '🎯' : '📄'}
+                </div>
+                <p className="text-sm font-medium text-gray-900">{asset}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Fun Facts */}
+        <div className="card p-8 bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-100">
+          <h3 className="text-xl font-semibold text-gray-900 mb-6 text-center flex items-center justify-center">
+            <Brain className="w-5 h-5 mr-2 text-indigo-600" />
+            While you wait...
           </h3>
           <div className="grid md:grid-cols-3 gap-6 text-center">
             <div className="p-4">
@@ -174,6 +210,21 @@ const ProcessingView: React.FC<ProcessingViewProps> = ({ webinarData }) => {
             </div>
           </div>
         </div>
+
+        {/* API Key Warning */}
+        {!import.meta.env.VITE_OPENAI_API_KEY && (
+          <div className="card p-6 border-red-200 bg-red-50 mt-8">
+            <div className="flex items-center space-x-3">
+              <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-red-900">API Key Missing</h3>
+                <p className="text-red-700 text-sm mt-1">
+                  OpenAI API key not configured. Processing will fail without proper API access.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

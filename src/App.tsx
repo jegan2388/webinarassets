@@ -5,6 +5,8 @@ import ProcessingView from './components/ProcessingView';
 import OutputView from './components/OutputView';
 import PricingSection from './components/PricingSection';
 import TranscriptionView from './components/TranscriptionView';
+import { transcribeAudio } from './services/transcription';
+import { generateMarketingAssets } from './services/assetGeneration';
 
 export interface WebinarData {
   file?: File;
@@ -32,56 +34,70 @@ function App() {
     selectedAssets: []
   });
   const [generatedAssets, setGeneratedAssets] = useState<GeneratedAsset[]>([]);
+  const [processingStep, setProcessingStep] = useState<string>('');
+  const [processingProgress, setProcessingProgress] = useState<number>(0);
+  const [error, setError] = useState<string | null>(null);
 
   const handleStartUpload = () => {
     setCurrentStep('upload');
   };
 
-  const handleFormSubmit = (data: WebinarData) => {
+  const handleFormSubmit = async (data: WebinarData) => {
     setWebinarData(data);
     setCurrentStep('processing');
+    setError(null);
     
-    // Simulate AI processing
-    setTimeout(() => {
-      const mockAssets: GeneratedAsset[] = [
-        {
-          id: '1',
-          type: 'LinkedIn Post',
-          title: 'Engaging LinkedIn Post',
-          content: `🚀 Just wrapped up an incredible webinar on ${data.description}!\n\nKey takeaways for ${data.persona} teams:\n• Strategic insights that drive results\n• Proven frameworks you can implement today\n• Real-world examples from industry leaders\n\nWhat resonated most with your team? Drop a comment below! 👇\n\n#${data.persona} #B2B #Growth`,
-        },
-        {
-          id: '2',
-          type: 'Email Snippet',
-          title: 'Nurture Email',
-          content: `Subject: The ${data.description} insights you requested\n\nHi [First Name],\n\nThanks for joining our recent webinar! As promised, here are the key insights we covered:\n\n1. Strategic approach to ${data.description.toLowerCase()}\n2. Framework for ${data.persona.toLowerCase()} teams\n3. Implementation roadmap\n\nReady to take the next step? Let's schedule a quick call to discuss how this applies to your specific situation.\n\nBest regards,\n[Your Name]`,
-        },
-        {
-          id: '3',
-          type: 'Quote Card',
-          title: 'Visual Quote',
-          content: `"The key to successful ${data.description.toLowerCase()} is understanding your ${data.persona.toLowerCase()} audience and meeting them where they are in their journey."`,
-          preview: 'quote-card-preview'
-        },
-        {
-          id: '4',
-          type: 'Sales Snippet',
-          title: 'Sales Outreach',
-          content: `Hi [Prospect Name],\n\nI noticed you're focused on ${data.description.toLowerCase()} for ${data.persona.toLowerCase()} teams. We recently hosted a webinar on this exact topic and uncovered some fascinating insights.\n\nOne key finding: Companies that implement our framework see 40% faster results.\n\nWould you be interested in a 15-minute call to discuss how this could apply to [Company Name]?\n\nBest,\n[Your Name]`,
+    try {
+      let transcript = '';
+      
+      // Step 1: Get transcript
+      if (data.file) {
+        setProcessingStep('Transcribing audio...');
+        setProcessingProgress(10);
+        
+        const transcriptionResult = await transcribeAudio(data.file);
+        transcript = transcriptionResult.text;
+        
+        if (!transcript || transcript.trim().length < 100) {
+          throw new Error('Transcript is too short or empty. Please ensure your audio is clear and contains speech.');
         }
-      ];
-
-      // Filter based on selected assets
-      const filteredAssets = mockAssets.filter(asset => 
-        data.selectedAssets.some(selected => 
-          asset.type.toLowerCase().includes(selected.toLowerCase()) ||
-          selected.toLowerCase().includes(asset.type.toLowerCase())
-        )
+      } else if (data.youtubeUrl) {
+        // For now, show error for YouTube - we'd need a backend service for this
+        throw new Error('YouTube URL processing requires a backend service. Please upload a file instead.');
+      } else {
+        throw new Error('No audio source provided.');
+      }
+      
+      setProcessingStep('Analyzing content and generating assets...');
+      setProcessingProgress(30);
+      
+      // Step 2: Generate marketing assets
+      const assets = await generateMarketingAssets(
+        transcript, 
+        data,
+        (step, progress) => {
+          setProcessingStep(step);
+          setProcessingProgress(progress);
+        }
       );
-
-      setGeneratedAssets(filteredAssets.length > 0 ? filteredAssets : mockAssets);
+      
+      if (assets.length === 0) {
+        throw new Error('No assets were generated. Please try again or check your content.');
+      }
+      
+      setGeneratedAssets(assets);
       setCurrentStep('output');
-    }, 3000);
+      
+    } catch (err) {
+      console.error('Processing error:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      
+      // Show error for a few seconds, then go back to upload
+      setTimeout(() => {
+        setCurrentStep('upload');
+        setError(null);
+      }, 5000);
+    }
   };
 
   const handleBackToLanding = () => {
@@ -93,6 +109,9 @@ function App() {
       selectedAssets: []
     });
     setGeneratedAssets([]);
+    setError(null);
+    setProcessingStep('');
+    setProcessingProgress(0);
   };
 
   const handleViewPricing = () => {
@@ -108,9 +127,15 @@ function App() {
       case 'landing':
         return <LandingPage onStartUpload={handleStartUpload} onViewPricing={handleViewPricing} onViewTranscription={handleViewTranscription} />;
       case 'upload':
-        return <UploadForm onSubmit={handleFormSubmit} onBack={handleBackToLanding} />;
+        return <UploadForm onSubmit={handleFormSubmit} onBack={handleBackToLanding} error={error} />;
       case 'processing':
-        return <ProcessingView webinarData={webinarData} />;
+        return (
+          <ProcessingView 
+            webinarData={webinarData} 
+            currentStep={processingStep}
+            progress={processingProgress}
+          />
+        );
       case 'output':
         return <OutputView assets={generatedAssets} onBack={handleBackToLanding} onViewPricing={handleViewPricing} />;
       case 'pricing':
