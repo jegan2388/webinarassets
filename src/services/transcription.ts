@@ -25,40 +25,20 @@ const getOpenAIClient = (): OpenAI => {
   });
 };
 
-// Common hallucination patterns to filter out
-const HALLUCINATION_PATTERNS = [
-  /you're going to die/gi,
-  /i'm going to kill you/gi,
-  /i'll kill/gi,
-  /destroy you/gi,
-  /thank you for watching/gi,
-  /please subscribe/gi,
-  /like and subscribe/gi,
-  /don't forget to/gi,
-  /see you next time/gi,
-  /bye bye/gi,
-  /goodbye/gi,
-  /(\w+)\s+\1\s+\1\s+\1/gi, // Repetitive words (4+ times)
-];
-
 const cleanTranscription = (text: string): string => {
   let cleaned = text;
   
-  // Remove common hallucination patterns
-  HALLUCINATION_PATTERNS.forEach(pattern => {
-    cleaned = cleaned.replace(pattern, '');
-  });
+  // Only remove excessive repetition patterns, not specific phrases
+  // Remove when the same phrase (10+ chars) repeats 3+ times consecutively
+  cleaned = cleaned.replace(/(.{10,?}?)\1{2,}/gi, '$1');
   
-  // Remove excessive repetition of phrases
-  cleaned = cleaned.replace(/(.{10,}?)\1{3,}/gi, '$1');
-  
-  // Remove lines that are mostly repetitive
+  // Remove lines that are mostly repetitive (same word repeated many times)
   const lines = cleaned.split('\n');
   const filteredLines = lines.filter(line => {
     const words = line.trim().split(/\s+/);
-    if (words.length < 3) return true;
+    if (words.length < 4) return true; // Keep short lines
     
-    // Check if more than 60% of words are the same
+    // Check if more than 70% of words are the same (indicating repetitive hallucination)
     const wordCounts = words.reduce((acc, word) => {
       acc[word.toLowerCase()] = (acc[word.toLowerCase()] || 0) + 1;
       return acc;
@@ -67,7 +47,8 @@ const cleanTranscription = (text: string): string => {
     const maxCount = Math.max(...Object.values(wordCounts));
     const repetitionRatio = maxCount / words.length;
     
-    return repetitionRatio < 0.6;
+    // Only filter out if it's extremely repetitive (likely hallucination)
+    return repetitionRatio < 0.7;
   });
   
   // Clean up extra whitespace
@@ -180,14 +161,14 @@ export const transcribeAudio = async (file: File): Promise<TranscriptionResult> 
 
     console.log('Transcription completed successfully');
 
-    // Clean the transcription to remove hallucinations
+    // Clean the transcription to remove repetitive hallucinations only
     const cleanedText = cleanTranscription(response.text);
     
     // Clean and merge segments intelligently
     let cleanedSegments: Array<{ start: number; end: number; text: string }> | undefined;
     
     if (response.segments && response.segments.length > 0) {
-      // First clean individual segments
+      // First clean individual segments (only remove repetitive patterns)
       const initialCleanedSegments = response.segments
         .map(segment => ({
           start: segment.start,
@@ -200,9 +181,9 @@ export const transcribeAudio = async (file: File): Promise<TranscriptionResult> 
       cleanedSegments = mergeSegments(initialCleanedSegments);
     }
 
-    // If the cleaned text is too short compared to original, warn the user
-    if (cleanedText.length < response.text.length * 0.3) {
-      console.warn('Significant content was filtered out due to potential hallucinations');
+    // If the cleaned text is significantly shorter, it might indicate heavy filtering
+    if (cleanedText.length < response.text.length * 0.5) {
+      console.warn('Some repetitive content was filtered out - this may indicate background music or audio artifacts');
     }
 
     return {
