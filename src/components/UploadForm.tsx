@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, ArrowLeft, Link, Check, FileVideo, Youtube, Users, Target, Sparkles, MessageSquare, Mail, Quote, AlertCircle } from 'lucide-react';
+import { Upload, ArrowLeft, Link, Check, FileVideo, Youtube, Users, Target, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe } from 'lucide-react';
 import { WebinarData } from '../App';
 
 interface UploadFormProps {
@@ -228,6 +228,28 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, error }) => {
                 </p>
               </div>
             )}
+
+            {/* Company Website URL */}
+            <div>
+              <label htmlFor="company-website" className="block text-sm font-semibold text-gray-900 mb-4">
+                <Globe className="w-4 h-4 inline mr-2" />
+                Company Website (Optional)
+              </label>
+              <div className="relative">
+                <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="url"
+                  id="company-website"
+                  value={formData.companyWebsiteUrl || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, companyWebsiteUrl: e.target.value }))}
+                  placeholder="https://yourcompany.com"
+                  className="input-field pl-12"
+                />
+              </div>
+              <p className="text-sm text-gray-500 mt-2">
+                We'll extract your brand colors and logo to create branded quote cards and visuals
+              </p>
+            </div>
 
             {/* Webinar Description */}
             <div>

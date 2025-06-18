@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { WebinarData, GeneratedAsset } from '../App';
+import { BrandData } from './brandExtraction';
 
 // Initialize OpenAI client
 const getOpenAIClient = (): OpenAI => {
@@ -62,7 +63,8 @@ const extractInsights = async (transcript: string, description: string): Promise
 // Generate LinkedIn posts
 const generateLinkedInPosts = async (
   insights: string[], 
-  webinarData: WebinarData
+  webinarData: WebinarData,
+  brandData?: BrandData | null
 ): Promise<GeneratedAsset[]> => {
   const openai = getOpenAIClient();
   
@@ -71,6 +73,10 @@ const generateLinkedInPosts = async (
   // Generate 2-3 different LinkedIn posts
   for (let i = 0; i < Math.min(3, insights.length); i++) {
     const insight = insights[i];
+    
+    const brandContext = brandData?.companyName 
+      ? `Company: ${brandData.companyName}. ` 
+      : '';
     
     const response = await openai.chat.completions.create({
       model: 'gpt-4',
@@ -112,7 +118,7 @@ const generateLinkedInPosts = async (
         },
         {
           role: 'user',
-          content: `Create a highly engaging LinkedIn post based on this insight from our webinar "${webinarData.description}" for ${webinarData.persona}:
+          content: `${brandContext}Create a highly engaging LinkedIn post based on this insight from our webinar "${webinarData.description}" for ${webinarData.persona}:
 
           Key Insight: ${insight}
           
@@ -140,11 +146,16 @@ const generateLinkedInPosts = async (
 // Generate email copy
 const generateEmailCopy = async (
   insights: string[], 
-  webinarData: WebinarData
+  webinarData: WebinarData,
+  brandData?: BrandData | null
 ): Promise<GeneratedAsset[]> => {
   const openai = getOpenAIClient();
   
   const emails: GeneratedAsset[] = [];
+  
+  const brandContext = brandData?.companyName 
+    ? `Company: ${brandData.companyName}. ` 
+    : '';
   
   // Generate nurture email
   const nurtureResponse = await openai.chat.completions.create({
@@ -185,7 +196,7 @@ const generateEmailCopy = async (
       },
       {
         role: 'user',
-        content: `Create a concise, high-converting nurture email for attendees of our webinar "${webinarData.description}" targeting ${webinarData.persona}.
+        content: `${brandContext}Create a concise, high-converting nurture email for attendees of our webinar "${webinarData.description}" targeting ${webinarData.persona}.
         
         Key insights to include (pick the most valuable 2-3):
         ${insights.slice(0, 3).map((insight, i) => `${i + 1}. ${insight}`).join('\n')}
@@ -225,7 +236,7 @@ const generateEmailCopy = async (
         },
         {
           role: 'user',
-          content: `Create a brief follow-up email for non-attendees of "${webinarData.description}" for ${webinarData.persona}.
+          content: `${brandContext}Create a brief follow-up email for non-attendees of "${webinarData.description}" for ${webinarData.persona}.
           
           Top insights they missed:
           ${insights.slice(0, 2).map((insight, i) => `${i + 1}. ${insight}`).join('\n')}`
@@ -246,10 +257,11 @@ const generateEmailCopy = async (
   return emails;
 };
 
-// Generate quote cards
+// Generate quote cards with brand-aware styling
 const generateQuoteCards = async (
   insights: string[], 
-  webinarData: WebinarData
+  webinarData: WebinarData,
+  brandData?: BrandData | null
 ): Promise<GeneratedAsset[]> => {
   const openai = getOpenAIClient();
   
@@ -303,7 +315,8 @@ const generateQuoteCards = async (
       type: 'Quote Card',
       title: `Insightful Quote ${index + 1}`,
       content: quote,
-      preview: 'quote-card-preview'
+      preview: 'quote-card-preview',
+      brandData: brandData // Include brand data for styling
     }));
   } catch (error) {
     console.error('Failed to parse quotes:', error);
@@ -314,11 +327,16 @@ const generateQuoteCards = async (
 // Generate sales snippets
 const generateSalesSnippets = async (
   insights: string[], 
-  webinarData: WebinarData
+  webinarData: WebinarData,
+  brandData?: BrandData | null
 ): Promise<GeneratedAsset[]> => {
   const openai = getOpenAIClient();
   
   const snippets: GeneratedAsset[] = [];
+  
+  const brandContext = brandData?.companyName 
+    ? `Company: ${brandData.companyName}. ` 
+    : '';
   
   // Cold outreach snippet
   const coldResponse = await openai.chat.completions.create({
@@ -353,7 +371,7 @@ const generateSalesSnippets = async (
       },
       {
         role: 'user',
-        content: `Create a high-converting cold outreach snippet referencing our webinar "${webinarData.description}" for ${webinarData.persona}.
+        content: `${brandContext}Create a high-converting cold outreach snippet referencing our webinar "${webinarData.description}" for ${webinarData.persona}.
         
         Key insight to mention: ${insights[0]}
         
@@ -397,7 +415,7 @@ const generateSalesSnippets = async (
       },
       {
         role: 'user',
-        content: `Create a warm follow-up snippet for webinar attendees of "${webinarData.description}".
+        content: `${brandContext}Create a warm follow-up snippet for webinar attendees of "${webinarData.description}".
         
         Key value delivered: ${insights[0]}
         Target: ${webinarData.persona}
@@ -424,10 +442,11 @@ const generateSalesSnippets = async (
 export const generateMarketingAssets = async (
   transcript: string,
   webinarData: WebinarData,
+  brandData?: BrandData | null,
   onProgress?: (step: string, progress: number) => void
 ): Promise<GeneratedAsset[]> => {
   try {
-    onProgress?.('Analyzing webinar content for key insights...', 10);
+    onProgress?.('Analyzing webinar content for key insights...', 15);
     
     // Extract key insights from transcript
     const insights = await extractInsights(transcript, webinarData.description);
@@ -436,32 +455,32 @@ export const generateMarketingAssets = async (
       throw new Error('Could not extract meaningful insights from the webinar content. Please ensure your audio contains substantial discussion or presentation content.');
     }
 
-    onProgress?.('Generating high-quality marketing assets...', 30);
+    onProgress?.('Generating high-quality marketing assets...', 35);
     
     const allAssets: GeneratedAsset[] = [];
     
     // Generate assets based on selected types
     if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('linkedin'))) {
-      onProgress?.('Creating engaging LinkedIn posts...', 40);
-      const linkedInPosts = await generateLinkedInPosts(insights, webinarData);
+      onProgress?.('Creating engaging LinkedIn posts...', 45);
+      const linkedInPosts = await generateLinkedInPosts(insights, webinarData, brandData);
       allAssets.push(...linkedInPosts);
     }
     
     if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('email'))) {
-      onProgress?.('Writing concise, high-converting email copy...', 60);
-      const emailCopy = await generateEmailCopy(insights, webinarData);
+      onProgress?.('Writing concise, high-converting email copy...', 65);
+      const emailCopy = await generateEmailCopy(insights, webinarData, brandData);
       allAssets.push(...emailCopy);
     }
     
     if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('quote'))) {
-      onProgress?.('Extracting most insightful quotes...', 75);
-      const quoteCards = await generateQuoteCards(insights, webinarData);
+      onProgress?.('Extracting most insightful quotes...', 80);
+      const quoteCards = await generateQuoteCards(insights, webinarData, brandData);
       allAssets.push(...quoteCards);
     }
     
     if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('sales'))) {
-      onProgress?.('Creating personalized sales snippets...', 90);
-      const salesSnippets = await generateSalesSnippets(insights, webinarData);
+      onProgress?.('Creating personalized sales snippets...', 95);
+      const salesSnippets = await generateSalesSnippets(insights, webinarData, brandData);
       allAssets.push(...salesSnippets);
     }
     

@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink } from 'lucide-react';
+import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette } from 'lucide-react';
 import { GeneratedAsset } from '../App';
+import { BrandData } from '../services/brandExtraction';
 
 interface OutputViewProps {
   assets: GeneratedAsset[];
+  brandData?: BrandData | null;
   onBack: () => void;
   onViewPricing: () => void;
 }
 
-const OutputView: React.FC<OutputViewProps> = ({ assets, onBack, onViewPricing }) => {
+const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onViewPricing }) => {
   const [copiedAsset, setCopiedAsset] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [showEmailCapture, setShowEmailCapture] = useState(false);
@@ -53,7 +55,7 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, onBack, onViewPricing }
     switch (type.toLowerCase()) {
       case 'linkedin post':
         return '💼';
-      case 'email snippet':
+      case 'email copy':
         return '📧';
       case 'quote card':
         return '💬';
@@ -68,7 +70,7 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, onBack, onViewPricing }
     switch (type.toLowerCase()) {
       case 'linkedin post':
         return 'border-blue-200 bg-blue-50';
-      case 'email snippet':
+      case 'email copy':
         return 'border-mint-200 bg-mint-50';
       case 'quote card':
         return 'border-indigo-200 bg-indigo-50';
@@ -79,13 +81,78 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, onBack, onViewPricing }
     }
   };
 
-  const renderQuoteCard = (content: string) => (
-    <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white p-8 rounded-2xl shadow-2xl">
-      <div className="text-6xl mb-4 opacity-50">"</div>
-      <p className="text-lg font-medium leading-relaxed mb-6">{content}</p>
-      <div className="text-sm opacity-80 font-medium">— Your Webinar Insights</div>
-    </div>
-  );
+  const renderQuoteCard = (content: string, asset: GeneratedAsset) => {
+    // Use brand colors if available, otherwise use default gradient
+    const primaryColor = brandData?.primaryColor || '#4f46e5';
+    const secondaryColor = brandData?.secondaryColor || '#7c3aed';
+    
+    const gradientStyle = {
+      background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`
+    };
+
+    return (
+      <div className="space-y-4">
+        <div 
+          className="text-white p-8 rounded-2xl shadow-2xl relative overflow-hidden"
+          style={gradientStyle}
+        >
+          {/* Brand logo overlay if available */}
+          {brandData?.logoUrl && brandData.logoUrl !== 'svg-logo-found' && (
+            <div className="absolute top-4 right-4 opacity-20">
+              <img 
+                src={brandData.logoUrl} 
+                alt="Company logo" 
+                className="h-8 w-auto"
+                onError={(e) => {
+                  // Hide logo if it fails to load
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+          
+          <div className="text-6xl mb-4 opacity-50">"</div>
+          <p className="text-lg font-medium leading-relaxed mb-6" style={{ 
+            fontFamily: brandData?.fontFamily || 'inherit' 
+          }}>
+            {content}
+          </p>
+          <div className="text-sm opacity-80 font-medium">
+            — {brandData?.companyName || 'Your Webinar Insights'}
+          </div>
+        </div>
+        
+        <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="flex items-center space-x-2 mb-2">
+            <Palette className="w-4 h-4 text-indigo-600" />
+            <span className="text-sm font-medium text-gray-700">Brand-Styled Quote Card</span>
+          </div>
+          <p className="text-sm text-gray-600">
+            💡 <strong>Usage tip:</strong> This quote card uses your brand colors
+            {brandData?.companyName && ` and ${brandData.companyName} branding`}. 
+            Perfect for social media, presentations, or email newsletters.
+          </p>
+          {brandData?.primaryColor && (
+            <div className="flex items-center space-x-2 mt-2">
+              <span className="text-xs text-gray-500">Brand colors:</span>
+              <div 
+                className="w-4 h-4 rounded border border-gray-300" 
+                style={{ backgroundColor: brandData.primaryColor }}
+                title={`Primary: ${brandData.primaryColor}`}
+              />
+              {brandData.secondaryColor && (
+                <div 
+                  className="w-4 h-4 rounded border border-gray-300" 
+                  style={{ backgroundColor: brandData.secondaryColor }}
+                  title={`Secondary: ${brandData.secondaryColor}`}
+                />
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen py-8">
@@ -106,8 +173,39 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, onBack, onViewPricing }
             🎉 Your Marketing Assets Are Ready!
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            <span className="font-semibold text-blue-600">{assets.length} campaign-ready assets</span> generated from your webinar and tailored for your audience
+            <span className="font-semibold text-blue-600">{assets.length} campaign-ready assets</span> generated from your webinar
+            {brandData?.companyName && (
+              <span> and styled with <span className="font-semibold text-indigo-600">{brandData.companyName}</span> branding</span>
+            )}
           </p>
+          
+          {/* Brand Data Summary */}
+          {brandData && (brandData.primaryColor || brandData.companyName) && (
+            <div className="card p-4 max-w-md mx-auto mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+              <div className="flex items-center justify-center space-x-2 mb-2">
+                <Palette className="w-5 h-5 text-blue-600" />
+                <span className="font-semibold text-blue-900">Brand Elements Applied</span>
+              </div>
+              <div className="text-sm text-blue-800">
+                {brandData.companyName && <div>Company: {brandData.companyName}</div>}
+                {brandData.primaryColor && (
+                  <div className="flex items-center justify-center space-x-2 mt-1">
+                    <span>Colors:</span>
+                    <div 
+                      className="w-4 h-4 rounded border border-blue-300" 
+                      style={{ backgroundColor: brandData.primaryColor }}
+                    />
+                    {brandData.secondaryColor && (
+                      <div 
+                        className="w-4 h-4 rounded border border-blue-300" 
+                        style={{ backgroundColor: brandData.secondaryColor }}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
@@ -162,12 +260,7 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, onBack, onViewPricing }
               </div>
 
               {asset.type === 'Quote Card' ? (
-                <div className="space-y-4">
-                  {renderQuoteCard(asset.content)}
-                  <p className="text-sm text-gray-600 bg-white p-3 rounded-lg border border-gray-200">
-                    💡 <strong>Usage tip:</strong> Share this visual quote on social media, use in presentations, or include in email newsletters
-                  </p>
-                </div>
+                renderQuoteCard(asset.content, asset)
               ) : (
                 <div className="bg-white rounded-xl p-4 border border-gray-200">
                   <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium leading-relaxed">

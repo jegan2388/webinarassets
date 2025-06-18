@@ -7,6 +7,7 @@ import PricingSection from './components/PricingSection';
 import TranscriptionView from './components/TranscriptionView';
 import { transcribeAudio } from './services/transcription';
 import { generateMarketingAssets } from './services/assetGeneration';
+import { extractBrandElements, BrandData } from './services/brandExtraction';
 
 export interface WebinarData {
   file?: File;
@@ -15,6 +16,7 @@ export interface WebinarData {
   funnelStage: string;
   selectedAssets: string[];
   youtubeUrl?: string;
+  companyWebsiteUrl?: string;
 }
 
 export interface GeneratedAsset {
@@ -34,6 +36,7 @@ function App() {
     selectedAssets: []
   });
   const [generatedAssets, setGeneratedAssets] = useState<GeneratedAsset[]>([]);
+  const [brandData, setBrandData] = useState<BrandData | null>(null);
   const [processingStep, setProcessingStep] = useState<string>('');
   const [processingProgress, setProcessingProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
@@ -49,11 +52,26 @@ function App() {
     
     try {
       let transcript = '';
+      let extractedBrandData: BrandData | null = null;
+      
+      // Step 0: Extract brand elements if website URL provided
+      if (data.companyWebsiteUrl) {
+        setProcessingStep('Extracting brand elements from your website...');
+        setProcessingProgress(5);
+        
+        extractedBrandData = await extractBrandElements(data.companyWebsiteUrl);
+        setBrandData(extractedBrandData);
+        
+        if (extractedBrandData.error) {
+          console.warn('Brand extraction failed:', extractedBrandData.error);
+          // Continue without brand data rather than failing completely
+        }
+      }
       
       // Step 1: Get transcript
       if (data.file) {
         setProcessingStep('Transcribing audio...');
-        setProcessingProgress(10);
+        setProcessingProgress(15);
         
         const transcriptionResult = await transcribeAudio(data.file);
         transcript = transcriptionResult.text;
@@ -69,12 +87,13 @@ function App() {
       }
       
       setProcessingStep('Analyzing content and generating assets...');
-      setProcessingProgress(30);
+      setProcessingProgress(35);
       
-      // Step 2: Generate marketing assets
+      // Step 2: Generate marketing assets with brand data
       const assets = await generateMarketingAssets(
         transcript, 
         data,
+        extractedBrandData,
         (step, progress) => {
           setProcessingStep(step);
           setProcessingProgress(progress);
@@ -109,6 +128,7 @@ function App() {
       selectedAssets: []
     });
     setGeneratedAssets([]);
+    setBrandData(null);
     setError(null);
     setProcessingStep('');
     setProcessingProgress(0);
@@ -137,7 +157,7 @@ function App() {
           />
         );
       case 'output':
-        return <OutputView assets={generatedAssets} onBack={handleBackToLanding} onViewPricing={handleViewPricing} />;
+        return <OutputView assets={generatedAssets} brandData={brandData} onBack={handleBackToLanding} onViewPricing={handleViewPricing} />;
       case 'pricing':
         return <PricingSection onBack={handleBackToLanding} />;
       case 'transcription':
