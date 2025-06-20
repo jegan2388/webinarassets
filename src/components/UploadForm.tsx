@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Upload, ArrowLeft, Link, Check, FileVideo, Youtube, Users, Target, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, BarChart3, UserCheck, TrendingUp, CreditCard } from 'lucide-react';
+import { Upload, ArrowLeft, Link, Check, FileVideo, Youtube, Users, Target, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, BarChart3, UserCheck, TrendingUp, CreditCard, LogIn } from 'lucide-react';
 import { WebinarData } from '../App';
 import { createCheckoutSession } from '../lib/stripe';
+import { useAuth } from '../hooks/useAuth';
 
 interface UploadFormProps {
   onSubmit: (data: WebinarData) => void;
@@ -12,6 +13,7 @@ interface UploadFormProps {
 }
 
 const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPending, error, isProUser }) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState<WebinarData>({
     description: '',
     persona: '',
@@ -117,6 +119,10 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!user) {
+      return; // This shouldn't happen as the button is disabled, but extra safety
+    }
+    
     if (!formData.description || !formData.persona || !formData.funnelStage || 
         (!formData.file && !formData.youtubeUrl) || formData.selectedAssets.length === 0) {
       return;
@@ -172,6 +178,21 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
           </div>
         )}
 
+        {/* Authentication Required Message */}
+        {!user && (
+          <div className="card p-6 border-blue-200 bg-blue-50 mb-8">
+            <div className="flex items-center space-x-3">
+              <LogIn className="w-6 h-6 text-blue-600 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-blue-900">Sign In Required</h3>
+                <p className="text-blue-700 text-sm mt-1">
+                  Please sign in or create an account to upload your webinar and generate marketing assets.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="card p-8 lg:p-12">
           <div className="mb-10 text-center">
             <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -195,11 +216,12 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                 <button
                   type="button"
                   onClick={() => setUploadType('file')}
+                  disabled={!user}
                   className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
                     uploadType === 'file'
                       ? 'border-blue-500 bg-blue-50 text-blue-900'
                       : 'border-gray-200 hover:border-gray-300 bg-white'
-                  }`}
+                  } ${!user ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <FileVideo className="w-5 h-5 mb-2" />
                   <div className="font-medium">Upload File</div>
@@ -208,11 +230,12 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                 <button
                   type="button"
                   onClick={() => setUploadType('youtube')}
+                  disabled={!user}
                   className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
                     uploadType === 'youtube'
                       ? 'border-blue-500 bg-blue-50 text-blue-900'
                       : 'border-gray-200 hover:border-gray-300 bg-white'
-                  }`}
+                  } ${!user ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <Youtube className="w-5 h-5 mb-2" />
                   <div className="font-medium">YouTube Link</div>
@@ -228,11 +251,13 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                   Upload your webinar recording
                 </label>
                 <div
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
+                  onDragOver={user ? handleDragOver : undefined}
+                  onDragLeave={user ? handleDragLeave : undefined}
+                  onDrop={user ? handleDrop : undefined}
                   className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 ${
-                    isDragging
+                    !user
+                      ? 'border-gray-200 bg-gray-50 opacity-50'
+                      : isDragging
                       ? 'border-blue-400 bg-blue-50'
                       : formData.file
                       ? 'border-success-400 bg-success-50'
@@ -260,10 +285,13 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                         onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
                         className="hidden"
                         id="file-upload"
+                        disabled={!user}
                       />
                       <label
                         htmlFor="file-upload"
-                        className="btn-primary cursor-pointer inline-flex items-center space-x-2"
+                        className={`btn-primary cursor-pointer inline-flex items-center space-x-2 ${
+                          !user ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                       >
                         <Upload className="w-4 h-4" />
                         <span>Choose File</span>
@@ -310,6 +338,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                   onChange={(e) => setFormData(prev => ({ ...prev, companyWebsiteUrl: e.target.value }))}
                   placeholder="https://yourcompany.com"
                   className="input-field pl-12"
+                  disabled={!user}
                 />
               </div>
               <p className="text-sm text-gray-500 mt-2">
@@ -330,6 +359,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                 rows={4}
                 className="input-field resize-none"
                 required
+                disabled={!user}
               />
               <p className="text-sm text-gray-500 mt-2">
                 Be specific - this helps us create more targeted content for your audience
@@ -348,6 +378,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                 onChange={(e) => setFormData(prev => ({ ...prev, persona: e.target.value }))}
                 className="input-field"
                 required
+                disabled={!user}
               >
                 <option value="">Select your target audience...</option>
                 {personas.map(persona => (
@@ -368,6 +399,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                 onChange={(e) => setFormData(prev => ({ ...prev, funnelStage: e.target.value }))}
                 className="input-field"
                 required
+                disabled={!user}
               >
                 <option value="">Select funnel stage...</option>
                 {funnelStages.map(stage => (
@@ -393,7 +425,9 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                   <label
                     key={asset.name}
                     className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
-                      formData.selectedAssets.includes(asset.name)
+                      !user
+                        ? 'opacity-50 cursor-not-allowed border-gray-200 bg-gray-50'
+                        : formData.selectedAssets.includes(asset.name)
                         ? `border-blue-500 bg-blue-50 ${asset.color}`
                         : `border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50`
                     }`}
@@ -403,6 +437,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                       checked={formData.selectedAssets.includes(asset.name)}
                       onChange={() => handleAssetToggle(asset.name)}
                       className="sr-only"
+                      disabled={!user}
                     />
                     <div className={`w-5 h-5 rounded-lg border-2 mr-3 flex items-center justify-center transition-all duration-200 ${
                       formData.selectedAssets.includes(asset.name)
@@ -491,10 +526,15 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
             <div className="pt-6">
               <button
                 type="submit"
-                disabled={!isFormValid || isProcessingPayment}
+                disabled={!user || !isFormValid || isProcessingPayment}
                 className="w-full btn-primary text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
               >
-                {isProcessingPayment ? (
+                {!user ? (
+                  <>
+                    <LogIn className="w-5 h-5" />
+                    <span>Sign In Required</span>
+                  </>
+                ) : isProcessingPayment ? (
                   <>
                     <CreditCard className="w-5 h-5 animate-pulse" />
                     <span>Redirecting to Payment...</span>
@@ -506,11 +546,15 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                   </>
                 )}
               </button>
-              {!isFormValid && (
+              {!user ? (
+                <p className="text-sm text-gray-500 text-center mt-3">
+                  Please sign in or create an account to continue
+                </p>
+              ) : !isFormValid ? (
                 <p className="text-sm text-gray-500 text-center mt-3">
                   Please fill in all fields and select at least one asset to continue
                 </p>
-              )}
+              ) : null}
             </div>
           </form>
         </div>
