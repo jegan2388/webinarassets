@@ -1,37 +1,46 @@
 import React from 'react';
-import { Upload, Zap, Target, Mail, MessageSquare, Quote, TrendingUp, ArrowRight, Play, Sparkles, Users, Clock, FileAudio } from 'lucide-react';
+import { Upload, Zap, Target, Mail, MessageSquare, Quote, TrendingUp, ArrowRight, Play, Sparkles, Users, Clock, FileAudio, User, Crown } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import UserMenu from './UserMenu';
 
 interface LandingPageProps {
   onStartUpload: () => void;
   onViewPricing: () => void;
   onViewTranscription: () => void;
+  onShowAuth: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing, onViewTranscription }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing, onViewTranscription, onShowAuth }) => {
+  const { user, isProUser } = useAuth();
+
   const features = [
     {
       icon: <MessageSquare className="w-6 h-6 text-blue-600" />,
       title: "LinkedIn Posts",
       description: "Engaging social content that drives awareness and thought leadership",
-      color: "bg-blue-50 border-blue-100"
+      color: "bg-blue-50 border-blue-100",
+      isFree: true
+    },
+    {
+      icon: <Mail className="w-6 h-6 text-red-600" />,
+      title: "Sales Outreach",
+      description: "Direct, value-focused emails for cold and warm prospects",
+      color: "bg-red-50 border-red-100",
+      isFree: true
     },
     {
       icon: <Mail className="w-6 h-6 text-mint-600" />,
       title: "Nurture Emails",
-      description: "Personalized email sequences that move prospects through your funnel",
-      color: "bg-mint-50 border-mint-100"
+      description: "Educational, relationship-building email sequences",
+      color: "bg-mint-50 border-mint-100",
+      isFree: false
     },
     {
       icon: <Quote className="w-6 h-6 text-indigo-600" />,
       title: "Quote Visuals",
       description: "Share-worthy graphics with key insights from your webinar",
-      color: "bg-indigo-50 border-indigo-100"
-    },
-    {
-      icon: <Target className="w-6 h-6 text-orange-600" />,
-      title: "Sales Snippets",
-      description: "Ready-to-use outreach messages for your sales team",
-      color: "bg-orange-50 border-orange-100"
+      color: "bg-indigo-50 border-indigo-100",
+      isFree: false
     }
   ];
 
@@ -57,7 +66,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
   ];
 
   const stats = [
-    { value: "6", label: "Marketing Assets", subtext: "Generated automatically" },
+    { value: "7", label: "Marketing Assets", subtext: "Generated automatically" },
     { value: "5min", label: "Processing Time", subtext: "From upload to assets" },
     { value: "73%", label: "Time Saved", subtext: "vs manual creation" }
   ];
@@ -87,6 +96,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
             >
               Pricing
             </button>
+            {user ? (
+              <UserMenu />
+            ) : (
+              <button
+                onClick={onShowAuth}
+                className="btn-primary flex items-center space-x-2"
+              >
+                <User className="w-4 h-4" />
+                <span>Sign In</span>
+              </button>
+            )}
           </div>
         </nav>
 
@@ -101,13 +121,34 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
             <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
               Turn Your Webinar into
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 block mt-2">
-                6 Campaign-Ready Assets
+                7 Campaign-Ready Assets
               </span>
             </h1>
             
             <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-              Upload your webinar. Get LinkedIn posts, nurture emails, and more — crafted for B2B marketers who need results fast.
+              Upload your webinar. Get LinkedIn posts, sales emails, and more — crafted for B2B marketers who need results fast.
             </p>
+            
+            {/* User Status Banner */}
+            {user && (
+              <div className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium mb-6 ${
+                isProUser 
+                  ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200'
+                  : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+              }`}>
+                {isProUser ? (
+                  <>
+                    <Crown className="w-4 h-4" />
+                    <span>Pro Account - All Features Unlocked</span>
+                  </>
+                ) : (
+                  <>
+                    <User className="w-4 h-4" />
+                    <span>Free Account - 2 Asset Types Available</span>
+                  </>
+                )}
+              </div>
+            )}
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <button
@@ -159,7 +200,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
                   <div className="w-16 h-16 bg-gradient-to-r from-mint-500 to-mint-600 rounded-2xl flex items-center justify-center mb-3 mx-auto shadow-lg">
                     <TrendingUp className="w-8 h-8 text-white" />
                   </div>
-                  <p className="text-sm font-medium text-gray-700">6 Ready Assets</p>
+                  <p className="text-sm font-medium text-gray-700">7 Ready Assets</p>
                 </div>
               </div>
             </div>
@@ -179,12 +220,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => (
-              <div key={index} className={`card p-6 group hover:scale-105 transition-all duration-200 border-2 ${feature.color}`}>
+              <div key={index} className={`card p-6 group hover:scale-105 transition-all duration-200 border-2 ${feature.color} relative`}>
+                {!feature.isFree && (
+                  <div className="absolute top-3 right-3">
+                    <Crown className="w-4 h-4 text-blue-600" />
+                  </div>
+                )}
                 <div className="mb-4">
                   {feature.icon}
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
                 <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
+                {!feature.isFree && (
+                  <div className="mt-3">
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Pro Feature</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -236,7 +287,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
               <div className="text-sm text-gray-600">Webinars Processed</div>
             </div>
             <div className="card p-6 text-center">
-              <div className="text-2xl font-bold text-mint-600 mb-2">3,000+</div>
+              <div className="text-2xl font-bold text-mint-600 mb-2">3,500+</div>
               <div className="text-sm text-gray-600">Assets Generated</div>
             </div>
             <div className="card p-6 text-center">
@@ -255,13 +306,24 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
             <p className="text-lg text-gray-600 mb-8">
               Stop spending hours creating marketing assets. Let AI do the heavy lifting while you focus on strategy.
             </p>
-            <button
-              onClick={onStartUpload}
-              className="btn-primary text-lg px-8 py-4 inline-flex items-center space-x-2"
-            >
-              <span>Get Started Free</span>
-              <ArrowRight className="w-5 h-5" />
-            </button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={onStartUpload}
+                className="btn-primary text-lg px-8 py-4 inline-flex items-center space-x-2"
+              >
+                <span>Get Started {user ? (isProUser ? 'Pro' : 'Free') : 'Free'}</span>
+                <ArrowRight className="w-5 h-5" />
+              </button>
+              {!user && (
+                <button
+                  onClick={onShowAuth}
+                  className="btn-secondary text-lg px-8 py-4 inline-flex items-center space-x-2"
+                >
+                  <User className="w-5 h-5" />
+                  <span>Sign Up for Pro</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

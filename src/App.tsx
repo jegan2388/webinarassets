@@ -5,9 +5,12 @@ import ProcessingView from './components/ProcessingView';
 import OutputView from './components/OutputView';
 import PricingSection from './components/PricingSection';
 import TranscriptionView from './components/TranscriptionView';
+import Auth from './components/Auth';
+import UserMenu from './components/UserMenu';
 import { transcribeAudio } from './services/transcription';
 import { generateMarketingAssets } from './services/assetGeneration';
 import { extractBrandElements, BrandData } from './services/brandExtraction';
+import { useAuth } from './hooks/useAuth';
 
 export interface WebinarData {
   file?: File;
@@ -41,7 +44,9 @@ function App() {
   const [processingStep, setProcessingStep] = useState<string>('');
   const [processingProgress, setProcessingProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
-  const [isProUser, setIsProUser] = useState<boolean>(false); // New state for Pro subscription
+  const [showAuth, setShowAuth] = useState(false);
+
+  const { user, isProUser, loading: authLoading } = useAuth();
 
   const handleStartUpload = () => {
     setCurrentStep('upload');
@@ -144,12 +149,34 @@ function App() {
     setCurrentStep('transcription');
   };
 
+  const handleShowAuth = () => {
+    setShowAuth(true);
+  };
+
+  const handleCloseAuth = () => {
+    setShowAuth(false);
+  };
+
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 'landing':
-        return <LandingPage onStartUpload={handleStartUpload} onViewPricing={handleViewPricing} onViewTranscription={handleViewTranscription} />;
+        return (
+          <LandingPage 
+            onStartUpload={handleStartUpload} 
+            onViewPricing={handleViewPricing} 
+            onViewTranscription={handleViewTranscription}
+            onShowAuth={handleShowAuth}
+          />
+        );
       case 'upload':
-        return <UploadForm onSubmit={handleFormSubmit} onBack={handleBackToLanding} error={error} isProUser={isProUser} />;
+        return (
+          <UploadForm 
+            onSubmit={handleFormSubmit} 
+            onBack={handleBackToLanding} 
+            error={error} 
+            isProUser={isProUser}
+          />
+        );
       case 'processing':
         return (
           <ProcessingView 
@@ -159,19 +186,56 @@ function App() {
           />
         );
       case 'output':
-        return <OutputView assets={generatedAssets} brandData={brandData} onBack={handleBackToLanding} onViewPricing={handleViewPricing} />;
+        return (
+          <OutputView 
+            assets={generatedAssets} 
+            brandData={brandData} 
+            onBack={handleBackToLanding} 
+            onViewPricing={handleViewPricing} 
+          />
+        );
       case 'pricing':
         return <PricingSection onBack={handleBackToLanding} />;
       case 'transcription':
         return <TranscriptionView onBack={handleBackToLanding} />;
       default:
-        return <LandingPage onStartUpload={handleStartUpload} onViewPricing={handleViewPricing} onViewTranscription={handleViewTranscription} />;
+        return (
+          <LandingPage 
+            onStartUpload={handleStartUpload} 
+            onViewPricing={handleViewPricing} 
+            onViewTranscription={handleViewTranscription}
+            onShowAuth={handleShowAuth}
+          />
+        );
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* User Menu - Show on all pages except landing */}
+      {currentStep !== 'landing' && user && (
+        <div className="absolute top-4 right-4 z-10">
+          <UserMenu />
+        </div>
+      )}
+      
       {renderCurrentStep()}
+      
+      {/* Auth Modal */}
+      {showAuth && <Auth onClose={handleCloseAuth} />}
     </div>
   );
 }
