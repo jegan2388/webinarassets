@@ -25,6 +25,7 @@ export interface GeneratedAsset {
   title: string;
   content: string;
   preview?: string;
+  imageUrl?: string;
 }
 
 function App() {

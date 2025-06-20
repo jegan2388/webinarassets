@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette } from 'lucide-react';
+import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, Image } from 'lucide-react';
 import { GeneratedAsset } from '../App';
 import { BrandData } from '../services/brandExtraction';
 
@@ -53,14 +53,18 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
 
   const getAssetIcon = (type: string) => {
     switch (type.toLowerCase()) {
-      case 'linkedin post':
+      case 'linkedin posts':
         return '💼';
       case 'email copy':
         return '📧';
-      case 'quote card':
+      case 'quote cards':
         return '💬';
-      case 'sales snippet':
+      case 'sales snippets':
         return '🎯';
+      case 'one-pager recap':
+        return '📄';
+      case 'linkedin visuals':
+        return '🎨';
       default:
         return '📄';
     }
@@ -68,14 +72,18 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
 
   const getAssetColor = (type: string) => {
     switch (type.toLowerCase()) {
-      case 'linkedin post':
+      case 'linkedin posts':
         return 'border-blue-200 bg-blue-50';
       case 'email copy':
         return 'border-mint-200 bg-mint-50';
-      case 'quote card':
+      case 'quote cards':
         return 'border-indigo-200 bg-indigo-50';
-      case 'sales snippet':
+      case 'sales snippets':
         return 'border-orange-200 bg-orange-50';
+      case 'one-pager recap':
+        return 'border-purple-200 bg-purple-50';
+      case 'linkedin visuals':
+        return 'border-cyan-200 bg-cyan-50';
       default:
         return 'border-gray-200 bg-gray-50';
     }
@@ -150,6 +158,154 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
             </div>
           )}
         </div>
+      </div>
+    );
+  };
+
+  const renderOnePager = (content: string) => {
+    try {
+      const data = JSON.parse(content);
+      const primaryColor = brandData?.primaryColor || '#2563eb';
+      
+      return (
+        <div className="space-y-4">
+          <div className="bg-white p-8 rounded-2xl border-2 border-gray-200 shadow-lg">
+            {/* Header */}
+            <div className="text-center mb-8 pb-6 border-b-2 border-gray-100">
+              <div 
+                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg"
+                style={{ backgroundColor: primaryColor }}
+              >
+                <FileText className="w-8 h-8 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Webinar Session Recap
+              </h2>
+              <p className="text-gray-600">
+                {brandData?.companyName || 'Professional'} Summary Document
+              </p>
+            </div>
+
+            {/* Quick Overview */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                <div 
+                  className="w-6 h-6 rounded-full mr-3"
+                  style={{ backgroundColor: primaryColor }}
+                ></div>
+                Quick Session Overview
+              </h3>
+              <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-xl">
+                {data.overview || 'Session overview not available'}
+              </p>
+            </div>
+
+            {/* Key Quote */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                <div 
+                  className="w-6 h-6 rounded-full mr-3"
+                  style={{ backgroundColor: primaryColor }}
+                ></div>
+                Key Quote from Speaker
+              </h3>
+              <blockquote 
+                className="text-lg italic text-white p-6 rounded-xl shadow-lg relative"
+                style={{ backgroundColor: primaryColor }}
+              >
+                <div className="text-4xl opacity-30 absolute top-2 left-4">"</div>
+                <p className="relative z-10 pl-6">
+                  {data.quote || 'Key quote not available'}
+                </p>
+              </blockquote>
+            </div>
+
+            {/* Key Takeaways */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <div 
+                  className="w-6 h-6 rounded-full mr-3"
+                  style={{ backgroundColor: primaryColor }}
+                ></div>
+                4 Key Takeaways
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {(data.takeaways || []).map((takeaway: string, index: number) => (
+                  <div key={index} className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <div className="flex items-start space-x-3">
+                      <div 
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 mt-1"
+                        style={{ backgroundColor: primaryColor }}
+                      >
+                        {index + 1}
+                      </div>
+                      <p className="text-gray-700 text-sm leading-relaxed">
+                        {takeaway}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <div className="flex items-center space-x-2 mb-2">
+              <FileText className="w-4 h-4 text-purple-600" />
+              <span className="text-sm font-medium text-gray-700">Professional One-Pager Document</span>
+            </div>
+            <p className="text-sm text-gray-600">
+              💡 <strong>Usage tip:</strong> Perfect for sharing with stakeholders, including in follow-up emails, 
+              or using as a reference document for future presentations.
+            </p>
+          </div>
+        </div>
+      );
+    } catch (error) {
+      // Fallback for non-JSON content
+      return (
+        <div className="bg-white rounded-xl p-4 border border-gray-200">
+          <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium leading-relaxed">
+            {content}
+          </pre>
+        </div>
+      );
+    }
+  };
+
+  const renderLinkedInPost = (asset: GeneratedAsset) => {
+    return (
+      <div className="space-y-4">
+        {/* LinkedIn Post Content */}
+        <div className="bg-white rounded-xl p-4 border border-gray-200">
+          <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium leading-relaxed">
+            {asset.content}
+          </pre>
+        </div>
+        
+        {/* Generated Visual */}
+        {asset.imageUrl && (
+          <div className="space-y-2">
+            <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="flex items-center space-x-2 mb-2">
+                <Image className="w-4 h-4 text-blue-600" />
+                <span className="text-sm font-medium text-gray-700">AI-Generated Visual</span>
+              </div>
+              <img 
+                src={asset.imageUrl} 
+                alt="LinkedIn post visual" 
+                className="w-full rounded-lg shadow-md"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+              <p className="text-sm text-gray-600 mt-2">
+                💡 <strong>Usage tip:</strong> This visual was created specifically for your LinkedIn post. 
+                Download and use it to make your post stand out in the feed.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -259,8 +415,12 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
                 </button>
               </div>
 
-              {asset.type === 'Quote Card' ? (
+              {asset.type === 'Quote Cards' ? (
                 renderQuoteCard(asset.content, asset)
+              ) : asset.type === 'One-Pager Recap' ? (
+                renderOnePager(asset.content)
+              ) : asset.type === 'LinkedIn Posts' ? (
+                renderLinkedInPost(asset)
               ) : (
                 <div className="bg-white rounded-xl p-4 border border-gray-200">
                   <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium leading-relaxed">

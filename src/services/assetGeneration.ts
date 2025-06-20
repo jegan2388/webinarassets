@@ -60,7 +60,116 @@ const extractInsights = async (transcript: string, description: string): Promise
   }
 };
 
-// Generate LinkedIn posts
+// Generate One-Pager Recap
+const generateOnePagerRecap = async (
+  transcript: string,
+  webinarData: WebinarData,
+  brandData?: BrandData | null
+): Promise<GeneratedAsset> => {
+  const openai = getOpenAIClient();
+  
+  const brandContext = brandData?.companyName 
+    ? `Company: ${brandData.companyName}. ` 
+    : '';
+  
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4',
+    messages: [
+      {
+        role: 'system',
+        content: `You are a professional content strategist creating a one-page webinar recap document. Create a structured document with exactly these sections and word limits:
+
+        STRUCTURE REQUIREMENTS:
+        1. Quick Session Overview (50 words max) - Brief summary of what was covered
+        2. Key Quote from Speaker (20 words max) - Most impactful direct quote from the transcript
+        3. 4 Key Takeaways (25 words each) - Most valuable insights attendees can implement
+        
+        FORMAT REQUIREMENTS:
+        - Return as structured JSON with sections: "overview", "quote", "takeaways" (array of 4 strings)
+        - Each section must stay within word limits
+        - Use professional, engaging language appropriate for ${webinarData.persona}
+        - Focus on actionable insights and practical value
+        - Make it scannable and easy to digest
+        
+        CONTENT FOCUS:
+        - Highlight the most valuable and actionable content
+        - Use specific examples or data points when available
+        - Ensure takeaways are implementable immediately
+        - Match the tone and sophistication level for the target audience`
+      },
+      {
+        role: 'user',
+        content: `${brandContext}Create a one-page recap for the webinar "${webinarData.description}" targeting ${webinarData.persona}.
+        
+        Use this transcript to extract the content (focus on the most valuable parts):
+        ${transcript.slice(0, 6000)}
+        
+        Funnel Stage: ${webinarData.funnelStage}
+        
+        Remember: Follow the exact structure and word limits specified.`
+      }
+    ],
+    temperature: 0.4,
+    max_tokens: 800
+  });
+
+  try {
+    const content = JSON.parse(response.choices[0].message.content || '{}');
+    return {
+      id: 'one-pager-recap',
+      type: 'One-Pager Recap',
+      title: 'Webinar Session Recap',
+      content: JSON.stringify(content)
+    };
+  } catch (error) {
+    console.error('Failed to parse one-pager content:', error);
+    return {
+      id: 'one-pager-recap',
+      type: 'One-Pager Recap',
+      title: 'Webinar Session Recap',
+      content: response.choices[0].message.content || ''
+    };
+  }
+};
+
+// Generate DALL-E image for LinkedIn post
+const generateLinkedInImage = async (
+  postContent: string,
+  webinarDescription: string,
+  brandData?: BrandData | null
+): Promise<string | undefined> => {
+  const openai = getOpenAIClient();
+  
+  try {
+    // Create a visual prompt based on the post content and brand
+    const brandColors = brandData?.primaryColor && brandData?.secondaryColor 
+      ? `using brand colors ${brandData.primaryColor} and ${brandData.secondaryColor}` 
+      : 'using professional blue and white colors';
+    
+    const visualPrompt = `Create a professional LinkedIn post visual for "${webinarDescription}". 
+    The image should be modern, clean, and business-focused ${brandColors}. 
+    Include abstract geometric shapes, subtle gradients, and professional typography space. 
+    Style: minimalist, corporate, high-quality. 
+    Dimensions: 1200x630 pixels. 
+    No text overlay needed - just the visual background design.`;
+
+    const response = await openai.images.generate({
+      model: 'dall-e-3',
+      prompt: visualPrompt,
+      n: 1,
+      size: '1024x1024',
+      quality: 'standard',
+      style: 'natural'
+    });
+
+    return response.data[0]?.url;
+  } catch (error) {
+    console.error('DALL-E image generation failed:', error);
+    return undefined;
+  }
+};
+
+// Generate LinkedIn posts with visuals
 const generateLinkedInPosts = async (
   insights: string[], 
   webinarData: WebinarData,
@@ -132,11 +241,17 @@ const generateLinkedInPosts = async (
       max_tokens: 500
     });
 
+    const postContent = response.choices[0].message.content || '';
+    
+    // Generate DALL-E image for this post
+    const imageUrl = await generateLinkedInImage(postContent, webinarData.description, brandData);
+
     posts.push({
       id: `linkedin-${i + 1}`,
-      type: 'LinkedIn Post',
+      type: 'LinkedIn Posts',
       title: `Engaging LinkedIn Post ${i + 1}`,
-      content: response.choices[0].message.content || ''
+      content: postContent,
+      imageUrl: imageUrl
     });
   }
   
@@ -312,7 +427,7 @@ const generateQuoteCards = async (
     const quotes = JSON.parse(response.choices[0].message.content || '[]');
     return quotes.map((quote: string, index: number) => ({
       id: `quote-${index + 1}`,
-      type: 'Quote Card',
+      type: 'Quote Cards',
       title: `Insightful Quote ${index + 1}`,
       content: quote,
       preview: 'quote-card-preview',
@@ -386,7 +501,7 @@ const generateSalesSnippets = async (
 
   snippets.push({
     id: 'sales-cold',
-    type: 'Sales Snippet',
+    type: 'Sales Snippets',
     title: 'Cold Outreach Message',
     content: coldResponse.choices[0].message.content || ''
   });
@@ -430,7 +545,7 @@ const generateSalesSnippets = async (
 
   snippets.push({
     id: 'sales-warm',
-    type: 'Sales Snippet',
+    type: 'Sales Snippets',
     title: 'Warm Lead Follow-up',
     content: warmResponse.choices[0].message.content || ''
   });
@@ -460,28 +575,34 @@ export const generateMarketingAssets = async (
     const allAssets: GeneratedAsset[] = [];
     
     // Generate assets based on selected types
-    if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('linkedin'))) {
-      onProgress?.('Creating engaging LinkedIn posts...', 45);
+    if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('linkedin posts'))) {
+      onProgress?.('Creating engaging LinkedIn posts with visuals...', 45);
       const linkedInPosts = await generateLinkedInPosts(insights, webinarData, brandData);
       allAssets.push(...linkedInPosts);
     }
     
     if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('email'))) {
-      onProgress?.('Writing concise, high-converting email copy...', 65);
+      onProgress?.('Writing concise, high-converting email copy...', 60);
       const emailCopy = await generateEmailCopy(insights, webinarData, brandData);
       allAssets.push(...emailCopy);
     }
     
     if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('quote'))) {
-      onProgress?.('Extracting most insightful quotes...', 80);
+      onProgress?.('Extracting most insightful quotes...', 75);
       const quoteCards = await generateQuoteCards(insights, webinarData, brandData);
       allAssets.push(...quoteCards);
     }
     
     if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('sales'))) {
-      onProgress?.('Creating personalized sales snippets...', 95);
+      onProgress?.('Creating personalized sales snippets...', 85);
       const salesSnippets = await generateSalesSnippets(insights, webinarData, brandData);
       allAssets.push(...salesSnippets);
+    }
+    
+    if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('one-pager'))) {
+      onProgress?.('Generating comprehensive one-pager recap...', 90);
+      const onePager = await generateOnePagerRecap(transcript, webinarData, brandData);
+      allAssets.push(onePager);
     }
     
     onProgress?.('Finalizing your campaign-ready assets...', 100);

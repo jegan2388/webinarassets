@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, ArrowLeft, Link, Check, FileVideo, Youtube, Users, Target, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe } from 'lucide-react';
+import { Upload, ArrowLeft, Link, Check, FileVideo, Youtube, Users, Target, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, Image } from 'lucide-react';
 import { WebinarData } from '../App';
 
 interface UploadFormProps {
@@ -38,8 +38,8 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, error }) => {
     { name: 'Email Copy', icon: <Mail className="w-4 h-4" />, color: 'border-mint-200 bg-mint-50' },
     { name: 'Quote Cards', icon: <Quote className="w-4 h-4" />, color: 'border-indigo-200 bg-indigo-50' },
     { name: 'Sales Snippets', icon: <Target className="w-4 h-4" />, color: 'border-orange-200 bg-orange-50' },
-    { name: 'Twitter Threads', icon: <MessageSquare className="w-4 h-4" />, color: 'border-cyan-200 bg-cyan-50' },
-    { name: 'Blog Outlines', icon: <FileVideo className="w-4 h-4" />, color: 'border-purple-200 bg-purple-50' }
+    { name: 'One-Pager Recap', icon: <FileText className="w-4 h-4" />, color: 'border-purple-200 bg-purple-50' },
+    { name: 'LinkedIn Visuals', icon: <Image className="w-4 h-4" />, color: 'border-cyan-200 bg-cyan-50' }
   ];
 
   const handleFileUpload = (file: File) => {
