@@ -61,7 +61,7 @@ export const subscribeToPaymentUpdates = (
   webinarRequestId: string,
   callback: (payload: any) => void
 ) => {
-  return supabase
+  const channel = supabase
     .channel(`webinar_request_${webinarRequestId}`)
     .on(
       'postgres_changes',
@@ -73,5 +73,6 @@ export const subscribeToPaymentUpdates = (
       },
       callback
     )
-    .subscribe()
+
+  return channel
 }

@@ -19,7 +19,7 @@ const PaymentPending: React.FC<PaymentPendingProps> = ({
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    let subscription: any = null
+    let channel: any = null
 
     const checkStatus = async () => {
       try {
@@ -37,7 +37,7 @@ const PaymentPending: React.FC<PaymentPendingProps> = ({
           setStatus('pending')
           
           // Subscribe to real-time updates
-          subscription = subscribeToPaymentUpdates(webinarRequestId, (payload) => {
+          channel = subscribeToPaymentUpdates(webinarRequestId, (payload) => {
             const updatedRequest = payload.new
             
             if (updatedRequest.payment_status === 'completed') {
@@ -50,6 +50,11 @@ const PaymentPending: React.FC<PaymentPendingProps> = ({
               setError('Payment failed. Please try again.')
             }
           })
+
+          // Only subscribe if the channel is not already joined
+          if (channel.state !== 'joined') {
+            channel.subscribe()
+          }
         }
       } catch (err) {
         console.error('Error checking payment status:', err)
@@ -61,8 +66,8 @@ const PaymentPending: React.FC<PaymentPendingProps> = ({
     checkStatus()
 
     return () => {
-      if (subscription) {
-        subscription.unsubscribe()
+      if (channel) {
+        channel.unsubscribe()
       }
     }
   }, [webinarRequestId, onPaymentSuccess])
