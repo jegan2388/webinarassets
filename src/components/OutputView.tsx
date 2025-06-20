@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, Image, BarChart3 } from 'lucide-react';
+import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, BarChart3, UserCheck, TrendingUp } from 'lucide-react';
 import { GeneratedAsset } from '../App';
 import { BrandData } from '../services/brandExtraction';
 
@@ -55,16 +55,16 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
     switch (type.toLowerCase()) {
       case 'linkedin posts':
         return '💼';
-      case 'email copy':
+      case 'sales outreach emails':
+        return '🎯';
+      case 'marketing nurture emails':
         return '📧';
       case 'quote cards':
         return '💬';
       case 'sales snippets':
-        return '🎯';
+        return '📞';
       case 'one-pager recap':
         return '📄';
-      case 'linkedin visuals':
-        return '🎨';
       case 'visual infographic':
         return '📊';
       default:
@@ -76,7 +76,9 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
     switch (type.toLowerCase()) {
       case 'linkedin posts':
         return 'border-blue-200 bg-blue-50';
-      case 'email copy':
+      case 'sales outreach emails':
+        return 'border-red-200 bg-red-50';
+      case 'marketing nurture emails':
         return 'border-mint-200 bg-mint-50';
       case 'quote cards':
         return 'border-indigo-200 bg-indigo-50';
@@ -84,8 +86,6 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
         return 'border-orange-200 bg-orange-50';
       case 'one-pager recap':
         return 'border-purple-200 bg-purple-50';
-      case 'linkedin visuals':
-        return 'border-cyan-200 bg-cyan-50';
       case 'visual infographic':
         return 'border-emerald-200 bg-emerald-50';
       default:
@@ -275,43 +275,6 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
         </div>
       );
     }
-  };
-
-  const renderLinkedInPost = (asset: GeneratedAsset) => {
-    return (
-      <div className="space-y-4">
-        {/* LinkedIn Post Content */}
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
-          <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium leading-relaxed">
-            {asset.content}
-          </pre>
-        </div>
-        
-        {/* Generated Visual */}
-        {asset.imageUrl && (
-          <div className="space-y-2">
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
-              <div className="flex items-center space-x-2 mb-2">
-                <Image className="w-4 h-4 text-blue-600" />
-                <span className="text-sm font-medium text-gray-700">AI-Generated Visual</span>
-              </div>
-              <img 
-                src={asset.imageUrl} 
-                alt="LinkedIn post visual" 
-                className="w-full rounded-lg shadow-md"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-              <p className="text-sm text-gray-600 mt-2">
-                💡 <strong>Usage tip:</strong> This visual was created specifically for your LinkedIn post. 
-                Download and use it to make your post stand out in the feed.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-    );
   };
 
   const renderVisualInfographic = (asset: GeneratedAsset) => {
@@ -511,8 +474,6 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
                 renderQuoteCard(asset.content, asset)
               ) : asset.type === 'One-Pager Recap' ? (
                 renderOnePager(asset.content)
-              ) : asset.type === 'LinkedIn Posts' ? (
-                renderLinkedInPost(asset)
               ) : asset.type === 'Visual Infographic' ? (
                 renderVisualInfographic(asset)
               ) : (
@@ -541,18 +502,18 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
               <p className="text-sm text-gray-600">Post 2-3 times per week with webinar insights to build thought leadership</p>
             </div>
             <div className="text-center p-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <UserCheck className="w-6 h-6 text-white" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-2">Sales Outreach</h4>
+              <p className="text-sm text-gray-600">Direct, value-focused emails for cold and warm prospect outreach</p>
+            </div>
+            <div className="text-center p-4">
               <div className="w-12 h-12 bg-gradient-to-r from-mint-500 to-mint-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
                 <Mail className="w-6 h-6 text-white" />
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Email Nurture</h4>
-              <p className="text-sm text-gray-600">Send to webinar attendees and leads in your nurture sequences</p>
-            </div>
-            <div className="text-center p-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-                <Copy className="w-6 h-6 text-white" />
-              </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Sales Snippets</h4>
-              <p className="text-sm text-gray-600">Personalize for prospect outreach and follow-up conversations</p>
+              <h4 className="font-semibold text-gray-900 mb-2">Nurture Emails</h4>
+              <p className="text-sm text-gray-600">Educational, relationship-building emails for existing leads and prospects</p>
             </div>
             <div className="text-center p-4">
               <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">

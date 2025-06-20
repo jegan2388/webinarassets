@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, ArrowLeft, Link, Check, FileVideo, Youtube, Users, Target, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, Image, BarChart3 } from 'lucide-react';
+import { Upload, ArrowLeft, Link, Check, FileVideo, Youtube, Users, Target, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, BarChart3, UserCheck, TrendingUp } from 'lucide-react';
 import { WebinarData } from '../App';
 
 interface UploadFormProps {
@@ -35,11 +35,11 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, error }) => {
 
   const assetTypes = [
     { name: 'LinkedIn Posts', icon: <MessageSquare className="w-4 h-4" />, color: 'border-blue-200 bg-blue-50' },
-    { name: 'Email Copy', icon: <Mail className="w-4 h-4" />, color: 'border-mint-200 bg-mint-50' },
+    { name: 'Sales Outreach Emails', icon: <UserCheck className="w-4 h-4" />, color: 'border-red-200 bg-red-50' },
+    { name: 'Marketing Nurture Emails', icon: <Mail className="w-4 h-4" />, color: 'border-mint-200 bg-mint-50' },
     { name: 'Quote Cards', icon: <Quote className="w-4 h-4" />, color: 'border-indigo-200 bg-indigo-50' },
     { name: 'Sales Snippets', icon: <Target className="w-4 h-4" />, color: 'border-orange-200 bg-orange-50' },
     { name: 'One-Pager Recap', icon: <FileText className="w-4 h-4" />, color: 'border-purple-200 bg-purple-50' },
-    { name: 'LinkedIn Visuals', icon: <Image className="w-4 h-4" />, color: 'border-cyan-200 bg-cyan-50' },
     { name: 'Visual Infographic', icon: <BarChart3 className="w-4 h-4" />, color: 'border-emerald-200 bg-emerald-50' }
   ];
 
@@ -348,6 +348,24 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, error }) => {
                     </div>
                   </label>
                 ))}
+              </div>
+              
+              {/* Email Asset Descriptions */}
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-red-50 p-3 rounded-lg border border-red-100">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <UserCheck className="w-4 h-4 text-red-600" />
+                    <span className="text-sm font-medium text-red-800">Sales Outreach Emails</span>
+                  </div>
+                  <p className="text-xs text-red-700">Direct, value-focused emails for cold/warm prospects. Conversational tone with clear CTAs.</p>
+                </div>
+                <div className="bg-mint-50 p-3 rounded-lg border border-mint-100">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <Mail className="w-4 h-4 text-mint-600" />
+                    <span className="text-sm font-medium text-mint-800">Marketing Nurture Emails</span>
+                  </div>
+                  <p className="text-xs text-mint-700">Educational, relationship-building emails for existing leads. Helpful tone with soft CTAs.</p>
+                </div>
               </div>
             </div>
 

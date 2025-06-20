@@ -216,44 +216,7 @@ const generateVisualInfographic = async (
   }
 };
 
-// Generate DALL-E image for LinkedIn post
-const generateLinkedInImage = async (
-  postContent: string,
-  webinarDescription: string,
-  brandData?: BrandData | null
-): Promise<string | undefined> => {
-  const openai = getOpenAIClient();
-  
-  try {
-    // Create a visual prompt based on the post content and brand
-    const brandColors = brandData?.primaryColor && brandData?.secondaryColor 
-      ? `using brand colors ${brandData.primaryColor} and ${brandData.secondaryColor}` 
-      : 'using professional blue and white colors';
-    
-    const visualPrompt = `Create a professional LinkedIn post visual for "${webinarDescription}". 
-    The image should be modern, clean, and business-focused ${brandColors}. 
-    Include abstract geometric shapes, subtle gradients, and professional typography space. 
-    Style: minimalist, corporate, high-quality. 
-    Dimensions: 1200x630 pixels. 
-    No text overlay needed - just the visual background design.`;
-
-    const response = await openai.images.generate({
-      model: 'dall-e-3',
-      prompt: visualPrompt,
-      n: 1,
-      size: '1024x1024',
-      quality: 'standard',
-      style: 'natural'
-    });
-
-    return response.data[0]?.url;
-  } catch (error) {
-    console.error('DALL-E image generation failed:', error);
-    return undefined;
-  }
-};
-
-// Generate LinkedIn posts with visuals
+// Generate LinkedIn posts
 const generateLinkedInPosts = async (
   insights: string[], 
   webinarData: WebinarData,
@@ -326,24 +289,20 @@ const generateLinkedInPosts = async (
     });
 
     const postContent = response.choices[0].message.content || '';
-    
-    // Generate DALL-E image for this post
-    const imageUrl = await generateLinkedInImage(postContent, webinarData.description, brandData);
 
     posts.push({
       id: `linkedin-${i + 1}`,
       type: 'LinkedIn Posts',
       title: `Engaging LinkedIn Post ${i + 1}`,
-      content: postContent,
-      imageUrl: imageUrl
+      content: postContent
     });
   }
   
   return posts;
 };
 
-// Generate email copy
-const generateEmailCopy = async (
+// Generate Sales Outreach Emails
+const generateSalesOutreachEmails = async (
   insights: string[], 
   webinarData: WebinarData,
   brandData?: BrandData | null
@@ -356,53 +315,166 @@ const generateEmailCopy = async (
     ? `Company: ${brandData.companyName}. ` 
     : '';
   
-  // Generate nurture email
-  const nurtureResponse = await openai.chat.completions.create({
+  // Cold outreach email
+  const coldResponse = await openai.chat.completions.create({
     model: 'gpt-4',
     messages: [
       {
         role: 'system',
-        content: `You are an email marketing expert specializing in B2B nurture sequences. Create a nurture email that follows marketing best practices:
-        
-        EMAIL STRUCTURE & LENGTH:
-        - Keep the email concise, under 150 words total
-        - Use a compelling subject line under 50 characters
-        - Structure: Brief intro → 2-3 bullet points for key takeaways → Single clear CTA
-        - Focus on ONE primary message and call-to-action
-        
+        content: `Create a cold sales outreach email following these strict guidelines:
+
         TONE & APPROACH:
-        - Friendly, direct, and value-driven tone
-        - Thank attendees briefly but focus on delivering value
-        - Write in a conversational, helpful style
-        - Personalized for ${webinarData.persona} teams
+        - Direct, confident, and value-focused
+        - Conversational like talking to a peer, not corporate-speak
+        - Assume they're busy - get to the point quickly
+        - Sound like a real person, not a sales bot
         
-        CONTENT REQUIREMENTS:
-        - Lead with the most valuable insight first
-        - Make takeaways immediately actionable
-        - Include a soft, relevant call-to-action appropriate for ${webinarData.funnelStage}
-        - Avoid being pushy or overly promotional
-        
-        FORMAT:
-        Subject: [compelling subject line under 50 characters]
-        
-        [email body - under 150 words]
+        STRUCTURE (80-100 words max):
+        - Subject line: Curiosity-driven, specific, under 50 characters
+        - Brief personal connection or relevant observation
+        - ONE valuable insight from the webinar as immediate value
+        - Clear, specific ask for a brief conversation
+        - Professional but warm sign-off
         
         BEST PRACTICES:
-        - Use scannable formatting (bullet points, short paragraphs)
-        - Include social proof or urgency when appropriate
-        - Make the value proposition crystal clear
-        - Ensure the CTA is specific and actionable`
+        - Use "you" language, focus on their potential benefit
+        - Include social proof (webinar attendance/insights)
+        - Make the ask low-commitment (15-min call, quick chat)
+        - Avoid: "I hope this email finds you well" and other clichés
+        - Sound human: use contractions, natural language
+        
+        FORMAT: Subject: [subject line]\n\n[email body]`
       },
       {
         role: 'user',
-        content: `${brandContext}Create a concise, high-converting nurture email for attendees of our webinar "${webinarData.description}" targeting ${webinarData.persona}.
+        content: `${brandContext}Create a cold sales outreach email referencing our webinar "${webinarData.description}" for ${webinarData.persona}.
         
-        Key insights to include (pick the most valuable 2-3):
+        Key insight to include: ${insights[0]}
+        Funnel stage: ${webinarData.funnelStage}
+        
+        Make it feel personal, valuable, and impossible to ignore.`
+      }
+    ],
+    temperature: 0.7,
+    max_tokens: 300
+  });
+
+  emails.push({
+    id: 'sales-cold-outreach',
+    type: 'Sales Outreach Emails',
+    title: 'Cold Prospect Outreach',
+    content: coldResponse.choices[0].message.content || ''
+  });
+
+  // Warm follow-up email
+  const warmResponse = await openai.chat.completions.create({
+    model: 'gpt-4',
+    messages: [
+      {
+        role: 'system',
+        content: `Create a warm sales follow-up email for someone who attended the webinar:
+
+        TONE & APPROACH:
+        - Warm but professional, building on existing relationship
+        - Appreciative but not overly grateful
+        - Consultative, focused on their success
+        - Natural conversation starter
+        
+        STRUCTURE (60-80 words max):
+        - Subject line: Reference webinar attendance, create urgency
+        - Brief thanks for attending
+        - Connect their attendance to a specific next step
+        - Reference value they received
+        - Suggest logical progression based on their funnel stage
+        
+        BEST PRACTICES:
+        - Assume they found value in the webinar
+        - Reference specific content they heard
+        - Make the next step feel natural and beneficial
+        - Keep it short - they already know you
+        
+        FORMAT: Subject: [subject line]\n\n[email body]`
+      },
+      {
+        role: 'user',
+        content: `${brandContext}Create a warm follow-up email for webinar attendees of "${webinarData.description}".
+        
+        Key value they received: ${insights[0]}
+        Target: ${webinarData.persona}
+        Stage: ${webinarData.funnelStage}
+        
+        Make it feel like a natural next step in the conversation.`
+      }
+    ],
+    temperature: 0.6,
+    max_tokens: 250
+  });
+
+  emails.push({
+    id: 'sales-warm-followup',
+    type: 'Sales Outreach Emails',
+    title: 'Warm Attendee Follow-up',
+    content: warmResponse.choices[0].message.content || ''
+  });
+  
+  return emails;
+};
+
+// Generate Marketing Nurture Emails
+const generateMarketingNurtureEmails = async (
+  insights: string[], 
+  webinarData: WebinarData,
+  brandData?: BrandData | null
+): Promise<GeneratedAsset[]> => {
+  const openai = getOpenAIClient();
+  
+  const emails: GeneratedAsset[] = [];
+  
+  const brandContext = brandData?.companyName 
+    ? `Company: ${brandData.companyName}. ` 
+    : '';
+  
+  // Educational nurture email
+  const educationalResponse = await openai.chat.completions.create({
+    model: 'gpt-4',
+    messages: [
+      {
+        role: 'system',
+        content: `Create an educational marketing nurture email following these guidelines:
+
+        TONE & APPROACH:
+        - Helpful, educational, and relationship-building
+        - Generous with insights, not pushy
+        - Friendly and approachable, like a helpful colleague
+        - Focus on their success, not your offering
+        
+        STRUCTURE (120-150 words max):
+        - Subject line: Value-focused, educational angle
+        - Warm greeting acknowledging their interest
+        - 2-3 key takeaways from the webinar with brief explanations
+        - Soft call-to-action (resource, next webinar, etc.)
+        - Helpful sign-off
+        
+        BEST PRACTICES:
+        - Lead with education, not promotion
+        - Use bullet points for easy scanning
+        - Include actionable tips they can implement
+        - Soft CTA appropriate for nurture sequence
+        - Build trust through valuable content
+        - Sound like a helpful expert, not a salesperson
+        
+        FORMAT: Subject: [subject line]\n\n[email body]`
+      },
+      {
+        role: 'user',
+        content: `${brandContext}Create an educational nurture email for leads interested in "${webinarData.description}" targeting ${webinarData.persona}.
+        
+        Key insights to share:
         ${insights.slice(0, 3).map((insight, i) => `${i + 1}. ${insight}`).join('\n')}
         
         Funnel Stage: ${webinarData.funnelStage}
         
-        Remember: Keep it under 150 words and focus on immediate value delivery.`
+        Focus on building trust and providing value.`
       }
     ],
     temperature: 0.6,
@@ -410,48 +482,62 @@ const generateEmailCopy = async (
   });
 
   emails.push({
-    id: 'email-nurture',
-    type: 'Email Copy',
-    title: 'Concise Nurture Email',
-    content: nurtureResponse.choices[0].message.content || ''
+    id: 'marketing-educational',
+    type: 'Marketing Nurture Emails',
+    title: 'Educational Value Email',
+    content: educationalResponse.choices[0].message.content || ''
   });
 
-  // Generate follow-up email for non-attendees if applicable
-  if (webinarData.funnelStage !== 'Bottom of Funnel (Decision)') {
-    const followUpResponse = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: `Create a follow-up email for people who registered but didn't attend the webinar. Follow these guidelines:
-          
-          - Keep under 120 words
-          - Empathetic but brief acknowledgment they missed it
-          - Lead with the most valuable takeaway immediately
-          - Include ONE clear next step (recording, resource, or future event)
-          - Subject line should create urgency or curiosity
-          
-          Format: Subject: [subject line]\n\n[email body]`
-        },
-        {
-          role: 'user',
-          content: `${brandContext}Create a brief follow-up email for non-attendees of "${webinarData.description}" for ${webinarData.persona}.
-          
-          Top insights they missed:
-          ${insights.slice(0, 2).map((insight, i) => `${i + 1}. ${insight}`).join('\n')}`
-        }
-      ],
-      temperature: 0.6,
-      max_tokens: 350
-    });
+  // Resource sharing email
+  const resourceResponse = await openai.chat.completions.create({
+    model: 'gpt-4',
+    messages: [
+      {
+        role: 'system',
+        content: `Create a resource-sharing nurture email:
 
-    emails.push({
-      id: 'email-followup',
-      type: 'Email Copy',
-      title: 'Non-Attendee Follow-up',
-      content: followUpResponse.choices[0].message.content || ''
-    });
-  }
+        TONE & APPROACH:
+        - Supportive and resourceful
+        - Positioned as sharing valuable tools/insights
+        - Collaborative, like sharing with a colleague
+        - No pressure, just helpful resources
+        
+        STRUCTURE (100-120 words max):
+        - Subject line: Resource/tool focused
+        - Context about why you're sharing this
+        - Brief recap of webinar value
+        - Offer additional resources or tools
+        - Gentle invitation to engage further
+        
+        BEST PRACTICES:
+        - Frame as "thought you might find this helpful"
+        - Reference their specific challenges/goals
+        - Offer multiple ways to engage (low pressure)
+        - Include social proof if relevant
+        - End with open door for questions
+        
+        FORMAT: Subject: [subject line]\n\n[email body]`
+      },
+      {
+        role: 'user',
+        content: `${brandContext}Create a resource-sharing email for "${webinarData.description}" audience.
+        
+        Key insight to build on: ${insights[1] || insights[0]}
+        Target: ${webinarData.persona}
+        
+        Focus on being helpful and building the relationship.`
+      }
+    ],
+    temperature: 0.6,
+    max_tokens: 350
+  });
+
+  emails.push({
+    id: 'marketing-resource',
+    type: 'Marketing Nurture Emails',
+    title: 'Resource Sharing Email',
+    content: resourceResponse.choices[0].message.content || ''
+  });
   
   return emails;
 };
@@ -537,90 +623,78 @@ const generateSalesSnippets = async (
     ? `Company: ${brandData.companyName}. ` 
     : '';
   
-  // Cold outreach snippet
-  const coldResponse = await openai.chat.completions.create({
+  // LinkedIn connection request
+  const linkedinResponse = await openai.chat.completions.create({
     model: 'gpt-4',
     messages: [
       {
         role: 'system',
-        content: `Create a cold outreach message following sales best practices:
+        content: `Create a LinkedIn connection request message:
         
-        STRUCTURE & LENGTH:
-        - Keep under 100 words for higher response rates
-        - Use the webinar as credible social proof
-        - Lead with ONE compelling insight as immediate value
-        - End with a soft, specific ask for a brief conversation
+        REQUIREMENTS:
+        - Under 200 characters (LinkedIn limit)
+        - Reference the webinar as credible social proof
+        - Personalized for ${webinarData.persona}
+        - Conversational and professional tone
+        - Clear value proposition
         
-        PERSONALIZATION:
-        - Reference their likely challenges as ${webinarData.persona}
-        - Connect the webinar insight to their potential pain points
-        - Appropriate tone for ${webinarData.funnelStage} prospects
+        STRUCTURE:
+        - Brief personal connection
+        - Webinar reference
+        - Value offer
+        - Connection request
         
-        BEST PRACTICES:
-        - Conversational, not salesy tone
-        - Focus on their potential benefit, not your offering
-        - Include a specific, low-commitment next step
-        - Create curiosity about how the insight applies to them
-        
-        AVOID:
-        - Generic templates or corporate speak
-        - Multiple asks or CTAs
-        - Overly promotional language
-        - Long paragraphs or complex sentences`
+        Keep it short, valuable, and human.`
       },
       {
         role: 'user',
-        content: `${brandContext}Create a high-converting cold outreach snippet referencing our webinar "${webinarData.description}" for ${webinarData.persona}.
+        content: `${brandContext}Create a LinkedIn connection request for ${webinarData.persona} referencing our webinar "${webinarData.description}".
         
-        Key insight to mention: ${insights[0]}
+        Key insight: ${insights[0]}
         
-        Funnel stage: ${webinarData.funnelStage}
-        
-        Make it personal, valuable, and irresistible to respond to.`
+        Make it personal and valuable within LinkedIn's character limit.`
       }
     ],
     temperature: 0.6,
-    max_tokens: 250
+    max_tokens: 150
   });
 
   snippets.push({
-    id: 'sales-cold',
+    id: 'sales-linkedin',
     type: 'Sales Snippets',
-    title: 'Cold Outreach Message',
-    content: coldResponse.choices[0].message.content || ''
+    title: 'LinkedIn Connection Request',
+    content: linkedinResponse.choices[0].message.content || ''
   });
 
-  // Follow-up snippet for warm leads
-  const warmResponse = await openai.chat.completions.create({
+  // Phone call opener
+  const phoneResponse = await openai.chat.completions.create({
     model: 'gpt-4',
     messages: [
       {
         role: 'system',
-        content: `Create a follow-up message for warm leads who attended the webinar:
+        content: `Create a phone call opening script:
         
         APPROACH:
-        - Brief, genuine thank you for attending
-        - Reference specific value they received (show you know they were there)
-        - Connect their attendance to potential next steps
-        - Suggest logical progression based on ${webinarData.funnelStage}
+        - Confident but respectful
+        - Reference webinar attendance or interest
+        - Quick value statement
+        - Permission-based conversation starter
         
-        TONE:
-        - Professional but warm and appreciative
-        - Consultative, not pushy
-        - Focus on their success and outcomes
-        - Build on the relationship established during the webinar
+        STRUCTURE (30-40 words):
+        - Greeting and introduction
+        - Webinar reference
+        - Value proposition
+        - Permission to continue
         
-        Keep under 80 words and include ONE clear, valuable next step.`
+        Sound natural and conversational, not scripted.`
       },
       {
         role: 'user',
-        content: `${brandContext}Create a warm follow-up snippet for webinar attendees of "${webinarData.description}".
+        content: `${brandContext}Create a phone call opener for ${webinarData.persona} who attended "${webinarData.description}".
         
-        Key value delivered: ${insights[0]}
-        Target: ${webinarData.persona}
-        Stage: ${webinarData.funnelStage}
+        Key value: ${insights[0]}
         
-        Make it feel personal and build on the webinar experience.`
+        Make it sound natural and permission-based.`
       }
     ],
     temperature: 0.6,
@@ -628,10 +702,10 @@ const generateSalesSnippets = async (
   });
 
   snippets.push({
-    id: 'sales-warm',
+    id: 'sales-phone',
     type: 'Sales Snippets',
-    title: 'Warm Lead Follow-up',
-    content: warmResponse.choices[0].message.content || ''
+    title: 'Phone Call Opener',
+    content: phoneResponse.choices[0].message.content || ''
   });
   
   return snippets;
@@ -660,31 +734,37 @@ export const generateMarketingAssets = async (
     
     // Generate assets based on selected types
     if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('linkedin posts'))) {
-      onProgress?.('Creating engaging LinkedIn posts with visuals...', 45);
+      onProgress?.('Creating engaging LinkedIn posts...', 45);
       const linkedInPosts = await generateLinkedInPosts(insights, webinarData, brandData);
       allAssets.push(...linkedInPosts);
     }
     
-    if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('email'))) {
-      onProgress?.('Writing concise, high-converting email copy...', 55);
-      const emailCopy = await generateEmailCopy(insights, webinarData, brandData);
-      allAssets.push(...emailCopy);
+    if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('sales outreach emails'))) {
+      onProgress?.('Writing direct, value-focused sales emails...', 55);
+      const salesEmails = await generateSalesOutreachEmails(insights, webinarData, brandData);
+      allAssets.push(...salesEmails);
+    }
+    
+    if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('marketing nurture emails'))) {
+      onProgress?.('Creating educational nurture emails...', 65);
+      const nurtureEmails = await generateMarketingNurtureEmails(insights, webinarData, brandData);
+      allAssets.push(...nurtureEmails);
     }
     
     if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('quote'))) {
-      onProgress?.('Extracting most insightful quotes...', 65);
+      onProgress?.('Extracting most insightful quotes...', 75);
       const quoteCards = await generateQuoteCards(insights, webinarData, brandData);
       allAssets.push(...quoteCards);
     }
     
-    if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('sales'))) {
-      onProgress?.('Creating personalized sales snippets...', 75);
+    if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('sales snippets'))) {
+      onProgress?.('Creating personalized sales snippets...', 85);
       const salesSnippets = await generateSalesSnippets(insights, webinarData, brandData);
       allAssets.push(...salesSnippets);
     }
     
     if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('one-pager'))) {
-      onProgress?.('Generating comprehensive one-pager recap...', 85);
+      onProgress?.('Generating comprehensive one-pager recap...', 90);
       const onePager = await generateOnePagerRecap(transcript, webinarData, brandData);
       allAssets.push(onePager);
     }
