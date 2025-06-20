@@ -5,6 +5,7 @@ import ProcessingView from './components/ProcessingView';
 import OutputView from './components/OutputView';
 import PricingSection from './components/PricingSection';
 import TranscriptionView from './components/TranscriptionView';
+import PaymentPending from './components/PaymentPending';
 import Auth from './components/Auth';
 import UserMenu from './components/UserMenu';
 import { transcribeAudio } from './services/transcription';
@@ -32,7 +33,7 @@ export interface GeneratedAsset {
 }
 
 function App() {
-  const [currentStep, setCurrentStep] = useState<'landing' | 'upload' | 'processing' | 'output' | 'pricing' | 'transcription'>('landing');
+  const [currentStep, setCurrentStep] = useState<'landing' | 'upload' | 'payment_pending' | 'processing' | 'output' | 'pricing' | 'transcription'>('landing');
   const [webinarData, setWebinarData] = useState<WebinarData>({
     description: '',
     persona: '',
@@ -45,6 +46,7 @@ function App() {
   const [processingProgress, setProcessingProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [showAuth, setShowAuth] = useState(false);
+  const [pendingWebinarRequestId, setPendingWebinarRequestId] = useState<string | null>(null);
 
   const { user, isProUser, loading: authLoading } = useAuth();
 
@@ -52,8 +54,14 @@ function App() {
     setCurrentStep('upload');
   };
 
-  const handleFormSubmit = async (data: WebinarData) => {
-    setWebinarData(data);
+  const handlePaymentPending = (webinarRequestId: string, formData: WebinarData) => {
+    setPendingWebinarRequestId(webinarRequestId);
+    setWebinarData(formData);
+    setCurrentStep('payment_pending');
+  };
+
+  const handlePaymentSuccess = async (formData: WebinarData) => {
+    setWebinarData(formData);
     setCurrentStep('processing');
     setError(null);
     
@@ -62,11 +70,11 @@ function App() {
       let extractedBrandData: BrandData | null = null;
       
       // Step 0: Extract brand elements if website URL provided
-      if (data.companyWebsiteUrl) {
+      if (formData.companyWebsiteUrl) {
         setProcessingStep('Extracting brand elements from your website...');
         setProcessingProgress(5);
         
-        extractedBrandData = await extractBrandElements(data.companyWebsiteUrl);
+        extractedBrandData = await extractBrandElements(formData.companyWebsiteUrl);
         setBrandData(extractedBrandData);
         
         if (extractedBrandData.error) {
@@ -76,17 +84,17 @@ function App() {
       }
       
       // Step 1: Get transcript
-      if (data.file) {
+      if (formData.file) {
         setProcessingStep('Transcribing audio...');
         setProcessingProgress(15);
         
-        const transcriptionResult = await transcribeAudio(data.file);
+        const transcriptionResult = await transcribeAudio(formData.file);
         transcript = transcriptionResult.text;
         
         if (!transcript || transcript.trim().length < 100) {
           throw new Error('Transcript is too short or empty. Please ensure your audio is clear and contains speech.');
         }
-      } else if (data.youtubeUrl) {
+      } else if (formData.youtubeUrl) {
         // For now, show error for YouTube - we'd need a backend service for this
         throw new Error('YouTube URL processing requires a backend service. Please upload a file instead.');
       } else {
@@ -99,7 +107,7 @@ function App() {
       // Step 2: Generate marketing assets with brand data
       const assets = await generateMarketingAssets(
         transcript, 
-        data,
+        formData,
         extractedBrandData,
         (step, progress) => {
           setProcessingStep(step);
@@ -126,6 +134,17 @@ function App() {
     }
   };
 
+  const handlePaymentFailed = () => {
+    setCurrentStep('upload');
+    setPendingWebinarRequestId(null);
+    setError('Payment was cancelled or failed. Please try again.');
+    
+    // Clear error after a few seconds
+    setTimeout(() => {
+      setError(null);
+    }, 5000);
+  };
+
   const handleBackToLanding = () => {
     setCurrentStep('landing');
     setWebinarData({
@@ -139,6 +158,7 @@ function App() {
     setError(null);
     setProcessingStep('');
     setProcessingProgress(0);
+    setPendingWebinarRequestId(null);
   };
 
   const handleViewPricing = () => {
@@ -171,10 +191,20 @@ function App() {
       case 'upload':
         return (
           <UploadForm 
-            onSubmit={handleFormSubmit} 
+            onSubmit={handlePaymentSuccess} 
             onBack={handleBackToLanding} 
+            onPaymentPending={handlePaymentPending}
             error={error} 
             isProUser={isProUser}
+          />
+        );
+      case 'payment_pending':
+        return (
+          <PaymentPending
+            webinarRequestId={pendingWebinarRequestId!}
+            onPaymentSuccess={handlePaymentSuccess}
+            onPaymentFailed={handlePaymentFailed}
+            onBack={handleBackToLanding}
           />
         );
       case 'processing':

@@ -14,8 +14,21 @@ export interface Profile {
   id: string
   email: string
   is_pro_user: boolean
+  webinars_processed_count: number
   created_at: string
   updated_at: string
+}
+
+export interface WebinarRequest {
+  id: string
+  user_id: string
+  stripe_session_id: string | null
+  payment_status: 'pending' | 'completed' | 'failed'
+  form_data: any
+  amount_paid: number
+  created_at: string
+  updated_at: string
+  processed_at: string | null
 }
 
 export interface Database {
@@ -25,6 +38,11 @@ export interface Database {
         Row: Profile
         Insert: Omit<Profile, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<Profile, 'id' | 'created_at'>>
+      }
+      webinar_requests: {
+        Row: WebinarRequest
+        Insert: Omit<WebinarRequest, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<WebinarRequest, 'id' | 'created_at'>>
       }
     }
   }

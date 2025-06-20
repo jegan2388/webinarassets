@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Check, Zap, Crown, Building, Sparkles } from 'lucide-react';
+import { ArrowLeft, Check, Zap, Crown, Building, Sparkles, CreditCard } from 'lucide-react';
 
 interface PricingSectionProps {
   onBack: () => void;
@@ -8,55 +8,41 @@ interface PricingSectionProps {
 const PricingSection: React.FC<PricingSectionProps> = ({ onBack }) => {
   const plans = [
     {
-      name: 'Starter',
-      icon: <Zap className="w-6 h-6" />,
-      price: 'Free',
-      description: 'Perfect for trying out the platform',
-      features: [
-        '1 free webinar remix',
-        '4 asset types included',
-        'Basic templates',
-        'Email support'
-      ],
-      cta: 'Get Started Free',
-      popular: false,
-      color: 'border-gray-200 bg-white'
-    },
-    {
-      name: 'Pro',
-      icon: <Crown className="w-6 h-6" />,
-      price: '$9',
+      name: 'Pay Per Webinar',
+      icon: <CreditCard className="w-6 h-6" />,
+      price: '$4.99',
       period: 'per webinar',
-      description: 'Ideal for individual marketers and small teams',
+      description: 'Perfect for occasional use and testing the platform',
       features: [
-        'Unlimited asset generation',
-        '6 asset types included',
-        'Premium templates',
-        'Custom branding',
-        'Priority support',
-        'Analytics dashboard'
+        'All 7 asset types included',
+        'Brand-styled quote cards',
+        'Professional infographics',
+        'LinkedIn posts & email copy',
+        'One-pager recap document',
+        'Sales snippets & outreach',
+        'Instant processing'
       ],
-      cta: 'Start Pro Trial',
+      cta: 'Upload Webinar',
       popular: true,
       color: 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50'
     },
     {
-      name: 'Team',
-      icon: <Building className="w-6 h-6" />,
-      price: '$49',
-      period: 'per month',
-      description: 'Built for marketing teams and agencies',
+      name: 'Pro Account',
+      icon: <Crown className="w-6 h-6" />,
+      price: 'Coming Soon',
+      period: '',
+      description: 'Advanced features for power users and teams',
       features: [
-        'Up to 5 webinars per month',
-        'All asset types + custom',
+        'Everything in Pay Per Webinar',
+        'Bulk processing discounts',
+        'Custom asset templates',
         'Team collaboration tools',
-        'Brand kit management',
-        'API access',
-        'Dedicated success manager',
+        'Priority support',
         'Advanced analytics',
+        'API access',
         'White-label options'
       ],
-      cta: 'Contact Sales',
+      cta: 'Join Waitlist',
       popular: false,
       color: 'border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50'
     }
@@ -64,20 +50,28 @@ const PricingSection: React.FC<PricingSectionProps> = ({ onBack }) => {
 
   const faqs = [
     {
-      question: "What file formats do you support?",
-      answer: "We support MP4, MP3, WAV, and most common audio/video formats. You can also paste YouTube links directly."
+      question: "What's included in the $4.99 payment?",
+      answer: "You get all 7 asset types: LinkedIn posts, sales emails, nurture emails, quote cards, sales snippets, one-pager recap, and visual infographics - all generated from your single webinar."
     },
     {
-      question: "How accurate is the AI transcription?",
-      answer: "Our AI achieves 95%+ accuracy on clear audio. For best results, ensure good audio quality in your recordings."
+      question: "How does the payment work?",
+      answer: "It's a simple one-time payment of $4.99 per webinar. Upload your content, pay securely via Stripe, and get your assets generated immediately."
     },
     {
       question: "Can I customize the generated assets?",
-      answer: "Yes! All generated content can be edited, and Pro users get access to custom templates and branding options."
+      answer: "Yes! All generated content can be edited and customized. We also extract your brand colors and styling from your website if provided."
     },
     {
-      question: "Is there a limit on webinar length?",
-      answer: "Free plan supports up to 1-hour webinars. Pro and Team plans have no length restrictions."
+      question: "What file formats do you support?",
+      answer: "We support MP4, MP3, WAV, M4A, and most common audio/video formats. Files must be under 25MB for processing."
+    },
+    {
+      question: "How long does processing take?",
+      answer: "Most webinars are processed within 2-5 minutes, depending on length and complexity. You'll see real-time progress updates."
+    },
+    {
+      question: "Is there a refund policy?",
+      answer: "Yes, if we're unable to generate quality assets from your webinar content, we offer a full refund within 24 hours of processing."
     }
   ];
 
@@ -101,12 +95,12 @@ const PricingSection: React.FC<PricingSectionProps> = ({ onBack }) => {
             Choose Your Plan
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Transform your webinars into campaign-ready assets. Start free, scale as you grow.
+            Transform your webinars into campaign-ready assets. Pay only for what you use.
           </p>
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid lg:grid-cols-3 gap-8 mb-20">
+        <div className="grid lg:grid-cols-2 gap-8 mb-20 max-w-4xl mx-auto">
           {plans.map((plan, index) => (
             <div
               key={index}
@@ -153,11 +147,13 @@ const PricingSection: React.FC<PricingSectionProps> = ({ onBack }) => {
               </ul>
 
               <button
+                onClick={onBack}
                 className={`w-full py-3 px-6 rounded-xl font-semibold transition-all duration-300 ${
                   plan.popular
                     ? 'btn-primary'
                     : 'btn-secondary'
                 }`}
+                disabled={plan.name === 'Pro Account'}
               >
                 {plan.cta}
               </button>
@@ -165,15 +161,51 @@ const PricingSection: React.FC<PricingSectionProps> = ({ onBack }) => {
           ))}
         </div>
 
+        {/* Value Proposition */}
+        <div className="card p-12 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100 mb-20">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Why Choose Pay-Per-Webinar?
+            </h2>
+            <p className="text-lg text-gray-600">
+              No subscriptions, no commitments. Pay only when you need assets generated.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center p-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <CreditCard className="w-6 h-6 text-white" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-2">No Monthly Fees</h4>
+              <p className="text-sm text-gray-600">Only pay when you actually use the service. Perfect for occasional webinar creators.</p>
+            </div>
+            <div className="text-center p-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-2">All Features Included</h4>
+              <p className="text-sm text-gray-600">Get access to all 7 asset types, brand styling, and professional templates with every payment.</p>
+            </div>
+            <div className="text-center p-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-mint-500 to-mint-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <Zap className="w-6 h-6 text-white" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-2">Instant Processing</h4>
+              <p className="text-sm text-gray-600">Upload, pay, and get your assets within minutes. No waiting, no queues.</p>
+            </div>
+          </div>
+        </div>
+
         {/* FAQ Section */}
-        <div className="card p-12 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100">
+        <div className="card p-12 bg-white border-gray-100">
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
             Frequently Asked Questions
           </h2>
           
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {faqs.map((faq, index) => (
-              <div key={index} className="bg-white p-6 rounded-xl border border-gray-200">
+              <div key={index} className="bg-gray-50 p-6 rounded-xl border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">
                   {faq.question}
                 </h3>
@@ -188,17 +220,17 @@ const PricingSection: React.FC<PricingSectionProps> = ({ onBack }) => {
         {/* CTA Section */}
         <div className="text-center py-20">
           <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-            Ready to Transform Your Webinars?
+            Ready to Transform Your Webinar?
           </h2>
           <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-            Join hundreds of marketers who've streamlined their content creation with AI-powered asset generation
+            Upload your webinar and get professional marketing assets in minutes for just $4.99
           </p>
           <button
             onClick={onBack}
             className="btn-primary text-lg px-8 py-4 inline-flex items-center space-x-2"
           >
-            <Sparkles className="w-5 h-5" />
-            <span>Start Your Free Remix</span>
+            <CreditCard className="w-5 h-5" />
+            <span>Upload Your Webinar</span>
           </button>
         </div>
       </div>
