@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Upload, ArrowLeft, Link, Check, FileVideo, Youtube, Users, Target, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, BarChart3, UserCheck, TrendingUp } from 'lucide-react';
+import { Upload, ArrowLeft, Link, Check, FileVideo, Youtube, Users, Target, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, BarChart3, UserCheck, TrendingUp, Lock, Crown } from 'lucide-react';
 import { WebinarData } from '../App';
 
 interface UploadFormProps {
   onSubmit: (data: WebinarData) => void;
   onBack: () => void;
   error?: string | null;
+  isProUser: boolean;
 }
 
-const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, error }) => {
+const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, error, isProUser }) => {
   const [formData, setFormData] = useState<WebinarData>({
     description: '',
     persona: '',
@@ -34,13 +35,55 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, error }) => {
   ];
 
   const assetTypes = [
-    { name: 'LinkedIn Posts', icon: <MessageSquare className="w-4 h-4" />, color: 'border-blue-200 bg-blue-50' },
-    { name: 'Sales Outreach Emails', icon: <UserCheck className="w-4 h-4" />, color: 'border-red-200 bg-red-50' },
-    { name: 'Marketing Nurture Emails', icon: <Mail className="w-4 h-4" />, color: 'border-mint-200 bg-mint-50' },
-    { name: 'Quote Cards', icon: <Quote className="w-4 h-4" />, color: 'border-indigo-200 bg-indigo-50' },
-    { name: 'Sales Snippets', icon: <Target className="w-4 h-4" />, color: 'border-orange-200 bg-orange-50' },
-    { name: 'One-Pager Recap', icon: <FileText className="w-4 h-4" />, color: 'border-purple-200 bg-purple-50' },
-    { name: 'Visual Infographic', icon: <BarChart3 className="w-4 h-4" />, color: 'border-emerald-200 bg-emerald-50' }
+    { 
+      name: 'LinkedIn Posts', 
+      icon: <MessageSquare className="w-4 h-4" />, 
+      color: 'border-blue-200 bg-blue-50',
+      isPro: false,
+      description: 'Engaging social content for thought leadership'
+    },
+    { 
+      name: 'Sales Outreach Emails', 
+      icon: <UserCheck className="w-4 h-4" />, 
+      color: 'border-red-200 bg-red-50',
+      isPro: false,
+      description: 'Direct, value-focused emails for prospects'
+    },
+    { 
+      name: 'Marketing Nurture Emails', 
+      icon: <Mail className="w-4 h-4" />, 
+      color: 'border-mint-200 bg-mint-50',
+      isPro: true,
+      description: 'Educational, relationship-building emails'
+    },
+    { 
+      name: 'Quote Cards', 
+      icon: <Quote className="w-4 h-4" />, 
+      color: 'border-indigo-200 bg-indigo-50',
+      isPro: true,
+      description: 'Share-worthy graphics with key insights'
+    },
+    { 
+      name: 'Sales Snippets', 
+      icon: <Target className="w-4 h-4" />, 
+      color: 'border-orange-200 bg-orange-50',
+      isPro: true,
+      description: 'Ready-to-use outreach messages'
+    },
+    { 
+      name: 'One-Pager Recap', 
+      icon: <FileText className="w-4 h-4" />, 
+      color: 'border-purple-200 bg-purple-50',
+      isPro: true,
+      description: 'Professional summary document'
+    },
+    { 
+      name: 'Visual Infographic', 
+      icon: <BarChart3 className="w-4 h-4" />, 
+      color: 'border-emerald-200 bg-emerald-50',
+      isPro: true,
+      description: 'Professional visual content'
+    }
   ];
 
   const handleFileUpload = (file: File) => {
@@ -66,12 +109,17 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, error }) => {
     if (file) handleFileUpload(file);
   };
 
-  const handleAssetToggle = (asset: string) => {
+  const handleAssetToggle = (asset: { name: string; isPro: boolean }) => {
+    // Prevent selection of Pro assets if user is not Pro
+    if (asset.isPro && !isProUser) {
+      return;
+    }
+
     setFormData(prev => ({
       ...prev,
-      selectedAssets: prev.selectedAssets.includes(asset)
-        ? prev.selectedAssets.filter(a => a !== asset)
-        : [...prev.selectedAssets, asset]
+      selectedAssets: prev.selectedAssets.includes(asset.name)
+        ? prev.selectedAssets.filter(a => a !== asset.name)
+        : [...prev.selectedAssets, asset.name]
     }));
   };
 
@@ -82,6 +130,9 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, error }) => {
       onSubmit(formData);
     }
   };
+
+  const freeAssetsCount = assetTypes.filter(asset => !asset.isPro).length;
+  const proAssetsCount = assetTypes.filter(asset => asset.isPro).length;
 
   return (
     <div className="bg-gray-50 min-h-screen py-8">
@@ -313,41 +364,126 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, error }) => {
 
             {/* Asset Selection */}
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-4">
-                <Sparkles className="w-4 h-4 inline mr-2" />
-                Which assets do you want? (select all that apply)
-              </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {assetTypes.map(asset => (
-                  <label
-                    key={asset.name}
-                    className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
-                      formData.selectedAssets.includes(asset.name)
-                        ? `border-blue-500 bg-blue-50 ${asset.color}`
-                        : `border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50`
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formData.selectedAssets.includes(asset.name)}
-                      onChange={() => handleAssetToggle(asset.name)}
-                      className="sr-only"
-                    />
-                    <div className={`w-5 h-5 rounded-lg border-2 mr-3 flex items-center justify-center transition-all duration-200 ${
-                      formData.selectedAssets.includes(asset.name)
-                        ? 'bg-blue-600 border-blue-600'
-                        : 'border-gray-300'
-                    }`}>
-                      {formData.selectedAssets.includes(asset.name) && (
-                        <Check className="w-3 h-3 text-white" />
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {asset.icon}
-                      <span className="font-medium text-gray-900">{asset.name}</span>
-                    </div>
-                  </label>
-                ))}
+              <div className="flex items-center justify-between mb-4">
+                <label className="block text-sm font-semibold text-gray-900">
+                  <Sparkles className="w-4 h-4 inline mr-2" />
+                  Which assets do you want?
+                </label>
+                <div className="text-sm text-gray-600">
+                  <span className="text-success-600 font-medium">{freeAssetsCount} Free</span>
+                  {' • '}
+                  <span className="text-blue-600 font-medium">{proAssetsCount} Pro</span>
+                </div>
+              </div>
+              
+              {/* Free Assets Section */}
+              <div className="mb-6">
+                <div className="flex items-center space-x-2 mb-3">
+                  <div className="w-6 h-6 bg-success-500 rounded-full flex items-center justify-center">
+                    <Check className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm font-semibold text-success-700">Free Assets</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {assetTypes.filter(asset => !asset.isPro).map(asset => (
+                    <label
+                      key={asset.name}
+                      className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                        formData.selectedAssets.includes(asset.name)
+                          ? `border-blue-500 bg-blue-50 ${asset.color}`
+                          : `border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50`
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.selectedAssets.includes(asset.name)}
+                        onChange={() => handleAssetToggle(asset)}
+                        className="sr-only"
+                      />
+                      <div className={`w-5 h-5 rounded-lg border-2 mr-3 flex items-center justify-center transition-all duration-200 ${
+                        formData.selectedAssets.includes(asset.name)
+                          ? 'bg-blue-600 border-blue-600'
+                          : 'border-gray-300'
+                      }`}>
+                        {formData.selectedAssets.includes(asset.name) && (
+                          <Check className="w-3 h-3 text-white" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          {asset.icon}
+                          <span className="font-medium text-gray-900">{asset.name}</span>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1">{asset.description}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Pro Assets Section */}
+              <div>
+                <div className="flex items-center space-x-2 mb-3">
+                  <div className="w-6 h-6 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
+                    <Crown className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm font-semibold text-blue-700">Pro Assets</span>
+                  {!isProUser && (
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Upgrade Required</span>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {assetTypes.filter(asset => asset.isPro).map(asset => {
+                    const isLocked = asset.isPro && !isProUser;
+                    return (
+                      <label
+                        key={asset.name}
+                        className={`flex items-center p-4 border-2 rounded-xl transition-all duration-200 ${
+                          isLocked
+                            ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                            : formData.selectedAssets.includes(asset.name)
+                            ? `border-blue-500 bg-blue-50 ${asset.color} cursor-pointer`
+                            : `border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 cursor-pointer`
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={formData.selectedAssets.includes(asset.name)}
+                          onChange={() => handleAssetToggle(asset)}
+                          className="sr-only"
+                          disabled={isLocked}
+                        />
+                        <div className={`w-5 h-5 rounded-lg border-2 mr-3 flex items-center justify-center transition-all duration-200 ${
+                          isLocked
+                            ? 'border-gray-300 bg-gray-100'
+                            : formData.selectedAssets.includes(asset.name)
+                            ? 'bg-blue-600 border-blue-600'
+                            : 'border-gray-300'
+                        }`}>
+                          {isLocked ? (
+                            <Lock className="w-3 h-3 text-gray-400" />
+                          ) : formData.selectedAssets.includes(asset.name) ? (
+                            <Check className="w-3 h-3 text-white" />
+                          ) : null}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2">
+                            {asset.icon}
+                            <span className={`font-medium ${isLocked ? 'text-gray-500' : 'text-gray-900'}`}>
+                              {asset.name}
+                            </span>
+                            {isLocked && (
+                              <Crown className="w-4 h-4 text-blue-500" />
+                            )}
+                          </div>
+                          <p className={`text-xs mt-1 ${isLocked ? 'text-gray-400' : 'text-gray-600'}`}>
+                            {asset.description}
+                          </p>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
               
               {/* Email Asset Descriptions */}
@@ -363,6 +499,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, error }) => {
                   <div className="flex items-center space-x-2 mb-1">
                     <Mail className="w-4 h-4 text-mint-600" />
                     <span className="text-sm font-medium text-mint-800">Marketing Nurture Emails</span>
+                    <Crown className="w-3 h-3 text-blue-500" />
                   </div>
                   <p className="text-xs text-mint-700">Educational, relationship-building emails for existing leads. Helpful tone with soft CTAs.</p>
                 </div>
@@ -399,7 +536,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, error }) => {
               {(!formData.description || !formData.persona || !formData.funnelStage || 
                 (!formData.file && !formData.youtubeUrl) || formData.selectedAssets.length === 0) && (
                 <p className="text-sm text-gray-500 text-center mt-3">
-                  Please fill in all fields to continue
+                  Please fill in all fields and select at least one asset to continue
                 </p>
               )}
             </div>

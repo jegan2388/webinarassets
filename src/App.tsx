@@ -41,6 +41,7 @@ function App() {
   const [processingStep, setProcessingStep] = useState<string>('');
   const [processingProgress, setProcessingProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
+  const [isProUser, setIsProUser] = useState<boolean>(false); // New state for Pro subscription
 
   const handleStartUpload = () => {
     setCurrentStep('upload');
@@ -148,7 +149,7 @@ function App() {
       case 'landing':
         return <LandingPage onStartUpload={handleStartUpload} onViewPricing={handleViewPricing} onViewTranscription={handleViewTranscription} />;
       case 'upload':
-        return <UploadForm onSubmit={handleFormSubmit} onBack={handleBackToLanding} error={error} />;
+        return <UploadForm onSubmit={handleFormSubmit} onBack={handleBackToLanding} error={error} isProUser={isProUser} />;
       case 'processing':
         return (
           <ProcessingView 
