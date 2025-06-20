@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, Image } from 'lucide-react';
+import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, Image, BarChart3 } from 'lucide-react';
 import { GeneratedAsset } from '../App';
 import { BrandData } from '../services/brandExtraction';
 
@@ -65,6 +65,8 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
         return '📄';
       case 'linkedin visuals':
         return '🎨';
+      case 'visual infographic':
+        return '📊';
       default:
         return '📄';
     }
@@ -84,6 +86,8 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
         return 'border-purple-200 bg-purple-50';
       case 'linkedin visuals':
         return 'border-cyan-200 bg-cyan-50';
+      case 'visual infographic':
+        return 'border-emerald-200 bg-emerald-50';
       default:
         return 'border-gray-200 bg-gray-50';
     }
@@ -310,6 +314,94 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
     );
   };
 
+  const renderVisualInfographic = (asset: GeneratedAsset) => {
+    try {
+      const data = JSON.parse(asset.content);
+      
+      return (
+        <div className="space-y-4">
+          {/* Visual Infographic Image */}
+          {data.imageUrl && (
+            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-lg">
+              <div className="flex items-center space-x-2 mb-4">
+                <BarChart3 className="w-5 h-5 text-emerald-600" />
+                <span className="text-lg font-semibold text-gray-900">Professional Visual Infographic</span>
+              </div>
+              <img 
+                src={data.imageUrl} 
+                alt="Visual infographic" 
+                className="w-full rounded-lg shadow-md"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+          
+          {/* Key Insights Summary */}
+          <div className="bg-white p-6 rounded-xl border border-gray-200">
+            <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <BarChart3 className="w-5 h-5 text-emerald-600 mr-2" />
+              Key Insights Featured
+            </h4>
+            <div className="space-y-3">
+              {data.insights && data.insights.map((insight: string, index: number) => (
+                <div key={index} className="flex items-start space-x-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100">
+                  <div className="w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
+                    {index + 1}
+                  </div>
+                  <p className="text-gray-700 text-sm leading-relaxed">{insight}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Usage Tips */}
+          <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <div className="flex items-center space-x-2 mb-2">
+              <BarChart3 className="w-4 h-4 text-emerald-600" />
+              <span className="text-sm font-medium text-gray-700">Professional Visual Infographic</span>
+            </div>
+            <p className="text-sm text-gray-600">
+              💡 <strong>Usage tip:</strong> This infographic is perfect for presentations, social media posts, 
+              website content, or as a standalone marketing piece. The visual format makes complex information 
+              easily digestible for your {data.targetAudience || 'target audience'}.
+            </p>
+          </div>
+          
+          {/* Error Fallback */}
+          {data.error && (
+            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+              <div className="flex items-center space-x-2 mb-2">
+                <ExternalLink className="w-4 h-4 text-yellow-600" />
+                <span className="text-sm font-medium text-yellow-800">Visual Generation Note</span>
+              </div>
+              <p className="text-sm text-yellow-700 mb-3">{data.fallbackMessage}</p>
+              {data.insights && (
+                <div className="space-y-2">
+                  {data.insights.map((insight: string, index: number) => (
+                    <div key={index} className="text-sm text-yellow-800">
+                      <strong>{index + 1}.</strong> {insight}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    } catch (error) {
+      // Fallback for non-JSON content
+      return (
+        <div className="bg-white rounded-xl p-4 border border-gray-200">
+          <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium leading-relaxed">
+            {asset.content}
+          </pre>
+        </div>
+      );
+    }
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -421,6 +513,8 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
                 renderOnePager(asset.content)
               ) : asset.type === 'LinkedIn Posts' ? (
                 renderLinkedInPost(asset)
+              ) : asset.type === 'Visual Infographic' ? (
+                renderVisualInfographic(asset)
               ) : (
                 <div className="bg-white rounded-xl p-4 border border-gray-200">
                   <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium leading-relaxed">
@@ -461,11 +555,11 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
               <p className="text-sm text-gray-600">Personalize for prospect outreach and follow-up conversations</p>
             </div>
             <div className="text-center p-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-                <RefreshCw className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <BarChart3 className="w-6 h-6 text-white" />
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Repurpose</h4>
-              <p className="text-sm text-gray-600">Adapt for different campaigns, channels, and audience segments</p>
+              <h4 className="font-semibold text-gray-900 mb-2">Infographics</h4>
+              <p className="text-sm text-gray-600">Use in presentations, social media, and marketing materials</p>
             </div>
           </div>
         </div>

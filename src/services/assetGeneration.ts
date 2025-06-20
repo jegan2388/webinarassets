@@ -132,6 +132,90 @@ const generateOnePagerRecap = async (
   }
 };
 
+// Generate Visual Infographic using DALL-E
+const generateVisualInfographic = async (
+  insights: string[],
+  webinarData: WebinarData,
+  brandData?: BrandData | null
+): Promise<GeneratedAsset> => {
+  const openai = getOpenAIClient();
+  
+  try {
+    // Create a comprehensive visual prompt for the infographic
+    const brandColors = brandData?.primaryColor && brandData?.secondaryColor 
+      ? `using brand colors ${brandData.primaryColor} and ${brandData.secondaryColor}` 
+      : 'using professional blue (#2563eb) and teal (#0d9488) colors';
+    
+    const companyName = brandData?.companyName || 'Professional Webinar';
+    
+    // Take the top 4 insights for the infographic
+    const topInsights = insights.slice(0, 4);
+    
+    const visualPrompt = `Create a professional business infographic titled "${webinarData.description}" for ${webinarData.persona}. 
+    
+    Design requirements:
+    - Clean, modern corporate design ${brandColors}
+    - Include 4 key sections/boxes for main insights
+    - Professional typography with clear hierarchy
+    - Icons and visual elements that represent business concepts
+    - Minimal text overlay - focus on visual design structure
+    - Company branding space for "${companyName}"
+    - Layout: vertical infographic format, well-organized sections
+    - Style: corporate, professional, high-quality business presentation
+    - Include subtle geometric patterns and professional gradients
+    - Ensure readability and visual balance
+    
+    The infographic should look like it belongs in a professional business presentation or marketing material.`;
+
+    const response = await openai.images.generate({
+      model: 'dall-e-3',
+      prompt: visualPrompt,
+      n: 1,
+      size: '1024x1792', // Vertical infographic format
+      quality: 'hd',
+      style: 'natural'
+    });
+
+    const imageUrl = response.data[0]?.url;
+    
+    if (!imageUrl) {
+      throw new Error('Failed to generate infographic image');
+    }
+
+    // Create content that includes both the image and key insights
+    const infographicContent = {
+      imageUrl: imageUrl,
+      title: `${webinarData.description} - Key Insights`,
+      insights: topInsights,
+      targetAudience: webinarData.persona,
+      companyName: brandData?.companyName
+    };
+
+    return {
+      id: 'visual-infographic',
+      type: 'Visual Infographic',
+      title: 'Professional Webinar Infographic',
+      content: JSON.stringify(infographicContent),
+      imageUrl: imageUrl
+    };
+
+  } catch (error) {
+    console.error('Visual infographic generation failed:', error);
+    
+    // Return a fallback asset with error information
+    return {
+      id: 'visual-infographic',
+      type: 'Visual Infographic',
+      title: 'Professional Webinar Infographic',
+      content: JSON.stringify({
+        error: 'Failed to generate visual infographic',
+        insights: insights.slice(0, 4),
+        fallbackMessage: 'Visual generation temporarily unavailable. Key insights are provided below.'
+      })
+    };
+  }
+};
+
 // Generate DALL-E image for LinkedIn post
 const generateLinkedInImage = async (
   postContent: string,
@@ -582,27 +666,33 @@ export const generateMarketingAssets = async (
     }
     
     if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('email'))) {
-      onProgress?.('Writing concise, high-converting email copy...', 60);
+      onProgress?.('Writing concise, high-converting email copy...', 55);
       const emailCopy = await generateEmailCopy(insights, webinarData, brandData);
       allAssets.push(...emailCopy);
     }
     
     if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('quote'))) {
-      onProgress?.('Extracting most insightful quotes...', 75);
+      onProgress?.('Extracting most insightful quotes...', 65);
       const quoteCards = await generateQuoteCards(insights, webinarData, brandData);
       allAssets.push(...quoteCards);
     }
     
     if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('sales'))) {
-      onProgress?.('Creating personalized sales snippets...', 85);
+      onProgress?.('Creating personalized sales snippets...', 75);
       const salesSnippets = await generateSalesSnippets(insights, webinarData, brandData);
       allAssets.push(...salesSnippets);
     }
     
     if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('one-pager'))) {
-      onProgress?.('Generating comprehensive one-pager recap...', 90);
+      onProgress?.('Generating comprehensive one-pager recap...', 85);
       const onePager = await generateOnePagerRecap(transcript, webinarData, brandData);
       allAssets.push(onePager);
+    }
+    
+    if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('visual infographic'))) {
+      onProgress?.('Creating professional visual infographic...', 95);
+      const visualInfographic = await generateVisualInfographic(insights, webinarData, brandData);
+      allAssets.push(visualInfographic);
     }
     
     onProgress?.('Finalizing your campaign-ready assets...', 100);
