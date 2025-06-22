@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, ArrowLeft, Check, FileVideo, Youtube, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, BarChart3, UserCheck, TrendingUp, CreditCard, User, Crown, Link, Video, Type } from 'lucide-react';
+import { Upload, ArrowLeft, Check, FileVideo, Youtube, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, BarChart3, UserCheck, TrendingUp, CreditCard, User, Crown, Link, Video, ExternalLink } from 'lucide-react';
 import { ContentData } from '../App';
 import { createCheckoutSession } from '../lib/stripe';
 import { useAuth } from '../hooks/useAuth';
@@ -44,7 +44,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
   const [combinedDescription, setCombinedDescription] = useState('');
   const [showProSummary, setShowProSummary] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
-  const [textContent, setTextContent] = useState('');
+  const [articleUrl, setArticleUrl] = useState('');
 
   // Increased file size limit to 100MB
   const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
@@ -150,8 +150,47 @@ const UploadForm: React.FC<UploadFormProps> = ({
     return 'Video Platform';
   };
 
-  // Validate video URL
-  const isValidVideoUrl = (url: string): boolean => {
+  // Detect content platform from URL
+  const detectContentPlatform = (url: string): string => {
+    if (!url) return 'Unknown';
+    
+    const lowerUrl = url.toLowerCase();
+    
+    if (lowerUrl.includes('medium.com')) {
+      return 'Medium';
+    } else if (lowerUrl.includes('substack.com')) {
+      return 'Substack';
+    } else if (lowerUrl.includes('linkedin.com/pulse') || lowerUrl.includes('linkedin.com/posts')) {
+      return 'LinkedIn Article';
+    } else if (lowerUrl.includes('hubspot.com/blog') || lowerUrl.includes('blog.hubspot.com')) {
+      return 'HubSpot Blog';
+    } else if (lowerUrl.includes('wordpress.com') || lowerUrl.includes('wp.com')) {
+      return 'WordPress';
+    } else if (lowerUrl.includes('ghost.org') || lowerUrl.includes('ghost.io')) {
+      return 'Ghost';
+    } else if (lowerUrl.includes('notion.so') || lowerUrl.includes('notion.site')) {
+      return 'Notion';
+    } else if (lowerUrl.includes('dev.to')) {
+      return 'Dev.to';
+    } else if (lowerUrl.includes('hashnode.com')) {
+      return 'Hashnode';
+    } else if (lowerUrl.includes('webflow.com')) {
+      return 'Webflow';
+    } else if (lowerUrl.includes('squarespace.com')) {
+      return 'Squarespace';
+    } else if (lowerUrl.includes('wix.com')) {
+      return 'Wix';
+    } else if (lowerUrl.includes('github.com') && lowerUrl.includes('readme')) {
+      return 'GitHub README';
+    } else if (lowerUrl.includes('docs.google.com')) {
+      return 'Google Docs';
+    }
+    
+    return 'Blog/Article';
+  };
+
+  // Validate URL
+  const isValidUrl = (url: string): boolean => {
     try {
       new URL(url);
       return true;
@@ -237,7 +276,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
       return;
     }
     
-    if (!combinedDescription || (!formData.file && !videoUrl && !textContent)) {
+    if (!combinedDescription || (!formData.file && !videoUrl && !articleUrl)) {
       return;
     }
 
@@ -248,8 +287,8 @@ const UploadForm: React.FC<UploadFormProps> = ({
       description: combinedDescription,
       persona,
       funnelStage,
-      youtubeUrl: uploadType === 'link' ? videoUrl : undefined,
-      textContent: uploadType === 'text' ? textContent : undefined,
+      youtubeUrl: uploadType === 'link' && videoUrl ? videoUrl : undefined,
+      textContent: uploadType === 'text' && articleUrl ? articleUrl : undefined,
       contentType: uploadType
     };
 
@@ -325,8 +364,8 @@ const UploadForm: React.FC<UploadFormProps> = ({
 
   const isFormValid = combinedDescription && (
     (uploadType === 'file' && formData.file) ||
-    (uploadType === 'link' && isValidVideoUrl(videoUrl)) ||
-    (uploadType === 'text' && textContent.trim().length > 50)
+    (uploadType === 'link' && isValidUrl(videoUrl)) ||
+    (uploadType === 'text' && isValidUrl(articleUrl))
   );
 
   const freeAssets = assetTypes.filter(asset => asset.isFree);
@@ -437,7 +476,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                       : 'border-gray-200 hover:border-gray-300 bg-white'
                   }`}
                 >
-                  <Link className="w-5 h-5 mb-2" />
+                  <Video className="w-5 h-5 mb-2" />
                   <div className="font-medium">Video Link</div>
                   <div className="text-sm text-gray-600">YouTube, Vimeo, HubSpot, etc.</div>
                 </button>
@@ -450,9 +489,9 @@ const UploadForm: React.FC<UploadFormProps> = ({
                       : 'border-gray-200 hover:border-gray-300 bg-white'
                   }`}
                 >
-                  <Type className="w-5 h-5 mb-2" />
-                  <div className="font-medium">Text Content</div>
-                  <div className="text-sm text-gray-600">Blog posts, articles, notes</div>
+                  <ExternalLink className="w-5 h-5 mb-2" />
+                  <div className="font-medium">Article/Blog Link</div>
+                  <div className="text-sm text-gray-600">Medium, LinkedIn, blog posts</div>
                 </button>
               </div>
             </div>
@@ -547,13 +586,13 @@ const UploadForm: React.FC<UploadFormProps> = ({
                       <span className="text-sm font-medium text-blue-900">
                         Detected: {detectVideoPlatform(videoUrl)}
                       </span>
-                      {isValidVideoUrl(videoUrl) ? (
+                      {isValidUrl(videoUrl) ? (
                         <Check className="w-4 h-4 text-success-600" />
                       ) : (
                         <AlertCircle className="w-4 h-4 text-red-600" />
                       )}
                     </div>
-                    {!isValidVideoUrl(videoUrl) && (
+                    {!isValidUrl(videoUrl) && (
                       <p className="text-red-600 text-xs mt-1">Please enter a valid URL</p>
                     )}
                   </div>
@@ -573,29 +612,51 @@ const UploadForm: React.FC<UploadFormProps> = ({
               </div>
             ) : (
               <div>
-                <label htmlFor="text-content" className="block text-sm font-semibold text-gray-900 mb-4">
-                  <Type className="w-4 h-4 inline mr-2" />
-                  Paste your text content
+                <label htmlFor="article-url" className="block text-sm font-semibold text-gray-900 mb-4">
+                  <ExternalLink className="w-4 h-4 inline mr-2" />
+                  Article or Blog Post URL
                 </label>
-                <textarea
-                  id="text-content"
-                  value={textContent}
-                  onChange={(e) => setTextContent(e.target.value)}
-                  placeholder="Paste your blog post, article, meeting notes, or any text content here. Minimum 50 characters required."
-                  rows={12}
-                  className="input-field resize-none"
-                  required
-                />
-                <div className="flex justify-between items-center mt-2">
-                  <p className="text-sm text-gray-500">
-                    {textContent.length} characters {textContent.length < 50 && '(minimum 50 required)'}
-                  </p>
-                  {textContent.length >= 50 && (
-                    <div className="flex items-center space-x-1 text-success-600">
-                      <Check className="w-4 h-4" />
-                      <span className="text-sm">Ready to process</span>
+                <div className="relative">
+                  <Link className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="url"
+                    id="article-url"
+                    value={articleUrl}
+                    onChange={(e) => setArticleUrl(e.target.value)}
+                    placeholder="https://medium.com/@author/article or any blog post URL"
+                    className="input-field pl-12"
+                    required
+                  />
+                </div>
+                {articleUrl && (
+                  <div className="mt-3 p-3 bg-mint-50 rounded-lg border border-mint-200">
+                    <div className="flex items-center space-x-2">
+                      <ExternalLink className="w-4 h-4 text-mint-600" />
+                      <span className="text-sm font-medium text-mint-900">
+                        Detected: {detectContentPlatform(articleUrl)}
+                      </span>
+                      {isValidUrl(articleUrl) ? (
+                        <Check className="w-4 h-4 text-success-600" />
+                      ) : (
+                        <AlertCircle className="w-4 h-4 text-red-600" />
+                      )}
                     </div>
-                  )}
+                    {!isValidUrl(articleUrl) && (
+                      <p className="text-red-600 text-xs mt-1">Please enter a valid URL</p>
+                    )}
+                  </div>
+                )}
+                <p className="text-sm text-gray-500 mt-2">
+                  <strong>Supported platforms:</strong> Medium, Substack, LinkedIn Articles, HubSpot Blog, WordPress, Ghost, Notion, Dev.to, Hashnode, and most blog platforms.
+                </p>
+                <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-900">How it works:</span>
+                  </div>
+                  <p className="text-blue-800 text-xs mt-1">
+                    We'll extract the text content from your article/blog post and use it to generate marketing assets. Make sure the URL is publicly accessible.
+                  </p>
                 </div>
               </div>
             )}
