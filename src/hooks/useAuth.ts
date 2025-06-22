@@ -8,6 +8,9 @@ export interface AuthState {
   profile: Profile | null
   loading: boolean
   isProUser: boolean
+  subscriptionStatus: string
+  monthlyContentLimit: number
+  contentProcessedThisMonth: number
 }
 
 export const useAuth = () => {
@@ -16,7 +19,10 @@ export const useAuth = () => {
     session: null,
     profile: null,
     loading: true,
-    isProUser: false
+    isProUser: false,
+    subscriptionStatus: 'free',
+    monthlyContentLimit: 1,
+    contentProcessedThisMonth: 0
   })
 
   useEffect(() => {
@@ -41,7 +47,10 @@ export const useAuth = () => {
             session,
             profile,
             loading: false,
-            isProUser: profile?.is_pro_user || false
+            isProUser: profile?.subscription_status === 'pro' || profile?.is_pro_user || false,
+            subscriptionStatus: profile?.subscription_status || 'free',
+            monthlyContentLimit: profile?.monthly_content_limit || 1,
+            contentProcessedThisMonth: profile?.content_processed_this_month || 0
           })
           console.log('useAuth: Setting loading to false (session found)')
         } else {
@@ -82,7 +91,10 @@ export const useAuth = () => {
               session,
               profile,
               loading: false,
-              isProUser: profile?.is_pro_user || false
+              isProUser: profile?.subscription_status === 'pro' || profile?.is_pro_user || false,
+              subscriptionStatus: profile?.subscription_status || 'free',
+              monthlyContentLimit: profile?.monthly_content_limit || 1,
+              contentProcessedThisMonth: profile?.content_processed_this_month || 0
             })
             console.log('useAuth: Setting loading to false (auth change with user)')
           } else {
@@ -92,7 +104,10 @@ export const useAuth = () => {
               session: null,
               profile: null,
               loading: false,
-              isProUser: false
+              isProUser: false,
+              subscriptionStatus: 'free',
+              monthlyContentLimit: 1,
+              contentProcessedThisMonth: 0
             })
             console.log('useAuth: Setting loading to false (auth change without user)')
           }
@@ -103,7 +118,10 @@ export const useAuth = () => {
             session: null,
             profile: null,
             loading: false,
-            isProUser: false
+            isProUser: false,
+            subscriptionStatus: 'free',
+            monthlyContentLimit: 1,
+            contentProcessedThisMonth: 0
           })
           console.log('useAuth: Setting loading to false (auth change error)')
         }
@@ -211,7 +229,10 @@ export const useAuth = () => {
     setAuthState(prev => ({
       ...prev,
       profile: data,
-      isProUser: data.is_pro_user
+      isProUser: data.subscription_status === 'pro' || data.is_pro_user,
+      subscriptionStatus: data.subscription_status || 'free',
+      monthlyContentLimit: data.monthly_content_limit || 1,
+      contentProcessedThisMonth: data.content_processed_this_month || 0
     }))
 
     return data

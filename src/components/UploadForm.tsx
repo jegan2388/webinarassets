@@ -1,26 +1,39 @@
 import React, { useState } from 'react';
-import { Upload, ArrowLeft, Check, FileVideo, Youtube, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, BarChart3, UserCheck, TrendingUp, CreditCard, User, Crown, Link, Video } from 'lucide-react';
-import { WebinarData } from '../App';
+import { Upload, ArrowLeft, Check, FileVideo, Youtube, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, BarChart3, UserCheck, TrendingUp, CreditCard, User, Crown, Link, Video, Type } from 'lucide-react';
+import { ContentData } from '../App';
 import { createCheckoutSession } from '../lib/stripe';
 import { useAuth } from '../hooks/useAuth';
 
 interface UploadFormProps {
-  onSubmit: (data: WebinarData) => void;
+  onSubmit: (data: ContentData) => void;
   onBack: () => void;
-  onPaymentPending: (webinarRequestId: string, formData: WebinarData) => void;
+  onPaymentPending: (contentRequestId: string, formData: ContentData) => void;
   error?: string | null;
   isProUser: boolean;
+  subscriptionStatus?: string;
+  monthlyContentLimit?: number;
+  contentProcessedThisMonth?: number;
 }
 
-const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPending, error, isProUser }) => {
+const UploadForm: React.FC<UploadFormProps> = ({ 
+  onSubmit, 
+  onBack, 
+  onPaymentPending, 
+  error, 
+  isProUser,
+  subscriptionStatus = 'free',
+  monthlyContentLimit = 1,
+  contentProcessedThisMonth = 0
+}) => {
   const { user, signUp, signIn } = useAuth();
-  const [formData, setFormData] = useState<WebinarData>({
+  const [formData, setFormData] = useState<ContentData>({
     description: '',
     persona: '',
     funnelStage: '',
-    selectedAssets: ['LinkedIn Posts', 'Sales Outreach Emails'] // Default free assets
+    selectedAssets: ['LinkedIn Posts', 'Sales Outreach Emails'], // Default free assets
+    contentType: 'file'
   });
-  const [uploadType, setUploadType] = useState<'file' | 'link'>('file');
+  const [uploadType, setUploadType] = useState<'file' | 'link' | 'text'>('file');
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showEmailCapture, setShowEmailCapture] = useState(false);
@@ -31,6 +44,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
   const [combinedDescription, setCombinedDescription] = useState('');
   const [showProSummary, setShowProSummary] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
+  const [textContent, setTextContent] = useState('');
 
   // Increased file size limit to 100MB
   const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
@@ -86,6 +100,10 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
       isFree: false
     }
   ];
+
+  // Check if user has reached their monthly limit
+  const hasReachedLimit = contentProcessedThisMonth >= monthlyContentLimit;
+  const remainingContent = Math.max(0, monthlyContentLimit - contentProcessedThisMonth);
 
   // Detect video platform from URL
   const detectVideoPlatform = (url: string): string => {
@@ -150,7 +168,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
     }
 
     if (file && (file.type.startsWith('video/') || file.type.startsWith('audio/'))) {
-      setFormData(prev => ({ ...prev, file }));
+      setFormData(prev => ({ ...prev, file, contentType: 'file' }));
     } else {
       alert('Please upload a valid audio or video file.');
     }
@@ -213,7 +231,13 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!combinedDescription || (!formData.file && !videoUrl)) {
+    // Check if user has reached their monthly limit
+    if (hasReachedLimit && !isProUser) {
+      setShowProSummary(true);
+      return;
+    }
+    
+    if (!combinedDescription || (!formData.file && !videoUrl && !textContent)) {
       return;
     }
 
@@ -224,16 +248,18 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
       description: combinedDescription,
       persona,
       funnelStage,
-      youtubeUrl: uploadType === 'link' ? videoUrl : undefined
+      youtubeUrl: uploadType === 'link' ? videoUrl : undefined,
+      textContent: uploadType === 'text' ? textContent : undefined,
+      contentType: uploadType
     };
 
-    // If only free assets are selected, proceed directly
-    if (assetTier === 'free') {
+    // If only free assets are selected and user is within limits, proceed directly
+    if (assetTier === 'free' && !hasReachedLimit) {
       onSubmit(updatedFormData);
       return;
     }
 
-    // For paid assets, show pro summary first
+    // For paid assets or limit exceeded, show pro summary first
     setFormData(updatedFormData);
     setShowProSummary(true);
   };
@@ -249,14 +275,14 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
     // User is logged in, proceed to payment
     try {
       setIsProcessingPayment(true);
-      const { url, webinarRequestId } = await createCheckoutSession(
+      const { url, contentRequestId } = await createCheckoutSession(
         formData,
         `${window.location.origin}/payment-success`,
         `${window.location.origin}/upload`
       );
 
       window.location.href = url;
-      onPaymentPending(webinarRequestId, formData);
+      onPaymentPending(contentRequestId, formData);
     } catch (err) {
       console.error('Payment initiation error:', err);
       setIsProcessingPayment(false);
@@ -282,14 +308,14 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
         }
       }
 
-      const { url, webinarRequestId } = await createCheckoutSession(
+      const { url, contentRequestId } = await createCheckoutSession(
         formData,
         `${window.location.origin}/payment-success`,
         `${window.location.origin}/upload`
       );
 
       window.location.href = url;
-      onPaymentPending(webinarRequestId, formData);
+      onPaymentPending(contentRequestId, formData);
       
     } catch (err) {
       console.error('Payment initiation error:', err);
@@ -297,7 +323,11 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
     }
   };
 
-  const isFormValid = combinedDescription && (formData.file || (uploadType === 'link' && isValidVideoUrl(videoUrl)));
+  const isFormValid = combinedDescription && (
+    (uploadType === 'file' && formData.file) ||
+    (uploadType === 'link' && isValidVideoUrl(videoUrl)) ||
+    (uploadType === 'text' && textContent.trim().length > 50)
+  );
 
   const freeAssets = assetTypes.filter(asset => asset.isFree);
   const proAssets = assetTypes.filter(asset => !asset.isFree);
@@ -321,6 +351,37 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
           <span>Back to home</span>
         </button>
 
+        {/* Usage Limit Warning */}
+        {hasReachedLimit && !isProUser && (
+          <div className="card p-6 border-yellow-200 bg-yellow-50 mb-8">
+            <div className="flex items-center space-x-3">
+              <AlertCircle className="w-6 h-6 text-yellow-600 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-yellow-900">Monthly Limit Reached</h3>
+                <p className="text-yellow-700 text-sm mt-1">
+                  You've processed {contentProcessedThisMonth} of {monthlyContentLimit} content pieces this month. 
+                  Upgrade to Pro for unlimited processing.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Usage Status for Pro Users */}
+        {isProUser && (
+          <div className="card p-4 border-blue-200 bg-blue-50 mb-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Crown className="w-5 h-5 text-blue-600" />
+                <span className="font-semibold text-blue-900">Pro Account</span>
+              </div>
+              <div className="text-sm text-blue-700">
+                {contentProcessedThisMonth} of {monthlyContentLimit} used this month
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Error Message */}
         {error && (
           <div className="card p-6 border-red-200 bg-red-50 mb-8">
@@ -340,10 +401,10 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
               <Upload className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-3">
-              Upload Your Webinar
+              Upload Your Content
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Tell us about your content and we'll create targeted marketing assets that resonate with your audience
+              Transform any content into targeted marketing assets that resonate with your audience
             </p>
           </div>
 
@@ -351,9 +412,9 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
             {/* Upload Type Toggle */}
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-4">
-                How would you like to upload your webinar?
+                What type of content do you want to remix?
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <button
                   type="button"
                   onClick={() => setUploadType('file')}
@@ -380,14 +441,27 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                   <div className="font-medium">Video Link</div>
                   <div className="text-sm text-gray-600">YouTube, Vimeo, HubSpot, etc.</div>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setUploadType('text')}
+                  className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                    uploadType === 'text'
+                      ? 'border-blue-500 bg-blue-50 text-blue-900'
+                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                  }`}
+                >
+                  <Type className="w-5 h-5 mb-2" />
+                  <div className="font-medium">Text Content</div>
+                  <div className="text-sm text-gray-600">Blog posts, articles, notes</div>
+                </button>
               </div>
             </div>
 
-            {/* File Upload or Video URL */}
+            {/* Content Input Based on Type */}
             {uploadType === 'file' ? (
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-4">
-                  Upload your webinar recording
+                  Upload your content recording
                   <span className="text-sm font-normal text-gray-600 ml-2">
                     (Maximum file size: {formatFileSize(MAX_FILE_SIZE)})
                   </span>
@@ -421,7 +495,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                     <div>
                       <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                       <p className="text-lg font-semibold text-gray-700 mb-2">
-                        Drop your webinar file here
+                        Drop your content file here
                       </p>
                       <p className="text-gray-500 mb-6">
                         or click to browse your files
@@ -449,7 +523,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                   )}
                 </div>
               </div>
-            ) : (
+            ) : uploadType === 'link' ? (
               <div>
                 <label htmlFor="video-url" className="block text-sm font-semibold text-gray-900 mb-4">
                   <Video className="w-4 h-4 inline mr-2" />
@@ -497,12 +571,39 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                   </p>
                 </div>
               </div>
+            ) : (
+              <div>
+                <label htmlFor="text-content" className="block text-sm font-semibold text-gray-900 mb-4">
+                  <Type className="w-4 h-4 inline mr-2" />
+                  Paste your text content
+                </label>
+                <textarea
+                  id="text-content"
+                  value={textContent}
+                  onChange={(e) => setTextContent(e.target.value)}
+                  placeholder="Paste your blog post, article, meeting notes, or any text content here. Minimum 50 characters required."
+                  rows={12}
+                  className="input-field resize-none"
+                  required
+                />
+                <div className="flex justify-between items-center mt-2">
+                  <p className="text-sm text-gray-500">
+                    {textContent.length} characters {textContent.length < 50 && '(minimum 50 required)'}
+                  </p>
+                  {textContent.length >= 50 && (
+                    <div className="flex items-center space-x-1 text-success-600">
+                      <Check className="w-4 h-4" />
+                      <span className="text-sm">Ready to process</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
 
             {/* Combined Description */}
             <div>
               <label htmlFor="combined-description" className="block text-sm font-semibold text-gray-900 mb-4">
-                Tell us about your webinar and who it's for
+                Tell us about your content and who it's for
               </label>
               <textarea
                 id="combined-description"
@@ -514,7 +615,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                 required
               />
               <p className="text-sm text-gray-500 mt-2">
-                Include your webinar topic, target audience, and key takeaways. Our AI will automatically categorize this for optimal asset generation.
+                Include your content topic, target audience, and key takeaways. Our AI will automatically categorize this for optimal asset generation.
               </p>
             </div>
 
@@ -540,98 +641,100 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
               </p>
             </div>
 
-            {/* Asset Tier Selection */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-4">
-                <Sparkles className="w-4 h-4 inline mr-2" />
-                Choose your asset package
-              </label>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Free Assets */}
-                <label
-                  className={`p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
-                    assetTier === 'free'
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="assetTier"
-                    value="free"
-                    checked={assetTier === 'free'}
-                    onChange={() => handleAssetTierChange('free')}
-                    className="sr-only"
-                  />
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      assetTier === 'free' ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
-                    }`}>
-                      {assetTier === 'free' && <div className="w-2 h-2 bg-white rounded-full" />}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">Remix into Free Assets</h3>
-                      <p className="text-sm text-gray-600">Perfect for trying out the platform</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    {freeAssets.map(asset => (
-                      <div key={asset.name} className="flex items-center space-x-2 text-sm text-gray-700">
-                        <Check className="w-4 h-4 text-success-500" />
-                        <span>{asset.name}</span>
-                      </div>
-                    ))}
-                  </div>
+            {/* Asset Tier Selection - Only show if user has remaining content or is Pro */}
+            {(!hasReachedLimit || isProUser) && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-4">
+                  <Sparkles className="w-4 h-4 inline mr-2" />
+                  Choose your asset package
                 </label>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Free Assets */}
+                  <label
+                    className={`p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                      assetTier === 'free'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="assetTier"
+                      value="free"
+                      checked={assetTier === 'free'}
+                      onChange={() => handleAssetTierChange('free')}
+                      className="sr-only"
+                    />
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        assetTier === 'free' ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
+                      }`}>
+                        {assetTier === 'free' && <div className="w-2 h-2 bg-white rounded-full" />}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Free Assets</h3>
+                        <p className="text-sm text-gray-600">Perfect for trying out the platform</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {freeAssets.map(asset => (
+                        <div key={asset.name} className="flex items-center space-x-2 text-sm text-gray-700">
+                          <Check className="w-4 h-4 text-success-500" />
+                          <span>{asset.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </label>
 
-                {/* Pro Assets */}
-                <label
-                  className={`p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 relative ${
-                    assetTier === 'pro'
-                      ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="assetTier"
-                    value="pro"
-                    checked={assetTier === 'pro'}
-                    onChange={() => handleAssetTierChange('pro')}
-                    className="sr-only"
-                  />
-                  <div className="absolute top-3 right-3">
-                    <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                      $4.99
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      assetTier === 'pro' ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
-                    }`}>
-                      {assetTier === 'pro' && <div className="w-2 h-2 bg-white rounded-full" />}
+                  {/* Pro Assets */}
+                  <label
+                    className={`p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 relative ${
+                      assetTier === 'pro'
+                        ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50'
+                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="assetTier"
+                      value="pro"
+                      checked={assetTier === 'pro'}
+                      onChange={() => handleAssetTierChange('pro')}
+                      className="sr-only"
+                    />
+                    <div className="absolute top-3 right-3">
+                      <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                        Pro Only
+                      </span>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 flex items-center space-x-2">
-                        <span>Remix into Full Campaign Kit</span>
-                        <Crown className="w-4 h-4 text-blue-600" />
-                      </h3>
-                      <p className="text-sm text-gray-600">Everything you need for a complete campaign</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-sm text-gray-700 font-medium mb-2">Includes all free assets plus:</div>
-                    {proAssets.map(asset => (
-                      <div key={asset.name} className="flex items-center space-x-2 text-sm text-gray-700">
-                        <Check className="w-4 h-4 text-blue-600" />
-                        <span>{asset.name}</span>
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        assetTier === 'pro' ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
+                      }`}>
+                        {assetTier === 'pro' && <div className="w-2 h-2 bg-white rounded-full" />}
                       </div>
-                    ))}
-                  </div>
-                </label>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 flex items-center space-x-2">
+                          <span>Full Campaign Kit</span>
+                          <Crown className="w-4 h-4 text-blue-600" />
+                        </h3>
+                        <p className="text-sm text-gray-600">Everything you need for a complete campaign</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="text-sm text-gray-700 font-medium mb-2">Includes all free assets plus:</div>
+                      {proAssets.map(asset => (
+                        <div key={asset.name} className="flex items-center space-x-2 text-sm text-gray-700">
+                          <Check className="w-4 h-4 text-blue-600" />
+                          <span>{asset.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </label>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* API Key Notice */}
             {!import.meta.env.VITE_OPENAI_API_KEY && (
@@ -661,21 +764,31 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                     <CreditCard className="w-5 h-5 animate-pulse" />
                     <span>Processing...</span>
                   </>
-                ) : assetTier === 'pro' ? (
+                ) : hasReachedLimit && !isProUser ? (
                   <>
-                    <CreditCard className="w-5 h-5" />
-                    <span>Continue to Payment ($4.99)</span>
+                    <Crown className="w-5 h-5" />
+                    <span>Upgrade to Continue</span>
+                  </>
+                ) : assetTier === 'pro' && !isProUser ? (
+                  <>
+                    <Crown className="w-5 h-5" />
+                    <span>Upgrade to Pro</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5" />
-                    <span>Generate Free Assets</span>
+                    <span>Generate Assets</span>
                   </>
                 )}
               </button>
               {!isFormValid && (
                 <p className="text-sm text-gray-500 text-center mt-3">
                   Please fill in all required fields to continue
+                </p>
+              )}
+              {remainingContent > 0 && !isProUser && (
+                <p className="text-sm text-gray-600 text-center mt-3">
+                  {remainingContent} content piece{remainingContent !== 1 ? 's' : ''} remaining this month
                 </p>
               )}
             </div>
@@ -691,31 +804,33 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                   <Crown className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  Full Campaign Kit - $4.99
+                  {hasReachedLimit ? 'Upgrade to Continue' : 'Upgrade to Pro - $39/month'}
                 </h3>
-                <div className="inline-flex items-center space-x-2 bg-red-50 text-red-700 px-3 py-1 rounded-full text-sm font-medium border border-red-200">
-                  <span>🔥 50% off today!</span>
-                </div>
+                {hasReachedLimit && (
+                  <div className="inline-flex items-center space-x-2 bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 mb-4">
+                    <span>Monthly limit reached</span>
+                  </div>
+                )}
               </div>
               
               <div className="space-y-4 mb-6">
-                <h4 className="font-semibold text-gray-900">What's included:</h4>
+                <h4 className="font-semibold text-gray-900">Pro subscription includes:</h4>
                 <div className="grid grid-cols-1 gap-3">
                   <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
                     <Check className="w-5 h-5 text-blue-600" />
-                    <span className="text-sm text-gray-700">4x more assets than free version</span>
+                    <span className="text-sm text-gray-700">10 content remixes per month</span>
                   </div>
                   <div className="flex items-center space-x-3 p-3 bg-indigo-50 rounded-lg">
                     <Check className="w-5 h-5 text-indigo-600" />
-                    <span className="text-sm text-gray-700">Branded quote visuals with your colors</span>
+                    <span className="text-sm text-gray-700">All 7 asset types included</span>
                   </div>
                   <div className="flex items-center space-x-3 p-3 bg-mint-50 rounded-lg">
                     <Check className="w-5 h-5 text-mint-600" />
-                    <span className="text-sm text-gray-700">Professional nurture email sequences</span>
+                    <span className="text-sm text-gray-700">Branded visuals with your colors</span>
                   </div>
                   <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
                     <Check className="w-5 h-5 text-purple-600" />
-                    <span className="text-sm text-gray-700">One-pager recap & infographics</span>
+                    <span className="text-sm text-gray-700">Priority processing & support</span>
                   </div>
                 </div>
               </div>
@@ -734,7 +849,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                   ) : (
                     <>
                       <CreditCard className="w-4 h-4" />
-                      <span>Pay $4.99</span>
+                      <span>Upgrade to Pro</span>
                     </>
                   )}
                 </button>
@@ -742,7 +857,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                   onClick={() => setShowProSummary(false)}
                   className="btn-secondary"
                 >
-                  Back
+                  Cancel
                 </button>
               </div>
             </div>
@@ -754,10 +869,10 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="card max-w-md w-full p-8 bg-white">
               <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                Create Account & Pay
+                Create Account & Subscribe
               </h3>
               <p className="text-gray-600 mb-6">
-                Create an account to securely process your payment and access your premium assets.
+                Create an account to subscribe to Pro and access unlimited content processing.
               </p>
               
               <form onSubmit={handleEmailSubmit} className="space-y-4">
@@ -806,7 +921,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                     ) : (
                       <>
                         <CreditCard className="w-4 h-4" />
-                        <span>Pay $4.99</span>
+                        <span>Subscribe to Pro</span>
                       </>
                     )}
                   </button>
@@ -821,7 +936,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
               </form>
               
               <p className="text-xs text-gray-500 mt-4 text-center">
-                By continuing, you agree to create an account and proceed with secure payment via Stripe.
+                By continuing, you agree to create an account and subscribe to our Pro plan.
               </p>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { WebinarData, GeneratedAsset } from '../App';
+import { ContentData, GeneratedAsset } from '../App';
 import { BrandData } from './brandExtraction';
 
 // Initialize OpenAI client
@@ -16,7 +16,7 @@ const getOpenAIClient = (): OpenAI => {
   });
 };
 
-// Extract key insights from webinar transcript
+// Extract key insights from content transcript
 const extractInsights = async (transcript: string, description: string): Promise<string[]> => {
   const openai = getOpenAIClient();
   
@@ -25,7 +25,7 @@ const extractInsights = async (transcript: string, description: string): Promise
     messages: [
       {
         role: 'system',
-        content: `You are an expert content strategist. Extract the 5-7 most valuable, actionable insights from this webinar transcript. Focus on:
+        content: `You are an expert content strategist. Extract the 5-7 most valuable, actionable insights from this content. Focus on:
         - Key takeaways that would be valuable to share
         - Actionable strategies or frameworks mentioned
         - Surprising statistics or data points
@@ -44,7 +44,7 @@ const extractInsights = async (transcript: string, description: string): Promise
       },
       {
         role: 'user',
-        content: `Webinar Topic: ${description}\n\nTranscript: ${transcript.slice(0, 8000)}` // Limit to avoid token limits
+        content: `Content Topic: ${description}\n\nContent: ${transcript.slice(0, 8000)}` // Limit to avoid token limits
       }
     ],
     temperature: 0.3,
@@ -63,7 +63,7 @@ const extractInsights = async (transcript: string, description: string): Promise
 // Generate One-Pager Recap
 const generateOnePagerRecap = async (
   transcript: string,
-  webinarData: WebinarData,
+  contentData: ContentData,
   brandData?: BrandData | null
 ): Promise<GeneratedAsset> => {
   const openai = getOpenAIClient();
@@ -77,17 +77,17 @@ const generateOnePagerRecap = async (
     messages: [
       {
         role: 'system',
-        content: `You are a professional content strategist creating a one-page webinar recap document. Create a structured document with exactly these sections and word limits:
+        content: `You are a professional content strategist creating a one-page content recap document. Create a structured document with exactly these sections and word limits:
 
         STRUCTURE REQUIREMENTS:
         1. Quick Session Overview (50 words max) - Brief summary of what was covered
-        2. Key Quote from Speaker (20 words max) - Most impactful direct quote from the transcript
-        3. 4 Key Takeaways (25 words each) - Most valuable insights attendees can implement
+        2. Key Quote from Content (20 words max) - Most impactful direct quote from the content
+        3. 4 Key Takeaways (25 words each) - Most valuable insights readers can implement
         
         FORMAT REQUIREMENTS:
         - Return as structured JSON with sections: "overview", "quote", "takeaways" (array of 4 strings)
         - Each section must stay within word limits
-        - Use professional, engaging language appropriate for ${webinarData.persona}
+        - Use professional, engaging language appropriate for ${contentData.persona}
         - Focus on actionable insights and practical value
         - Make it scannable and easy to digest
         
@@ -99,12 +99,12 @@ const generateOnePagerRecap = async (
       },
       {
         role: 'user',
-        content: `${brandContext}Create a one-page recap for the webinar "${webinarData.description}" targeting ${webinarData.persona}.
+        content: `${brandContext}Create a one-page recap for the content "${contentData.description}" targeting ${contentData.persona}.
         
-        Use this transcript to extract the content (focus on the most valuable parts):
+        Use this content to extract the information (focus on the most valuable parts):
         ${transcript.slice(0, 6000)}
         
-        Funnel Stage: ${webinarData.funnelStage}
+        Funnel Stage: ${contentData.funnelStage}
         
         Remember: Follow the exact structure and word limits specified.`
       }
@@ -118,7 +118,7 @@ const generateOnePagerRecap = async (
     return {
       id: 'one-pager-recap',
       type: 'One-Pager Recap',
-      title: 'Webinar Session Recap',
+      title: 'Content Session Recap',
       content: JSON.stringify(content)
     };
   } catch (error) {
@@ -126,7 +126,7 @@ const generateOnePagerRecap = async (
     return {
       id: 'one-pager-recap',
       type: 'One-Pager Recap',
-      title: 'Webinar Session Recap',
+      title: 'Content Session Recap',
       content: response.choices[0].message.content || ''
     };
   }
@@ -135,7 +135,7 @@ const generateOnePagerRecap = async (
 // Generate Visual Infographic using DALL-E
 const generateVisualInfographic = async (
   insights: string[],
-  webinarData: WebinarData,
+  contentData: ContentData,
   brandData?: BrandData | null
 ): Promise<GeneratedAsset> => {
   const openai = getOpenAIClient();
@@ -146,12 +146,12 @@ const generateVisualInfographic = async (
       ? `using brand colors ${brandData.primaryColor} and ${brandData.secondaryColor}` 
       : 'using professional blue (#2563eb) and teal (#0d9488) colors';
     
-    const companyName = brandData?.companyName || 'Professional Webinar';
+    const companyName = brandData?.companyName || 'Professional Content';
     
     // Take the top 4 insights for the infographic
     const topInsights = insights.slice(0, 4);
     
-    const visualPrompt = `Create a professional business infographic titled "${webinarData.description}" for ${webinarData.persona}. 
+    const visualPrompt = `Create a professional business infographic titled "${contentData.description}" for ${contentData.persona}. 
     
     Design requirements:
     - Clean, modern corporate design ${brandColors}
@@ -185,16 +185,16 @@ const generateVisualInfographic = async (
     // Create content that includes both the image and key insights
     const infographicContent = {
       imageUrl: imageUrl,
-      title: `${webinarData.description} - Key Insights`,
+      title: `${contentData.description} - Key Insights`,
       insights: topInsights,
-      targetAudience: webinarData.persona,
+      targetAudience: contentData.persona,
       companyName: brandData?.companyName
     };
 
     return {
       id: 'visual-infographic',
       type: 'Visual Infographic',
-      title: 'Professional Webinar Infographic',
+      title: 'Professional Content Infographic',
       content: JSON.stringify(infographicContent),
       imageUrl: imageUrl
     };
@@ -206,10 +206,10 @@ const generateVisualInfographic = async (
     return {
       id: 'visual-infographic',
       type: 'Visual Infographic',
-      title: 'Professional Webinar Infographic',
+      title: 'Professional Content Infographic',
       content: JSON.stringify({
         error: 'Failed to generate visual infographic',
-        insights: insights.slice(0, 4),
+        insights: insights.slice(0,4),
         fallbackMessage: 'Visual generation temporarily unavailable. Key insights are provided below.'
       })
     };
@@ -219,7 +219,7 @@ const generateVisualInfographic = async (
 // Generate LinkedIn posts
 const generateLinkedInPosts = async (
   insights: string[], 
-  webinarData: WebinarData,
+  contentData: ContentData,
   brandData?: BrandData | null
 ): Promise<GeneratedAsset[]> => {
   const openai = getOpenAIClient();
@@ -257,14 +257,14 @@ const generateLinkedInPosts = async (
           - Keep posts between 150-250 words for optimal engagement
           - Lead with value, not promotion
           - Share personal insights or behind-the-scenes perspectives
-          - Include 3-5 relevant hashtags for ${webinarData.persona}
+          - Include 3-5 relevant hashtags for ${contentData.persona}
           - Make the value clear and immediately actionable
           
           TONE & STYLE:
           - Professional but conversational and relatable
           - Confident without being arrogant
           - Helpful and generous with insights
-          - Match the sophistication level of ${webinarData.funnelStage} audience
+          - Match the sophistication level of ${contentData.funnelStage} audience
           
           AVOID:
           - Generic corporate speak
@@ -274,12 +274,12 @@ const generateLinkedInPosts = async (
         },
         {
           role: 'user',
-          content: `${brandContext}Create a highly engaging LinkedIn post based on this insight from our webinar "${webinarData.description}" for ${webinarData.persona}:
+          content: `${brandContext}Create a highly engaging LinkedIn post based on this insight from our content "${contentData.description}" for ${contentData.persona}:
 
           Key Insight: ${insight}
           
-          Funnel Stage: ${webinarData.funnelStage}
-          Target Audience: ${webinarData.persona}
+          Funnel Stage: ${contentData.funnelStage}
+          Target Audience: ${contentData.persona}
           
           Make this post irresistible to read and share. Focus on creating genuine engagement and discussion.`
         }
@@ -304,7 +304,7 @@ const generateLinkedInPosts = async (
 // Generate Sales Outreach Emails
 const generateSalesOutreachEmails = async (
   insights: string[], 
-  webinarData: WebinarData,
+  contentData: ContentData,
   brandData?: BrandData | null
 ): Promise<GeneratedAsset[]> => {
   const openai = getOpenAIClient();
@@ -332,13 +332,13 @@ const generateSalesOutreachEmails = async (
         STRUCTURE (80-100 words max):
         - Subject line: Curiosity-driven, specific, under 50 characters
         - Brief personal connection or relevant observation
-        - ONE valuable insight from the webinar as immediate value
+        - ONE valuable insight from the content as immediate value
         - Clear, specific ask for a brief conversation
         - Professional but warm sign-off
         
         BEST PRACTICES:
         - Use "you" language, focus on their potential benefit
-        - Include social proof (webinar attendance/insights)
+        - Include social proof (content insights)
         - Make the ask low-commitment (15-min call, quick chat)
         - Avoid: "I hope this email finds you well" and other clichés
         - Sound human: use contractions, natural language
@@ -347,10 +347,10 @@ const generateSalesOutreachEmails = async (
       },
       {
         role: 'user',
-        content: `${brandContext}Create a cold sales outreach email referencing our webinar "${webinarData.description}" for ${webinarData.persona}.
+        content: `${brandContext}Create a cold sales outreach email referencing our content "${contentData.description}" for ${contentData.persona}.
         
         Key insight to include: ${insights[0]}
-        Funnel stage: ${webinarData.funnelStage}
+        Funnel stage: ${contentData.funnelStage}
         
         Make it feel personal, valuable, and impossible to ignore.`
       }
@@ -372,7 +372,7 @@ const generateSalesOutreachEmails = async (
     messages: [
       {
         role: 'system',
-        content: `Create a warm sales follow-up email for someone who attended the webinar:
+        content: `Create a warm sales follow-up email for someone who engaged with the content:
 
         TONE & APPROACH:
         - Warm but professional, building on existing relationship
@@ -381,15 +381,15 @@ const generateSalesOutreachEmails = async (
         - Natural conversation starter
         
         STRUCTURE (60-80 words max):
-        - Subject line: Reference webinar attendance, create urgency
-        - Brief thanks for attending
-        - Connect their attendance to a specific next step
+        - Subject line: Reference content engagement, create urgency
+        - Brief thanks for engaging
+        - Connect their engagement to a specific next step
         - Reference value they received
         - Suggest logical progression based on their funnel stage
         
         BEST PRACTICES:
-        - Assume they found value in the webinar
-        - Reference specific content they heard
+        - Assume they found value in the content
+        - Reference specific content they engaged with
         - Make the next step feel natural and beneficial
         - Keep it short - they already know you
         
@@ -397,11 +397,11 @@ const generateSalesOutreachEmails = async (
       },
       {
         role: 'user',
-        content: `${brandContext}Create a warm follow-up email for webinar attendees of "${webinarData.description}".
+        content: `${brandContext}Create a warm follow-up email for people who engaged with "${contentData.description}".
         
         Key value they received: ${insights[0]}
-        Target: ${webinarData.persona}
-        Stage: ${webinarData.funnelStage}
+        Target: ${contentData.persona}
+        Stage: ${contentData.funnelStage}
         
         Make it feel like a natural next step in the conversation.`
       }
@@ -413,7 +413,7 @@ const generateSalesOutreachEmails = async (
   emails.push({
     id: 'sales-warm-followup',
     type: 'Sales Outreach Emails',
-    title: 'Warm Attendee Follow-up',
+    title: 'Warm Engagement Follow-up',
     content: warmResponse.choices[0].message.content || ''
   });
   
@@ -423,7 +423,7 @@ const generateSalesOutreachEmails = async (
 // Generate Marketing Nurture Emails
 const generateMarketingNurtureEmails = async (
   insights: string[], 
-  webinarData: WebinarData,
+  contentData: ContentData,
   brandData?: BrandData | null
 ): Promise<GeneratedAsset[]> => {
   const openai = getOpenAIClient();
@@ -451,8 +451,8 @@ const generateMarketingNurtureEmails = async (
         STRUCTURE (120-150 words max):
         - Subject line: Value-focused, educational angle
         - Warm greeting acknowledging their interest
-        - 2-3 key takeaways from the webinar with brief explanations
-        - Soft call-to-action (resource, next webinar, etc.)
+        - 2-3 key takeaways from the content with brief explanations
+        - Soft call-to-action (resource, next content, etc.)
         - Helpful sign-off
         
         BEST PRACTICES:
@@ -467,12 +467,12 @@ const generateMarketingNurtureEmails = async (
       },
       {
         role: 'user',
-        content: `${brandContext}Create an educational nurture email for leads interested in "${webinarData.description}" targeting ${webinarData.persona}.
+        content: `${brandContext}Create an educational nurture email for leads interested in "${contentData.description}" targeting ${contentData.persona}.
         
         Key insights to share:
         ${insights.slice(0, 3).map((insight, i) => `${i + 1}. ${insight}`).join('\n')}
         
-        Funnel Stage: ${webinarData.funnelStage}
+        Funnel Stage: ${contentData.funnelStage}
         
         Focus on building trust and providing value.`
       }
@@ -505,7 +505,7 @@ const generateMarketingNurtureEmails = async (
         STRUCTURE (100-120 words max):
         - Subject line: Resource/tool focused
         - Context about why you're sharing this
-        - Brief recap of webinar value
+        - Brief recap of content value
         - Offer additional resources or tools
         - Gentle invitation to engage further
         
@@ -520,10 +520,10 @@ const generateMarketingNurtureEmails = async (
       },
       {
         role: 'user',
-        content: `${brandContext}Create a resource-sharing email for "${webinarData.description}" audience.
+        content: `${brandContext}Create a resource-sharing email for "${contentData.description}" audience.
         
         Key insight to build on: ${insights[1] || insights[0]}
-        Target: ${webinarData.persona}
+        Target: ${contentData.persona}
         
         Focus on being helpful and building the relationship.`
       }
@@ -545,7 +545,7 @@ const generateMarketingNurtureEmails = async (
 // Generate quote cards with brand-aware styling
 const generateQuoteCards = async (
   insights: string[], 
-  webinarData: WebinarData,
+  contentData: ContentData,
   brandData?: BrandData | null
 ): Promise<GeneratedAsset[]> => {
   const openai = getOpenAIClient();
@@ -561,13 +561,13 @@ const generateQuoteCards = async (
         - Reveal a new perspective or challenge common assumptions
         - Provide profound realizations or "aha!" moments
         - Highly actionable with immediate practical value
-        - Encapsulate core messages or key findings from the webinar
+        - Encapsulate core messages or key findings from the content
         - Self-contained and impactful out of context
         
         QUOTE CHARACTERISTICS:
         - Concise (under 40 words for visual impact)
         - Memorable and thought-provoking
-        - Relevant and valuable to ${webinarData.persona}
+        - Relevant and valuable to ${contentData.persona}
         - Shareable and discussion-worthy
         - Avoid generic advice - focus on unique insights
         
@@ -582,7 +582,7 @@ const generateQuoteCards = async (
       },
       {
         role: 'user',
-        content: `Extract the most insightful, quotable statements from these webinar insights about "${webinarData.description}" for ${webinarData.persona}:
+        content: `Extract the most insightful, quotable statements from these content insights about "${contentData.description}" for ${contentData.persona}:
         
         ${insights.join('\n\n')}
         
@@ -612,7 +612,7 @@ const generateQuoteCards = async (
 // Generate sales snippets
 const generateSalesSnippets = async (
   insights: string[], 
-  webinarData: WebinarData,
+  contentData: ContentData,
   brandData?: BrandData | null
 ): Promise<GeneratedAsset[]> => {
   const openai = getOpenAIClient();
@@ -633,14 +633,14 @@ const generateSalesSnippets = async (
         
         REQUIREMENTS:
         - Under 200 characters (LinkedIn limit)
-        - Reference the webinar as credible social proof
-        - Personalized for ${webinarData.persona}
+        - Reference the content as credible social proof
+        - Personalized for ${contentData.persona}
         - Conversational and professional tone
         - Clear value proposition
         
         STRUCTURE:
         - Brief personal connection
-        - Webinar reference
+        - Content reference
         - Value offer
         - Connection request
         
@@ -648,7 +648,7 @@ const generateSalesSnippets = async (
       },
       {
         role: 'user',
-        content: `${brandContext}Create a LinkedIn connection request for ${webinarData.persona} referencing our webinar "${webinarData.description}".
+        content: `${brandContext}Create a LinkedIn connection request for ${contentData.persona} referencing our content "${contentData.description}".
         
         Key insight: ${insights[0]}
         
@@ -676,13 +676,13 @@ const generateSalesSnippets = async (
         
         APPROACH:
         - Confident but respectful
-        - Reference webinar attendance or interest
+        - Reference content engagement or interest
         - Quick value statement
         - Permission-based conversation starter
         
         STRUCTURE (30-40 words):
         - Greeting and introduction
-        - Webinar reference
+        - Content reference
         - Value proposition
         - Permission to continue
         
@@ -690,7 +690,7 @@ const generateSalesSnippets = async (
       },
       {
         role: 'user',
-        content: `${brandContext}Create a phone call opener for ${webinarData.persona} who attended "${webinarData.description}".
+        content: `${brandContext}Create a phone call opener for ${contentData.persona} who engaged with "${contentData.description}".
         
         Key value: ${insights[0]}
         
@@ -714,18 +714,18 @@ const generateSalesSnippets = async (
 // Main function to generate all assets
 export const generateMarketingAssets = async (
   transcript: string,
-  webinarData: WebinarData,
+  contentData: ContentData,
   brandData?: BrandData | null,
   onProgress?: (step: string, progress: number) => void
 ): Promise<GeneratedAsset[]> => {
   try {
-    onProgress?.('Analyzing webinar content for key insights...', 15);
+    onProgress?.('Analyzing content for key insights...', 15);
     
     // Extract key insights from transcript
-    const insights = await extractInsights(transcript, webinarData.description);
+    const insights = await extractInsights(transcript, contentData.description);
     
     if (insights.length === 0) {
-      throw new Error('Could not extract meaningful insights from the webinar content. Please ensure your audio contains substantial discussion or presentation content.');
+      throw new Error('Could not extract meaningful insights from the content. Please ensure your content contains substantial discussion or valuable information.');
     }
 
     onProgress?.('Generating high-quality marketing assets...', 35);
@@ -733,45 +733,45 @@ export const generateMarketingAssets = async (
     const allAssets: GeneratedAsset[] = [];
     
     // Generate assets based on selected types
-    if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('linkedin posts'))) {
+    if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('linkedin posts'))) {
       onProgress?.('Creating engaging LinkedIn posts...', 45);
-      const linkedInPosts = await generateLinkedInPosts(insights, webinarData, brandData);
+      const linkedInPosts = await generateLinkedInPosts(insights, contentData, brandData);
       allAssets.push(...linkedInPosts);
     }
     
-    if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('sales outreach emails'))) {
+    if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('sales outreach emails'))) {
       onProgress?.('Writing direct, value-focused sales emails...', 55);
-      const salesEmails = await generateSalesOutreachEmails(insights, webinarData, brandData);
+      const salesEmails = await generateSalesOutreachEmails(insights, contentData, brandData);
       allAssets.push(...salesEmails);
     }
     
-    if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('marketing nurture emails'))) {
+    if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('marketing nurture emails'))) {
       onProgress?.('Creating educational nurture emails...', 65);
-      const nurtureEmails = await generateMarketingNurtureEmails(insights, webinarData, brandData);
+      const nurtureEmails = await generateMarketingNurtureEmails(insights, contentData, brandData);
       allAssets.push(...nurtureEmails);
     }
     
-    if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('quote'))) {
+    if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('quote'))) {
       onProgress?.('Extracting most insightful quotes...', 75);
-      const quoteCards = await generateQuoteCards(insights, webinarData, brandData);
+      const quoteCards = await generateQuoteCards(insights, contentData, brandData);
       allAssets.push(...quoteCards);
     }
     
-    if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('sales snippets'))) {
+    if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('sales snippets'))) {
       onProgress?.('Creating personalized sales snippets...', 85);
-      const salesSnippets = await generateSalesSnippets(insights, webinarData, brandData);
+      const salesSnippets = await generateSalesSnippets(insights, contentData, brandData);
       allAssets.push(...salesSnippets);
     }
     
-    if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('one-pager'))) {
+    if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('one-pager'))) {
       onProgress?.('Generating comprehensive one-pager recap...', 90);
-      const onePager = await generateOnePagerRecap(transcript, webinarData, brandData);
+      const onePager = await generateOnePagerRecap(transcript, contentData, brandData);
       allAssets.push(onePager);
     }
     
-    if (webinarData.selectedAssets.some(asset => asset.toLowerCase().includes('visual infographic'))) {
+    if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('visual infographic'))) {
       onProgress?.('Creating professional visual infographic...', 95);
-      const visualInfographic = await generateVisualInfographic(insights, webinarData, brandData);
+      const visualInfographic = await generateVisualInfographic(insights, contentData, brandData);
       allAssets.push(visualInfographic);
     }
     

@@ -15,7 +15,7 @@ import { extractBrandElements, BrandData } from './services/brandExtraction';
 import { useAuth } from './hooks/useAuth';
 import { createCheckoutSession } from './lib/stripe';
 
-export interface WebinarData {
+export interface ContentData {
   file?: File;
   description: string;
   persona: string;
@@ -23,6 +23,8 @@ export interface WebinarData {
   selectedAssets: string[];
   youtubeUrl?: string;
   companyWebsiteUrl?: string;
+  textContent?: string;
+  contentType: 'file' | 'link' | 'text';
 }
 
 export interface GeneratedAsset {
@@ -36,11 +38,12 @@ export interface GeneratedAsset {
 
 function App() {
   const [currentStep, setCurrentStep] = useState<'landing' | 'upload' | 'payment_pending' | 'processing' | 'output' | 'pricing' | 'transcription' | 'dashboard'>('landing');
-  const [webinarData, setWebinarData] = useState<WebinarData>({
+  const [contentData, setContentData] = useState<ContentData>({
     description: '',
     persona: '',
     funnelStage: '',
-    selectedAssets: []
+    selectedAssets: [],
+    contentType: 'file'
   });
   const [generatedAssets, setGeneratedAssets] = useState<GeneratedAsset[]>([]);
   const [brandData, setBrandData] = useState<BrandData | null>(null);
@@ -48,11 +51,11 @@ function App() {
   const [processingProgress, setProcessingProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [showAuth, setShowAuth] = useState(false);
-  const [pendingWebinarRequestId, setPendingWebinarRequestId] = useState<string | null>(null);
-  const [currentWebinarRequestId, setCurrentWebinarRequestId] = useState<string | null>(null);
-  const [viewingWebinarRequest, setViewingWebinarRequest] = useState<any>(null);
+  const [pendingContentRequestId, setPendingContentRequestId] = useState<string | null>(null);
+  const [currentContentRequestId, setCurrentContentRequestId] = useState<string | null>(null);
+  const [viewingContentRequest, setViewingContentRequest] = useState<any>(null);
 
-  const { user, isProUser, loading: authLoading } = useAuth();
+  const { user, isProUser, loading: authLoading, subscriptionStatus, monthlyContentLimit, contentProcessedThisMonth } = useAuth();
 
   const handleStartUpload = () => {
     setCurrentStep('upload');
@@ -62,16 +65,16 @@ function App() {
     setCurrentStep('dashboard');
   };
 
-  const handlePaymentPending = (webinarRequestId: string, formData: WebinarData) => {
-    setPendingWebinarRequestId(webinarRequestId);
-    setCurrentWebinarRequestId(webinarRequestId);
-    setWebinarData(formData);
+  const handlePaymentPending = (contentRequestId: string, formData: ContentData) => {
+    setPendingContentRequestId(contentRequestId);
+    setCurrentContentRequestId(contentRequestId);
+    setContentData(formData);
     setCurrentStep('payment_pending');
   };
 
-  const handlePaymentSuccess = async (formData: WebinarData, webinarRequestId?: string) => {
-    setWebinarData(formData);
-    setCurrentWebinarRequestId(webinarRequestId || null);
+  const handlePaymentSuccess = async (formData: ContentData, contentRequestId?: string) => {
+    setContentData(formData);
+    setCurrentContentRequestId(contentRequestId || null);
     setCurrentStep('processing');
     setError(null);
     
@@ -93,8 +96,13 @@ function App() {
         }
       }
       
-      // Step 1: Get transcript
-      if (formData.file) {
+      // Step 1: Get transcript based on content type
+      if (formData.contentType === 'text' && formData.textContent) {
+        // Use text content directly as transcript
+        transcript = formData.textContent;
+        setProcessingStep('Processing your text content...');
+        setProcessingProgress(25);
+      } else if (formData.file) {
         setProcessingStep('Transcribing audio...');
         setProcessingProgress(15);
         
@@ -105,10 +113,10 @@ function App() {
           throw new Error('Transcript is too short or empty. Please ensure your audio is clear and contains speech.');
         }
       } else if (formData.youtubeUrl) {
-        // For now, show error for YouTube - we'd need a backend service for this
-        throw new Error('YouTube URL processing requires a backend service. Please upload a file instead.');
+        // For now, show error for video URLs - we'd need a backend service for this
+        throw new Error('Video URL processing requires a backend service. Please upload a file or use text content instead.');
       } else {
-        throw new Error('No audio source provided.');
+        throw new Error('No content source provided.');
       }
       
       setProcessingStep('Analyzing content and generating assets...');
@@ -146,7 +154,7 @@ function App() {
 
   const handlePaymentFailed = () => {
     setCurrentStep('upload');
-    setPendingWebinarRequestId(null);
+    setPendingContentRequestId(null);
     setError('Payment was cancelled or failed. Please try again.');
     
     // Clear error after a few seconds
@@ -157,20 +165,21 @@ function App() {
 
   const handleBackToLanding = () => {
     setCurrentStep('landing');
-    setWebinarData({
+    setContentData({
       description: '',
       persona: '',
       funnelStage: '',
-      selectedAssets: []
+      selectedAssets: [],
+      contentType: 'file'
     });
     setGeneratedAssets([]);
     setBrandData(null);
     setError(null);
     setProcessingStep('');
     setProcessingProgress(0);
-    setPendingWebinarRequestId(null);
-    setCurrentWebinarRequestId(null);
-    setViewingWebinarRequest(null);
+    setPendingContentRequestId(null);
+    setCurrentContentRequestId(null);
+    setViewingContentRequest(null);
   };
 
   const handleViewPricing = () => {
@@ -189,10 +198,10 @@ function App() {
     setShowAuth(false);
   };
 
-  const handleViewAssets = (webinarRequest: any) => {
-    setViewingWebinarRequest(webinarRequest);
-    setWebinarData(webinarRequest.form_data);
-    setCurrentWebinarRequestId(webinarRequest.id);
+  const handleViewAssets = (contentRequest: any) => {
+    setViewingContentRequest(contentRequest);
+    setContentData(contentRequest.form_data);
+    setCurrentContentRequestId(contentRequest.id);
     
     // Mock assets for now - in production, these would be stored in the database
     const mockAssets: GeneratedAsset[] = [
@@ -200,12 +209,12 @@ function App() {
         id: 'linkedin-1',
         type: 'LinkedIn Posts',
         title: 'Engaging LinkedIn Post 1',
-        content: `🚀 Just discovered a game-changing insight from our latest webinar on "${webinarRequest.form_data.description}"
+        content: `🚀 Just discovered a game-changing insight from our latest content on "${contentRequest.form_data.description}"
 
 The biggest takeaway? Most teams are missing this one crucial step that could 3x their results.
 
 Here's what we learned:
-→ [Key insight from your webinar]
+→ [Key insight from your content]
 → [Specific strategy mentioned]
 → [Actionable tip for implementation]
 
@@ -223,7 +232,7 @@ Hi [Name],
 
 I noticed you're focused on scaling [Company] and thought you'd find this interesting.
 
-We just ran a webinar showing how companies like yours are increasing conversion rates by 40% using a simple automation tweak.
+We just shared insights showing how companies like yours are increasing conversion rates by 40% using a simple automation tweak.
 
 The key insight? Most teams are optimizing the wrong part of their funnel.
 
@@ -235,17 +244,17 @@ Best,
     ];
 
     // Add pro assets if this was a paid request
-    if (webinarRequest.amount_paid > 0) {
+    if (contentRequest.amount_paid > 0) {
       mockAssets.push(
         {
           id: 'nurture-1',
           type: 'Marketing Nurture Emails',
           title: 'Educational Value Email',
-          content: `Subject: 3 insights from our latest webinar you'll want to bookmark
+          content: `Subject: 3 insights from our latest content you'll want to bookmark
 
 Hi [Name],
 
-Thanks for your interest in our recent webinar on "${webinarRequest.form_data.description}".
+Thanks for your interest in our recent content on "${contentRequest.form_data.description}".
 
 Here are the 3 key takeaways that are already helping teams like yours:
 
@@ -273,13 +282,13 @@ Best,
     setCurrentStep('output');
   };
 
-  const handleUpgradeWebinar = async (webinarRequest: any) => {
+  const handleUpgradeContent = async (contentRequest: any) => {
     try {
       const { url } = await createCheckoutSession(
-        webinarRequest.form_data,
+        contentRequest.form_data,
         `${window.location.origin}/dashboard`,
         `${window.location.origin}/dashboard`,
-        webinarRequest.id
+        contentRequest.id
       );
       
       window.location.href = url;
@@ -312,7 +321,7 @@ Best,
           <Dashboard
             onBack={handleBackToLanding}
             onViewAssets={handleViewAssets}
-            onUpgradeWebinar={handleUpgradeWebinar}
+            onUpgradeContent={handleUpgradeContent}
             onRemixAgain={handleStartUpload}
           />
         );
@@ -324,12 +333,15 @@ Best,
             onPaymentPending={handlePaymentPending}
             error={error} 
             isProUser={isProUser}
+            subscriptionStatus={subscriptionStatus}
+            monthlyContentLimit={monthlyContentLimit}
+            contentProcessedThisMonth={contentProcessedThisMonth}
           />
         );
       case 'payment_pending':
         return (
           <PaymentPending
-            webinarRequestId={pendingWebinarRequestId!}
+            contentRequestId={pendingContentRequestId!}
             onPaymentSuccess={handlePaymentSuccess}
             onPaymentFailed={handlePaymentFailed}
             onBack={user ? handleViewDashboard : handleBackToLanding}
@@ -338,7 +350,7 @@ Best,
       case 'processing':
         return (
           <ProcessingView 
-            webinarData={webinarData} 
+            contentData={contentData} 
             currentStep={processingStep}
             progress={processingProgress}
           />
@@ -350,8 +362,8 @@ Best,
             brandData={brandData} 
             onBack={user ? handleViewDashboard : handleBackToLanding} 
             onViewPricing={handleViewPricing}
-            webinarRequestId={currentWebinarRequestId}
-            currentWebinarData={webinarData}
+            contentRequestId={currentContentRequestId}
+            currentContentData={contentData}
           />
         );
       case 'pricing':
@@ -363,7 +375,7 @@ Best,
           <Dashboard
             onBack={handleBackToLanding}
             onViewAssets={handleViewAssets}
-            onUpgradeWebinar={handleUpgradeWebinar}
+            onUpgradeContent={handleUpgradeContent}
             onRemixAgain={handleStartUpload}
           />
         ) : (
@@ -408,9 +420,9 @@ Best,
           
           {/* Tooltip */}
           <div className="absolute bottom-full right-0 mb-2 w-64 bg-gray-900 text-white text-sm rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-            <div className="font-semibold mb-1">WebinarRemix Demo</div>
+            <div className="font-semibold mb-1">ContentRemix Demo</div>
             <div className="text-xs text-gray-300">
-              AI-powered tool that transforms webinar content into 7 campaign-ready marketing assets. 
+              AI-powered tool that transforms any content (recordings, text, videos) into 7 campaign-ready marketing assets. 
               Upload → AI Analysis → Professional Assets in minutes.
             </div>
             <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>

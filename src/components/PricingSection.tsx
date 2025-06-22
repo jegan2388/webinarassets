@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Check, Zap, Crown, Building, Sparkles, CreditCard } from 'lucide-react';
+import { ArrowLeft, Check, Zap, Crown, Building, Sparkles, CreditCard, Users, FileText, BarChart3 } from 'lucide-react';
 
 interface PricingSectionProps {
   onBack: () => void;
@@ -8,70 +8,98 @@ interface PricingSectionProps {
 const PricingSection: React.FC<PricingSectionProps> = ({ onBack }) => {
   const plans = [
     {
-      name: 'Pay Per Webinar',
-      icon: <CreditCard className="w-6 h-6" />,
-      price: '$4.99',
-      period: 'per webinar',
-      description: 'Perfect for occasional use and testing the platform',
+      name: 'Free',
+      icon: <FileText className="w-6 h-6" />,
+      price: '$0',
+      period: 'per month',
+      description: 'Perfect for trying out the platform',
       features: [
-        'All 7 asset types included',
-        'Brand-styled quote cards',
-        'Professional infographics',
-        'LinkedIn posts & email copy',
-        'One-pager recap document',
-        'Sales snippets & outreach',
-        'Instant processing'
+        '1 content remix per month',
+        '2 basic asset types (LinkedIn posts, sales emails)',
+        'Basic transcription',
+        'Standard processing speed',
+        'Community support'
       ],
-      cta: 'Upload Webinar',
-      popular: true,
-      color: 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50'
+      cta: 'Get Started Free',
+      popular: false,
+      color: 'border-gray-200 bg-white',
+      limits: '1 content piece/month'
     },
     {
-      name: 'Pro Account',
+      name: 'Pro',
       icon: <Crown className="w-6 h-6" />,
-      price: 'Coming Soon',
-      period: '',
-      description: 'Advanced features for power users and teams',
+      price: '$39',
+      period: 'per month',
+      description: 'Everything you need for consistent content creation',
       features: [
-        'Everything in Pay Per Webinar',
-        'Bulk processing discounts',
-        'Custom asset templates',
-        'Team collaboration tools',
-        'Priority support',
-        'Advanced analytics',
-        'API access',
-        'White-label options'
+        '10 content remixes per month',
+        'All 7 asset types included',
+        'Brand-styled quote cards & visuals',
+        'Professional infographics',
+        'Nurture email sequences',
+        'Sales snippets & one-pagers',
+        'Priority processing',
+        'Email support'
       ],
-      cta: 'Join Waitlist',
-      popular: false,
-      color: 'border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50'
+      cta: 'Start Pro Trial',
+      popular: true,
+      color: 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50',
+      limits: '10 content pieces/month'
     }
+  ];
+
+  const contentTypes = [
+    {
+      icon: <FileText className="w-5 h-5" />,
+      title: 'Audio & Video Files',
+      description: 'Webinars, podcasts, meetings, presentations'
+    },
+    {
+      icon: <BarChart3 className="w-5 h-5" />,
+      title: 'Video Links',
+      description: 'YouTube, Vimeo, HubSpot, Loom, Zoom recordings'
+    },
+    {
+      icon: <Users className="w-5 h-5" />,
+      title: 'Text Content',
+      description: 'Blog posts, articles, meeting notes, transcripts'
+    }
+  ];
+
+  const assetTypes = [
+    'LinkedIn Posts',
+    'Sales Outreach Emails',
+    'Marketing Nurture Emails',
+    'Quote Cards & Visuals',
+    'Sales Snippets',
+    'One-Pager Recaps',
+    'Visual Infographics'
   ];
 
   const faqs = [
     {
-      question: "What's included in the $4.99 payment?",
-      answer: "You get all 7 asset types: LinkedIn posts, sales emails, nurture emails, quote cards, sales snippets, one-pager recap, and visual infographics - all generated from your single webinar."
+      question: "What counts as a 'content remix'?",
+      answer: "One content remix = processing one piece of content (audio file, video link, or text document) to generate marketing assets. Each upload or text input counts as one remix."
     },
     {
-      question: "How does the payment work?",
-      answer: "It's a simple one-time payment of $4.99 per webinar. Upload your content, pay securely via Stripe, and get your assets generated immediately."
+      question: "What's included in the Pro plan?",
+      answer: "Pro includes 10 content remixes per month, all 7 asset types, branded visuals with your company colors, priority processing, and email support."
     },
     {
-      question: "Can I customize the generated assets?",
-      answer: "Yes! All generated content can be edited and customized. We also extract your brand colors and styling from your website if provided."
+      question: "Can I upgrade or downgrade anytime?",
+      answer: "Yes! You can upgrade to Pro anytime. If you downgrade, you'll keep Pro features until your current billing period ends."
     },
     {
       question: "What file formats do you support?",
-      answer: "We support MP4, MP3, WAV, M4A, and most common audio/video formats. Files must be under 25MB for processing."
+      answer: "We support MP4, MP3, WAV, M4A, WebM, MOV, AVI files up to 100MB. For video links, we support YouTube, Vimeo, HubSpot, Loom, Zoom, and many more platforms."
     },
     {
       question: "How long does processing take?",
-      answer: "Most webinars are processed within 2-5 minutes, depending on length and complexity. You'll see real-time progress updates."
+      answer: "Most content is processed within 2-5 minutes. Pro users get priority processing for faster results during peak times."
     },
     {
-      question: "Is there a refund policy?",
-      answer: "Yes, if we're unable to generate quality assets from your webinar content, we offer a full refund within 24 hours of processing."
+      question: "Do unused remixes roll over?",
+      answer: "No, unused remixes don't roll over to the next month. Your remix count resets at the beginning of each billing cycle."
     }
   ];
 
@@ -89,14 +117,32 @@ const PricingSection: React.FC<PricingSectionProps> = ({ onBack }) => {
         <div className="text-center mb-16 animate-fade-in">
           <div className="inline-flex items-center space-x-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6 border border-blue-100">
             <Sparkles className="w-4 h-4" />
-            <span>Simple, Transparent Pricing</span>
+            <span>Simple Monthly Pricing</span>
           </div>
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Choose Your Plan
+            Transform Any Content Into Marketing Assets
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Transform your webinars into campaign-ready assets. Pay only for what you use.
+            From webinars to blog posts, turn your content into campaign-ready assets with AI
           </p>
+        </div>
+
+        {/* Content Types */}
+        <div className="mb-16">
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
+            Works With Any Content Type
+          </h2>
+          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            {contentTypes.map((type, index) => (
+              <div key={index} className="card p-6 text-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  {type.icon}
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">{type.title}</h3>
+                <p className="text-sm text-gray-600">{type.description}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Pricing Cards */}
@@ -129,10 +175,9 @@ const PricingSection: React.FC<PricingSectionProps> = ({ onBack }) => {
               <div className="text-center mb-8">
                 <div className="flex items-baseline justify-center space-x-1">
                   <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
-                  {plan.period && (
-                    <span className="text-gray-600">/{plan.period}</span>
-                  )}
+                  <span className="text-gray-600">/{plan.period}</span>
                 </div>
+                <p className="text-sm text-gray-500 mt-2">{plan.limits}</p>
               </div>
 
               <ul className="space-y-4 mb-8">
@@ -153,7 +198,6 @@ const PricingSection: React.FC<PricingSectionProps> = ({ onBack }) => {
                     ? 'btn-primary'
                     : 'btn-secondary'
                 }`}
-                disabled={plan.name === 'Pro Account'}
               >
                 {plan.cta}
               </button>
@@ -161,38 +205,61 @@ const PricingSection: React.FC<PricingSectionProps> = ({ onBack }) => {
           ))}
         </div>
 
-        {/* Value Proposition */}
+        {/* Asset Types */}
         <div className="card p-12 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100 mb-20">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Why Choose Pay-Per-Webinar?
+              7 Professional Asset Types
             </h2>
             <p className="text-lg text-gray-600">
-              No subscriptions, no commitments. Pay only when you need assets generated.
+              Every piece of content becomes a complete marketing campaign
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            {assetTypes.map((asset, index) => (
+              <div key={index} className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-blue-100">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Check className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-gray-700 font-medium">{asset}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Value Proposition */}
+        <div className="card p-12 bg-gradient-to-br from-mint-50 to-teal-50 border-mint-100 mb-20">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Why Choose Monthly Subscriptions?
+            </h2>
+            <p className="text-lg text-gray-600">
+              Predictable pricing for consistent content creation
             </p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center p-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-r from-mint-500 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
                 <CreditCard className="w-6 h-6 text-white" />
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">No Monthly Fees</h4>
-              <p className="text-sm text-gray-600">Only pay when you actually use the service. Perfect for occasional webinar creators.</p>
+              <h4 className="font-semibold text-gray-900 mb-2">Predictable Costs</h4>
+              <p className="text-sm text-gray-600">Know exactly what you'll spend each month. No surprise charges or per-use fees.</p>
+            </div>
+            <div className="text-center p-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <h4 className="font-semibold text-gray-900 mb-2">Consistent Quality</h4>
+              <p className="text-sm text-gray-600">Regular content creation with professional-grade assets every time.</p>
             </div>
             <div className="text-center p-4">
               <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <h4 className="font-semibold text-gray-900 mb-2">All Features Included</h4>
-              <p className="text-sm text-gray-600">Get access to all 7 asset types, brand styling, and professional templates with every payment.</p>
-            </div>
-            <div className="text-center p-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-mint-500 to-mint-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
                 <Zap className="w-6 h-6 text-white" />
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Instant Processing</h4>
-              <p className="text-sm text-gray-600">Upload, pay, and get your assets within minutes. No waiting, no queues.</p>
+              <h4 className="font-semibold text-gray-900 mb-2">Scale Your Content</h4>
+              <p className="text-sm text-gray-600">Process multiple pieces of content monthly to fuel your marketing campaigns.</p>
             </div>
           </div>
         </div>
@@ -220,17 +287,17 @@ const PricingSection: React.FC<PricingSectionProps> = ({ onBack }) => {
         {/* CTA Section */}
         <div className="text-center py-20">
           <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-            Ready to Transform Your Webinar?
+            Ready to Transform Your Content?
           </h2>
           <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-            Upload your webinar and get professional marketing assets in minutes for just $4.99
+            Start with our free plan and upgrade when you need more content processing power
           </p>
           <button
             onClick={onBack}
             className="btn-primary text-lg px-8 py-4 inline-flex items-center space-x-2"
           >
-            <CreditCard className="w-5 h-5" />
-            <span>Upload Your Webinar</span>
+            <span>Get Started Free</span>
+            <ArrowRight className="w-6 h-6" />
           </button>
         </div>
       </div>

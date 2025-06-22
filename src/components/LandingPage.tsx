@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, Zap, Target, Mail, MessageSquare, Quote, TrendingUp, ArrowRight, Play, Sparkles, Users, Clock, FileAudio, User, Crown, CheckCircle, BarChart3 } from 'lucide-react';
+import { Upload, Zap, Target, Mail, MessageSquare, Quote, TrendingUp, ArrowRight, Play, Sparkles, Users, Clock, FileAudio, User, Crown, CheckCircle, BarChart3, FileText, Type, Link } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import UserMenu from './UserMenu';
 import AuthModal from './AuthModal';
@@ -12,7 +12,7 @@ interface LandingPageProps {
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing, onViewTranscription, onShowAuth }) => {
-  const { user, isProUser } = useAuth();
+  const { user, isProUser, subscriptionStatus, monthlyContentLimit, contentProcessedThisMonth } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   const handleTryItFree = () => {
@@ -33,41 +33,41 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
     onStartUpload();
   };
 
-  const features = [
+  const contentTypes = [
     {
-      icon: <MessageSquare className="w-6 h-6 text-blue-600" />,
-      title: "LinkedIn Posts",
-      description: "Engaging social content that drives awareness and thought leadership",
+      icon: <FileText className="w-6 h-6 text-blue-600" />,
+      title: "Audio & Video Files",
+      description: "Webinars, podcasts, meetings, presentations",
       color: "bg-blue-50 border-blue-100",
-      isFree: true
+      examples: "MP4, MP3, WAV, M4A files"
     },
     {
-      icon: <Mail className="w-6 h-6 text-red-600" />,
-      title: "Sales Outreach",
-      description: "Direct, value-focused emails for cold and warm prospects",
+      icon: <Link className="w-6 h-6 text-red-600" />,
+      title: "Video Links",
+      description: "YouTube, Vimeo, HubSpot, Loom, Zoom recordings",
       color: "bg-red-50 border-red-100",
-      isFree: true
+      examples: "Any video platform URL"
     },
     {
-      icon: <Mail className="w-6 h-6 text-mint-600" />,
-      title: "Nurture Emails",
-      description: "Educational, relationship-building email sequences",
+      icon: <Type className="w-6 h-6 text-mint-600" />,
+      title: "Text Content",
+      description: "Blog posts, articles, meeting notes, transcripts",
       color: "bg-mint-50 border-mint-100",
-      isFree: false
+      examples: "Paste any text content"
     },
     {
       icon: <Quote className="w-6 h-6 text-indigo-600" />,
       title: "Quote Visuals",
-      description: "Share-worthy graphics with key insights from your webinar",
+      description: "Share-worthy graphics with key insights from your content",
       color: "bg-indigo-50 border-indigo-100",
-      isFree: false
+      examples: "Branded visual quotes"
     }
   ];
 
   const stats = [
     { value: "7", label: "Marketing Assets", subtext: "Generated automatically" },
-    { value: "5min", label: "Processing Time", subtext: "From upload to assets" },
-    { value: "73%", label: "Time Saved", subtext: "vs manual creation" }
+    { value: "3min", label: "Processing Time", subtext: "From upload to assets" },
+    { value: "85%", label: "Time Saved", subtext: "vs manual creation" }
   ];
 
   return (
@@ -79,7 +79,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
             <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
               <Zap className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900">WebinarRemix</span>
+            <span className="text-xl font-bold text-gray-900">ContentRemix</span>
           </div>
           <div className="flex items-center space-x-4">
             <button
@@ -114,18 +114,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
           <div className="max-w-4xl mx-auto animate-fade-in">
             <div className="inline-flex items-center space-x-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6 border border-blue-100">
               <Sparkles className="w-4 h-4" />
-              <span>AI-Powered Content Generation</span>
+              <span>AI-Powered Content Transformation</span>
             </div>
             
             <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              Turn Your Webinar into
+              Transform Any Content into
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 block mt-2">
                 7 Campaign-Ready Assets
               </span>
             </h1>
             
             <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-              Upload your webinar. Get LinkedIn posts, sales emails, and more — crafted for B2B marketers who need results fast.
+              Upload recordings, paste text, or share video links. Get LinkedIn posts, sales emails, and more — crafted for B2B marketers who need results fast.
             </p>
             
             {/* User Status Banner */}
@@ -138,12 +138,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
                 {isProUser ? (
                   <>
                     <Crown className="w-4 h-4" />
-                    <span>Pro Account - All Features Unlocked</span>
+                    <span>Pro Account - {monthlyContentLimit - contentProcessedThisMonth} remixes remaining this month</span>
                   </>
                 ) : (
                   <>
                     <User className="w-4 h-4" />
-                    <span>Free Account - 2 Asset Types Available</span>
+                    <span>Free Account - {monthlyContentLimit - contentProcessedThisMonth} remix remaining this month</span>
                   </>
                 )}
               </div>
@@ -156,7 +156,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
                 className="btn-primary text-xl px-12 py-5 flex items-center space-x-3 group shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300"
               >
                 <Upload className="w-6 h-6" />
-                <span>Try It Free – No Credit Card Needed</span>
+                <span>Start Free – No Credit Card Needed</span>
                 <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </button>
               <p className="text-sm text-gray-500 mt-3">
@@ -171,7 +171,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
                   <div className="text-center text-white">
                     <Play className="w-16 h-16 mx-auto mb-4 opacity-80" />
                     <p className="text-lg font-semibold">Watch 30-Second Demo</p>
-                    <p className="text-sm opacity-80">See how a webinar becomes 7 marketing assets</p>
+                    <p className="text-sm opacity-80">See how any content becomes 7 marketing assets</p>
                   </div>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
@@ -189,7 +189,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
                     <Upload className="w-8 h-8 text-white" />
                   </div>
                   <h4 className="font-semibold text-gray-900 mb-1">Upload</h4>
-                  <p className="text-sm text-gray-600">Drop your webinar file</p>
+                  <p className="text-sm text-gray-600">Drop files, paste text, or share links</p>
                 </div>
                 <ArrowRight className="w-6 h-6 text-gray-300 mx-4" />
                 <div className="text-center flex-1">
@@ -223,28 +223,53 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
           </div>
         </div>
 
+        {/* Content Types Section */}
+        <div className="py-20">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+              Works With Any Content Type
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              From recordings to text, transform any content into professional marketing assets
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {contentTypes.map((type, index) => (
+              <div key={index} className={`card p-6 group hover:scale-105 transition-all duration-200 border-2 ${type.color}`}>
+                <div className="mb-4">
+                  {type.icon}
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{type.title}</h3>
+                <p className="text-gray-600 text-sm leading-relaxed mb-3">{type.description}</p>
+                <p className="text-xs text-gray-500 italic">{type.examples}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Testimonials/Social Proof */}
         <div className="py-16">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Trusted by Marketing Teams
+              Trusted by Content Creators
             </h2>
             <p className="text-lg text-gray-600">
-              Join hundreds of B2B marketers who've streamlined their content creation
+              Join hundreds of marketers who've streamlined their content creation
             </p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-12">
             <div className="card p-6 text-center">
-              <div className="text-2xl font-bold text-blue-600 mb-2">500+</div>
-              <div className="text-sm text-gray-600">Webinars Processed</div>
+              <div className="text-2xl font-bold text-blue-600 mb-2">1,200+</div>
+              <div className="text-sm text-gray-600">Content Pieces Processed</div>
             </div>
             <div className="card p-6 text-center">
-              <div className="text-2xl font-bold text-mint-600 mb-2">3,500+</div>
+              <div className="text-2xl font-bold text-mint-600 mb-2">8,400+</div>
               <div className="text-sm text-gray-600">Assets Generated</div>
             </div>
             <div className="card p-6 text-center">
-              <div className="text-2xl font-bold text-indigo-600 mb-2">95%</div>
+              <div className="text-2xl font-bold text-indigo-600 mb-2">97%</div>
               <div className="text-sm text-gray-600">Customer Satisfaction</div>
             </div>
           </div>
@@ -272,47 +297,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900">David Johnson</p>
-                  <p className="text-sm text-gray-600">Sales Manager, GrowthCo</p>
+                  <p className="text-sm text-gray-600">Content Manager, GrowthCo</p>
                 </div>
               </div>
               <p className="text-gray-700 italic">
-                "The sales emails generated from our product demo webinar had a 40% higher open rate than our usual campaigns."
+                "I paste my blog posts and get instant social media content. It's like having a marketing team in my pocket."
               </p>
             </div>
-          </div>
-        </div>
-
-        {/* Features Grid */}
-        <div className="py-20">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Everything You Need for Your Next Campaign
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              From social media to sales outreach, we've got every touchpoint covered with AI-generated content
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
-              <div key={index} className={`card p-6 group hover:scale-105 transition-all duration-200 border-2 ${feature.color} relative`}>
-                {!feature.isFree && (
-                  <div className="absolute top-3 right-3">
-                    <Crown className="w-4 h-4 text-blue-600" />
-                  </div>
-                )}
-                <div className="mb-4">
-                  {feature.icon}
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
-                {!feature.isFree && (
-                  <div className="mt-3">
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Pro Feature</span>
-                  </div>
-                )}
-              </div>
-            ))}
           </div>
         </div>
 
@@ -335,14 +326,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
                   <div className="w-12 h-12 bg-gray-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg">
                     <CheckCircle className="w-6 h-6" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Free Assets</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Free</h3>
                   <p className="text-gray-600 text-sm">Perfect for trying out the platform</p>
                 </div>
                 
                 <div className="text-center mb-8">
                   <div className="flex items-baseline justify-center space-x-1">
-                    <span className="text-4xl font-bold text-gray-900">Free</span>
+                    <span className="text-4xl font-bold text-gray-900">$0</span>
+                    <span className="text-gray-600">/month</span>
                   </div>
+                  <p className="text-sm text-gray-500 mt-2">1 content remix/month</p>
                 </div>
 
                 <ul className="space-y-4 mb-8">
@@ -364,7 +357,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
                   onClick={handleTryItFree}
                   className="w-full btn-secondary py-3"
                 >
-                  Try Free Assets
+                  Start Free
                 </button>
               </div>
 
@@ -380,15 +373,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
                   <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg">
                     <Crown className="w-6 h-6" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Full Campaign Kit</h3>
-                  <p className="text-gray-600 text-sm">Everything you need for a complete campaign</p>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Pro</h3>
+                  <p className="text-gray-600 text-sm">Everything you need for consistent content creation</p>
                 </div>
                 
                 <div className="text-center mb-8">
                   <div className="flex items-baseline justify-center space-x-1">
-                    <span className="text-4xl font-bold text-gray-900">$4.99</span>
-                    <span className="text-gray-600">/webinar</span>
+                    <span className="text-4xl font-bold text-gray-900">$39</span>
+                    <span className="text-gray-600">/month</span>
                   </div>
+                  <p className="text-sm text-gray-500 mt-2">10 content remixes/month</p>
                 </div>
 
                 <ul className="space-y-4 mb-8">
@@ -410,7 +404,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
                   </li>
                   <li className="flex items-center space-x-3">
                     <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                    <span className="text-gray-700 text-sm">One-pager recap document</span>
+                    <span className="text-gray-700 text-sm">Priority processing</span>
                   </li>
                 </ul>
 
@@ -418,7 +412,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
                   onClick={handleTryItFree}
                   className="w-full btn-primary py-3"
                 >
-                  Get Full Campaign Kit
+                  Start Pro Trial
                 </button>
               </div>
             </div>
@@ -429,7 +423,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
         <div className="text-center py-20">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Ready to Transform Your Webinar Content?
+              Ready to Transform Your Content?
             </h2>
             <p className="text-lg text-gray-600 mb-8">
               Stop spending hours creating marketing assets. Let AI do the heavy lifting while you focus on strategy.
@@ -438,7 +432,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
               onClick={handleTryItFree}
               className="btn-primary text-xl px-12 py-5 inline-flex items-center space-x-3"
             >
-              <span>Try It Free – No Credit Card Needed</span>
+              <span>Start Free – No Credit Card Needed</span>
               <ArrowRight className="w-6 h-6" />
             </button>
           </div>
@@ -450,7 +444,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
             <div className="w-6 h-6 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
               <Zap className="w-4 h-4 text-white" />
             </div>
-            <span>© 2024 WebinarRemix. Built for modern B2B marketers.</span>
+            <span>© 2024 ContentRemix. Built for modern content creators.</span>
           </div>
         </footer>
       </div>

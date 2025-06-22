@@ -17,9 +17,17 @@ export interface Profile {
   webinars_processed_count: number
   created_at: string
   updated_at: string
+  subscription_status: 'free' | 'pro' | 'canceled' | 'past_due'
+  stripe_customer_id?: string
+  stripe_subscription_id?: string
+  current_plan_id?: string
+  monthly_content_limit: number
+  content_processed_this_month: number
+  subscription_ends_at?: string
+  last_billed_at?: string
 }
 
-export interface WebinarRequest {
+export interface ContentRequest {
   id: string
   user_id: string
   stripe_session_id: string | null
@@ -29,6 +37,11 @@ export interface WebinarRequest {
   created_at: string
   updated_at: string
   processed_at: string | null
+  subscription_tier: 'free' | 'pro'
+  content_type: 'file' | 'link' | 'text'
+  assets_json?: any
+  transcript?: string
+  brand_data?: any
 }
 
 export interface Database {
@@ -40,9 +53,9 @@ export interface Database {
         Update: Partial<Omit<Profile, 'id' | 'created_at'>>
       }
       webinar_requests: {
-        Row: WebinarRequest
-        Insert: Omit<WebinarRequest, 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Omit<WebinarRequest, 'id' | 'created_at'>>
+        Row: ContentRequest
+        Insert: Omit<ContentRequest, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<ContentRequest, 'id' | 'created_at'>>
       }
     }
   }
