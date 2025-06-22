@@ -39,26 +39,62 @@ serve(async (req) => {
       throw new Error('Invalid authentication')
     }
 
-    const { formData, successUrl, cancelUrl } = await req.json()
+    const { formData, successUrl, cancelUrl, existingWebinarRequestId } = await req.json()
 
     if (!formData) {
       throw new Error('Form data is required')
     }
 
-    // Create webinar request record
-    const { data: webinarRequest, error: insertError } = await supabaseClient
-      .from('webinar_requests')
-      .insert({
-        user_id: user.id,
-        form_data: formData,
-        payment_status: 'pending'
-      })
-      .select()
-      .single()
+    let webinarRequest;
 
-    if (insertError) {
-      console.error('Error creating webinar request:', insertError)
-      throw new Error('Failed to create webinar request')
+    // If upgrading existing webinar, update the existing record
+    if (existingWebinarRequestId) {
+      const { data: existingRequest, error: fetchError } = await supabaseClient
+        .from('webinar_requests')
+        .select('*')
+        .eq('id', existingWebinarRequestId)
+        .eq('user_id', user.id)
+        .single()
+
+      if (fetchError || !existingRequest) {
+        throw new Error('Webinar request not found or access denied')
+      }
+
+      // Update the existing request to pending payment status
+      const { data: updatedRequest, error: updateError } = await supabaseClient
+        .from('webinar_requests')
+        .update({
+          payment_status: 'pending',
+          form_data: formData, // Update with new form data if needed
+        })
+        .eq('id', existingWebinarRequestId)
+        .select()
+        .single()
+
+      if (updateError) {
+        console.error('Error updating webinar request:', updateError)
+        throw new Error('Failed to update webinar request')
+      }
+
+      webinarRequest = updatedRequest
+    } else {
+      // Create new webinar request record
+      const { data: newRequest, error: insertError } = await supabaseClient
+        .from('webinar_requests')
+        .insert({
+          user_id: user.id,
+          form_data: formData,
+          payment_status: 'pending'
+        })
+        .select()
+        .single()
+
+      if (insertError) {
+        console.error('Error creating webinar request:', insertError)
+        throw new Error('Failed to create webinar request')
+      }
+
+      webinarRequest = newRequest
     }
 
     // Create Stripe checkout session
@@ -69,8 +105,10 @@ serve(async (req) => {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: 'Webinar Asset Generation',
-              description: 'Generate professional marketing assets from your webinar content',
+              name: existingWebinarRequestId ? 'Webinar Asset Upgrade' : 'Webinar Asset Generation',
+              description: existingWebinarRequestId 
+                ? 'Upgrade to full campaign kit with premium assets'
+                : 'Generate professional marketing assets from your webinar content',
             },
             unit_amount: 499, // $4.99 in cents
           },
@@ -83,6 +121,7 @@ serve(async (req) => {
       metadata: {
         webinar_request_id: webinarRequest.id,
         user_id: user.id,
+        is_upgrade: existingWebinarRequestId ? 'true' : 'false',
       },
       customer_email: user.email,
     })

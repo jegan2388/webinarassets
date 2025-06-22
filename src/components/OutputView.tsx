@@ -1,21 +1,39 @@
 import React, { useState } from 'react';
-import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, BarChart3, UserCheck, TrendingUp, Zap } from 'lucide-react';
+import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, BarChart3, UserCheck, TrendingUp, Zap, Crown, CreditCard } from 'lucide-react';
 import { GeneratedAsset } from '../App';
 import { BrandData } from '../services/brandExtraction';
 import { useAuth } from '../hooks/useAuth';
+import { createCheckoutSession } from '../lib/stripe';
 
 interface OutputViewProps {
   assets: GeneratedAsset[];
   brandData?: BrandData | null;
   onBack: () => void;
   onViewPricing: () => void;
+  webinarRequestId?: string;
+  currentWebinarData?: any;
 }
 
-const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onViewPricing }) => {
+const OutputView: React.FC<OutputViewProps> = ({ 
+  assets, 
+  brandData, 
+  onBack, 
+  onViewPricing,
+  webinarRequestId,
+  currentWebinarData
+}) => {
   const [copiedAsset, setCopiedAsset] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [showEmailCapture, setShowEmailCapture] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
   const { user, isProUser } = useAuth();
+
+  // Check if this is a free user viewing free assets (can upgrade)
+  const canUpgradeThisWebinar = user && !isProUser && webinarRequestId && currentWebinarData;
+  const hasOnlyFreeAssets = assets.every(asset => 
+    ['LinkedIn Posts', 'Sales Outreach Emails'].includes(asset.type)
+  );
 
   const handleCopyToClipboard = async (content: string, assetId: string) => {
     try {
@@ -45,6 +63,25 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
     a.download = 'webinar-marketing-assets.txt';
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleUpgradeWebinar = async () => {
+    if (!webinarRequestId || !currentWebinarData) return;
+    
+    setIsProcessingUpgrade(true);
+    try {
+      const { url } = await createCheckoutSession(
+        currentWebinarData,
+        `${window.location.origin}/dashboard`,
+        `${window.location.origin}/dashboard`,
+        webinarRequestId // Pass existing webinar request ID
+      );
+      
+      window.location.href = url;
+    } catch (err) {
+      console.error('Upgrade error:', err);
+      setIsProcessingUpgrade(false);
+    }
   };
 
   const handleEmailSubmit = (e: React.FormEvent) => {
@@ -402,6 +439,30 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
           </div>
         </div>
 
+        {/* Upgrade Section - Show if user has only free assets and can upgrade */}
+        {canUpgradeThisWebinar && hasOnlyFreeAssets && (
+          <div className="card p-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 mb-12">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <Crown className="w-8 h-8 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                Want more assets from this webinar?
+              </h2>
+              <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
+                Get 4x more content including branded visuals, nurture emails, and extra posts.
+              </p>
+              <button
+                onClick={() => setShowUpgradeModal(true)}
+                className="btn-primary text-lg px-8 py-4 inline-flex items-center space-x-2"
+              >
+                <Crown className="w-5 h-5" />
+                <span>Unlock Full Campaign Kit ($4.99)</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Categorized Assets */}
         {Object.entries(categorizedAssets).map(([category, categoryAssets]) => (
           <div key={category} className="mb-12">
@@ -537,6 +598,77 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
             <ExternalLink className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Upgrade Modal */}
+        {showUpgradeModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="card max-w-lg w-full p-8 bg-white">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <Crown className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  Unlock Full Campaign Kit - $4.99
+                </h3>
+                <div className="inline-flex items-center space-x-2 bg-red-50 text-red-700 px-3 py-1 rounded-full text-sm font-medium border border-red-200">
+                  <span>🔥 50% off today!</span>
+                </div>
+              </div>
+              
+              <div className="space-y-4 mb-6">
+                <h4 className="font-semibold text-gray-900">Get 4x more assets from this same webinar:</h4>
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="flex items-center space-x-3 p-3 bg-mint-50 rounded-lg">
+                    <Check className="w-5 h-5 text-mint-600" />
+                    <span className="text-sm text-gray-700">Marketing nurture email sequences</span>
+                  </div>
+                  <div className="flex items-center space-x-3 p-3 bg-indigo-50 rounded-lg">
+                    <Check className="w-5 h-5 text-indigo-600" />
+                    <span className="text-sm text-gray-700">Branded quote visuals with your colors</span>
+                  </div>
+                  <div className="flex items-center space-x-3 p-3 bg-orange-50 rounded-lg">
+                    <Check className="w-5 h-5 text-orange-600" />
+                    <span className="text-sm text-gray-700">Sales snippets for calls & LinkedIn</span>
+                  </div>
+                  <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
+                    <Check className="w-5 h-5 text-purple-600" />
+                    <span className="text-sm text-gray-700">Professional one-pager recap document</span>
+                  </div>
+                  <div className="flex items-center space-x-3 p-3 bg-emerald-50 rounded-lg">
+                    <Check className="w-5 h-5 text-emerald-600" />
+                    <span className="text-sm text-gray-700">Visual infographic for presentations</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleUpgradeWebinar}
+                  disabled={isProcessingUpgrade}
+                  className="flex-1 btn-primary flex items-center justify-center space-x-2"
+                >
+                  {isProcessingUpgrade ? (
+                    <>
+                      <CreditCard className="w-4 h-4 animate-pulse" />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="w-4 h-4" />
+                      <span>Upgrade for $4.99</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => setShowUpgradeModal(false)}
+                  className="btn-secondary"
+                >
+                  Maybe Later
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Email Capture Modal */}
         {showEmailCapture && (

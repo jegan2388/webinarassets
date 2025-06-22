@@ -9,7 +9,8 @@ export interface CheckoutSessionResponse {
 export const createCheckoutSession = async (
   formData: any,
   successUrl?: string,
-  cancelUrl?: string
+  cancelUrl?: string,
+  existingWebinarRequestId?: string
 ): Promise<CheckoutSessionResponse> => {
   const { data: { session } } = await supabase.auth.getSession()
   
@@ -32,6 +33,7 @@ export const createCheckoutSession = async (
       formData,
       successUrl,
       cancelUrl,
+      existingWebinarRequestId, // Pass existing ID for upgrades
     }),
   })
 

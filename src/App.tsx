@@ -6,12 +6,14 @@ import OutputView from './components/OutputView';
 import PricingSection from './components/PricingSection';
 import TranscriptionView from './components/TranscriptionView';
 import PaymentPending from './components/PaymentPending';
+import Dashboard from './components/Dashboard';
 import Auth from './components/Auth';
 import UserMenu from './components/UserMenu';
 import { transcribeAudio } from './services/transcription';
 import { generateMarketingAssets } from './services/assetGeneration';
 import { extractBrandElements, BrandData } from './services/brandExtraction';
 import { useAuth } from './hooks/useAuth';
+import { createCheckoutSession } from './lib/stripe';
 
 export interface WebinarData {
   file?: File;
@@ -33,7 +35,7 @@ export interface GeneratedAsset {
 }
 
 function App() {
-  const [currentStep, setCurrentStep] = useState<'landing' | 'upload' | 'payment_pending' | 'processing' | 'output' | 'pricing' | 'transcription'>('landing');
+  const [currentStep, setCurrentStep] = useState<'landing' | 'upload' | 'payment_pending' | 'processing' | 'output' | 'pricing' | 'transcription' | 'dashboard'>('landing');
   const [webinarData, setWebinarData] = useState<WebinarData>({
     description: '',
     persona: '',
@@ -47,6 +49,8 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [pendingWebinarRequestId, setPendingWebinarRequestId] = useState<string | null>(null);
+  const [currentWebinarRequestId, setCurrentWebinarRequestId] = useState<string | null>(null);
+  const [viewingWebinarRequest, setViewingWebinarRequest] = useState<any>(null);
 
   const { user, isProUser, loading: authLoading } = useAuth();
 
@@ -54,14 +58,20 @@ function App() {
     setCurrentStep('upload');
   };
 
+  const handleViewDashboard = () => {
+    setCurrentStep('dashboard');
+  };
+
   const handlePaymentPending = (webinarRequestId: string, formData: WebinarData) => {
     setPendingWebinarRequestId(webinarRequestId);
+    setCurrentWebinarRequestId(webinarRequestId);
     setWebinarData(formData);
     setCurrentStep('payment_pending');
   };
 
-  const handlePaymentSuccess = async (formData: WebinarData) => {
+  const handlePaymentSuccess = async (formData: WebinarData, webinarRequestId?: string) => {
     setWebinarData(formData);
+    setCurrentWebinarRequestId(webinarRequestId || null);
     setCurrentStep('processing');
     setError(null);
     
@@ -159,6 +169,8 @@ function App() {
     setProcessingStep('');
     setProcessingProgress(0);
     setPendingWebinarRequestId(null);
+    setCurrentWebinarRequestId(null);
+    setViewingWebinarRequest(null);
   };
 
   const handleViewPricing = () => {
@@ -177,6 +189,113 @@ function App() {
     setShowAuth(false);
   };
 
+  const handleViewAssets = (webinarRequest: any) => {
+    setViewingWebinarRequest(webinarRequest);
+    setWebinarData(webinarRequest.form_data);
+    setCurrentWebinarRequestId(webinarRequest.id);
+    
+    // Mock assets for now - in production, these would be stored in the database
+    const mockAssets: GeneratedAsset[] = [
+      {
+        id: 'linkedin-1',
+        type: 'LinkedIn Posts',
+        title: 'Engaging LinkedIn Post 1',
+        content: `🚀 Just discovered a game-changing insight from our latest webinar on "${webinarRequest.form_data.description}"
+
+The biggest takeaway? Most teams are missing this one crucial step that could 3x their results.
+
+Here's what we learned:
+→ [Key insight from your webinar]
+→ [Specific strategy mentioned]
+→ [Actionable tip for implementation]
+
+What's your experience with this? Drop a comment below! 👇
+
+#Marketing #B2B #Strategy`
+      },
+      {
+        id: 'sales-1',
+        type: 'Sales Outreach Emails',
+        title: 'Cold Prospect Outreach',
+        content: `Subject: Quick question about your lead generation
+
+Hi [Name],
+
+I noticed you're focused on scaling [Company] and thought you'd find this interesting.
+
+We just ran a webinar showing how companies like yours are increasing conversion rates by 40% using a simple automation tweak.
+
+The key insight? Most teams are optimizing the wrong part of their funnel.
+
+Worth a 15-minute conversation to share what we learned?
+
+Best,
+[Your name]`
+      }
+    ];
+
+    // Add pro assets if this was a paid request
+    if (webinarRequest.amount_paid > 0) {
+      mockAssets.push(
+        {
+          id: 'nurture-1',
+          type: 'Marketing Nurture Emails',
+          title: 'Educational Value Email',
+          content: `Subject: 3 insights from our latest webinar you'll want to bookmark
+
+Hi [Name],
+
+Thanks for your interest in our recent webinar on "${webinarRequest.form_data.description}".
+
+Here are the 3 key takeaways that are already helping teams like yours:
+
+• [Key insight 1 with brief explanation]
+• [Key insight 2 with actionable tip]
+• [Key insight 3 with implementation guide]
+
+I've also attached a one-page summary you can share with your team.
+
+Questions? Just reply to this email.
+
+Best,
+[Your name]`
+        },
+        {
+          id: 'quote-1',
+          type: 'Quote Cards',
+          title: 'Insightful Quote 1',
+          content: 'The biggest mistake teams make is optimizing for the wrong metrics. Focus on quality over quantity, and watch your conversion rates soar.'
+        }
+      );
+    }
+
+    setGeneratedAssets(mockAssets);
+    setCurrentStep('output');
+  };
+
+  const handleUpgradeWebinar = async (webinarRequest: any) => {
+    try {
+      const { url } = await createCheckoutSession(
+        webinarRequest.form_data,
+        `${window.location.origin}/dashboard`,
+        `${window.location.origin}/dashboard`,
+        webinarRequest.id
+      );
+      
+      window.location.href = url;
+    } catch (err) {
+      console.error('Upgrade error:', err);
+      setError('Failed to initiate upgrade. Please try again.');
+    }
+  };
+
+  // Redirect authenticated users to dashboard instead of landing
+  React.useEffect(() => {
+    if (user && currentStep === 'landing') {
+      setCurrentStep('dashboard');
+    }
+  }, [user, currentStep]);
+
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 'landing':
@@ -188,11 +307,20 @@ function App() {
             onShowAuth={handleShowAuth}
           />
         );
+      case 'dashboard':
+        return (
+          <Dashboard
+            onBack={handleBackToLanding}
+            onViewAssets={handleViewAssets}
+            onUpgradeWebinar={handleUpgradeWebinar}
+            onRemixAgain={handleStartUpload}
+          />
+        );
       case 'upload':
         return (
           <UploadForm 
             onSubmit={handlePaymentSuccess} 
-            onBack={handleBackToLanding} 
+            onBack={user ? handleViewDashboard : handleBackToLanding} 
             onPaymentPending={handlePaymentPending}
             error={error} 
             isProUser={isProUser}
@@ -204,7 +332,7 @@ function App() {
             webinarRequestId={pendingWebinarRequestId!}
             onPaymentSuccess={handlePaymentSuccess}
             onPaymentFailed={handlePaymentFailed}
-            onBack={handleBackToLanding}
+            onBack={user ? handleViewDashboard : handleBackToLanding}
           />
         );
       case 'processing':
@@ -220,16 +348,25 @@ function App() {
           <OutputView 
             assets={generatedAssets} 
             brandData={brandData} 
-            onBack={handleBackToLanding} 
-            onViewPricing={handleViewPricing} 
+            onBack={user ? handleViewDashboard : handleBackToLanding} 
+            onViewPricing={handleViewPricing}
+            webinarRequestId={currentWebinarRequestId}
+            currentWebinarData={webinarData}
           />
         );
       case 'pricing':
-        return <PricingSection onBack={handleBackToLanding} />;
+        return <PricingSection onBack={user ? handleViewDashboard : handleBackToLanding} />;
       case 'transcription':
-        return <TranscriptionView onBack={handleBackToLanding} />;
+        return <TranscriptionView onBack={user ? handleViewDashboard : handleBackToLanding} />;
       default:
-        return (
+        return user ? (
+          <Dashboard
+            onBack={handleBackToLanding}
+            onViewAssets={handleViewAssets}
+            onUpgradeWebinar={handleUpgradeWebinar}
+            onRemixAgain={handleStartUpload}
+          />
+        ) : (
           <LandingPage 
             onStartUpload={handleStartUpload} 
             onViewPricing={handleViewPricing} 
