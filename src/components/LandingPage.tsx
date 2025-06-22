@@ -1,7 +1,8 @@
-import React from 'react';
-import { Upload, Zap, Target, Mail, MessageSquare, Quote, TrendingUp, ArrowRight, Play, Sparkles, Users, Clock, FileAudio, User, Crown } from 'lucide-react';
+import React, { useState } from 'react';
+import { Upload, Zap, Target, Mail, MessageSquare, Quote, TrendingUp, ArrowRight, Play, Sparkles, Users, Clock, FileAudio, User, Crown, CheckCircle, BarChart3 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import UserMenu from './UserMenu';
+import AuthModal from './AuthModal';
 
 interface LandingPageProps {
   onStartUpload: () => void;
@@ -12,6 +13,25 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing, onViewTranscription, onShowAuth }) => {
   const { user, isProUser } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  const handleTryItFree = () => {
+    if (user) {
+      onStartUpload();
+    } else {
+      setShowAuthModal(true);
+    }
+  };
+
+  const handleContinueWithoutAuth = () => {
+    setShowAuthModal(false);
+    onStartUpload();
+  };
+
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+    onStartUpload();
+  };
 
   const features = [
     {
@@ -41,27 +61,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
       description: "Share-worthy graphics with key insights from your webinar",
       color: "bg-indigo-50 border-indigo-100",
       isFree: false
-    }
-  ];
-
-  const steps = [
-    {
-      number: "1",
-      title: "Upload Your Webinar",
-      description: "Drop your video file or paste a YouTube link",
-      icon: <Upload className="w-5 h-5" />
-    },
-    {
-      number: "2",
-      title: "Set Your Context",
-      description: "Choose target persona and funnel stage",
-      icon: <Users className="w-5 h-5" />
-    },
-    {
-      number: "3",
-      title: "Get Your Assets",
-      description: "Download campaign-ready marketing materials",
-      icon: <Sparkles className="w-5 h-5" />
     }
   ];
 
@@ -150,26 +149,69 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
               </div>
             )}
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+            {/* Single Primary CTA */}
+            <div className="flex flex-col items-center mb-12">
               <button
-                onClick={onStartUpload}
-                className="btn-primary text-lg px-8 py-4 flex items-center space-x-2 group"
+                onClick={handleTryItFree}
+                className="btn-primary text-xl px-12 py-5 flex items-center space-x-3 group shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300"
               >
-                <Upload className="w-5 h-5" />
-                <span>Upload Your Webinar</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <Upload className="w-6 h-6" />
+                <span>Try It Free – No Credit Card Needed</span>
+                <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button 
-                onClick={onViewTranscription}
-                className="btn-secondary text-lg px-8 py-4 flex items-center space-x-2"
-              >
-                <FileAudio className="w-5 h-5" />
-                <span>Try Transcriber First</span>
-              </button>
+              <p className="text-sm text-gray-500 mt-3">
+                Start with free assets, upgrade for the full campaign kit
+              </p>
+            </div>
+
+            {/* 30-second Video Demo Placeholder */}
+            <div className="max-w-3xl mx-auto mb-12">
+              <div className="relative bg-gray-900 rounded-2xl overflow-hidden shadow-2xl">
+                <div className="aspect-video flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <Play className="w-16 h-16 mx-auto mb-4 opacity-80" />
+                    <p className="text-lg font-semibold">Watch 30-Second Demo</p>
+                    <p className="text-sm opacity-80">See how a webinar becomes 7 marketing assets</p>
+                  </div>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
+              </div>
+            </div>
+
+            {/* 3-Step Visual */}
+            <div className="card p-8 max-w-4xl mx-auto mb-16">
+              <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">
+                How It Works
+              </h3>
+              <div className="flex items-center justify-between">
+                <div className="text-center flex-1">
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-3 mx-auto shadow-lg">
+                    <Upload className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="font-semibold text-gray-900 mb-1">Upload</h4>
+                  <p className="text-sm text-gray-600">Drop your webinar file</p>
+                </div>
+                <ArrowRight className="w-6 h-6 text-gray-300 mx-4" />
+                <div className="text-center flex-1">
+                  <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center mb-3 mx-auto shadow-lg">
+                    <Zap className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="font-semibold text-gray-900 mb-1">Remix</h4>
+                  <p className="text-sm text-gray-600">AI analyzes & creates</p>
+                </div>
+                <ArrowRight className="w-6 h-6 text-gray-300 mx-4" />
+                <div className="text-center flex-1">
+                  <div className="w-16 h-16 bg-gradient-to-r from-mint-500 to-mint-600 rounded-2xl flex items-center justify-center mb-3 mx-auto shadow-lg">
+                    <TrendingUp className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="font-semibold text-gray-900 mb-1">Download</h4>
+                  <p className="text-sm text-gray-600">Get 7 ready assets</p>
+                </div>
+              </div>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto mb-16">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center">
                   <div className="text-3xl font-bold text-gray-900 mb-1">{stat.value}</div>
@@ -178,31 +220,64 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
                 </div>
               ))}
             </div>
+          </div>
+        </div>
 
-            {/* Visual Flow */}
-            <div className="card p-8 max-w-4xl mx-auto">
-              <div className="flex items-center justify-between">
-                <div className="text-center flex-1">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-3 mx-auto shadow-lg">
-                    <Upload className="w-8 h-8 text-white" />
-                  </div>
-                  <p className="text-sm font-medium text-gray-700">Upload Webinar</p>
+        {/* Testimonials/Social Proof */}
+        <div className="py-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Trusted by Marketing Teams
+            </h2>
+            <p className="text-lg text-gray-600">
+              Join hundreds of B2B marketers who've streamlined their content creation
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-12">
+            <div className="card p-6 text-center">
+              <div className="text-2xl font-bold text-blue-600 mb-2">500+</div>
+              <div className="text-sm text-gray-600">Webinars Processed</div>
+            </div>
+            <div className="card p-6 text-center">
+              <div className="text-2xl font-bold text-mint-600 mb-2">3,500+</div>
+              <div className="text-sm text-gray-600">Assets Generated</div>
+            </div>
+            <div className="card p-6 text-center">
+              <div className="text-2xl font-bold text-indigo-600 mb-2">95%</div>
+              <div className="text-sm text-gray-600">Customer Satisfaction</div>
+            </div>
+          </div>
+
+          {/* Mock Testimonials */}
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="card p-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
+                  <span className="text-white font-semibold">SM</span>
                 </div>
-                <ArrowRight className="w-6 h-6 text-gray-300 mx-4" />
-                <div className="text-center flex-1">
-                  <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center mb-3 mx-auto shadow-lg">
-                    <Zap className="w-8 h-8 text-white" />
-                  </div>
-                  <p className="text-sm font-medium text-gray-700">AI Processing</p>
-                </div>
-                <ArrowRight className="w-6 h-6 text-gray-300 mx-4" />
-                <div className="text-center flex-1">
-                  <div className="w-16 h-16 bg-gradient-to-r from-mint-500 to-mint-600 rounded-2xl flex items-center justify-center mb-3 mx-auto shadow-lg">
-                    <TrendingUp className="w-8 h-8 text-white" />
-                  </div>
-                  <p className="text-sm font-medium text-gray-700">7 Ready Assets</p>
+                <div>
+                  <p className="font-semibold text-gray-900">Sarah Martinez</p>
+                  <p className="text-sm text-gray-600">Marketing Director, TechCorp</p>
                 </div>
               </div>
+              <p className="text-gray-700 italic">
+                "Turned our 1-hour webinar into a month's worth of LinkedIn content. The AI actually gets our brand voice!"
+              </p>
+            </div>
+            <div className="card p-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-mint-500 to-teal-500 rounded-full flex items-center justify-center">
+                  <span className="text-white font-semibold">DJ</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">David Johnson</p>
+                  <p className="text-sm text-gray-600">Sales Manager, GrowthCo</p>
+                </div>
+              </div>
+              <p className="text-gray-700 italic">
+                "The sales emails generated from our product demo webinar had a 40% higher open rate than our usual campaigns."
+              </p>
             </div>
           </div>
         </div>
@@ -241,58 +316,111 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
           </div>
         </div>
 
-        {/* How It Works */}
+        {/* Pricing Section */}
         <div className="py-20">
           <div className="card p-12 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100">
             <div className="text-center mb-12">
               <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                How It Works
+                Simple, Transparent Pricing
               </h2>
               <p className="text-lg text-gray-600">
-                Get professional marketing assets in minutes, not hours
+                Start free, upgrade when you need more
               </p>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-              {steps.map((step, index) => (
-                <div key={index} className="text-center">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full flex items-center justify-center text-lg font-bold mb-4 mx-auto shadow-lg">
-                    {step.number}
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {/* Free Plan */}
+              <div className="card p-8 border-2 border-gray-200 bg-white">
+                <div className="text-center mb-8">
+                  <div className="w-12 h-12 bg-gray-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg">
+                    <CheckCircle className="w-6 h-6" />
                   </div>
-                  <div className="mb-3 flex justify-center text-blue-600">
-                    {step.icon}
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{step.title}</h3>
-                  <p className="text-gray-600">{step.description}</p>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Free Assets</h3>
+                  <p className="text-gray-600 text-sm">Perfect for trying out the platform</p>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
+                
+                <div className="text-center mb-8">
+                  <div className="flex items-baseline justify-center space-x-1">
+                    <span className="text-4xl font-bold text-gray-900">Free</span>
+                  </div>
+                </div>
 
-        {/* Social Proof */}
-        <div className="py-20">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Trusted by Marketing Teams
-            </h2>
-            <p className="text-lg text-gray-600">
-              Join hundreds of B2B marketers who've streamlined their content creation
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="card p-6 text-center">
-              <div className="text-2xl font-bold text-blue-600 mb-2">500+</div>
-              <div className="text-sm text-gray-600">Webinars Processed</div>
-            </div>
-            <div className="card p-6 text-center">
-              <div className="text-2xl font-bold text-mint-600 mb-2">3,500+</div>
-              <div className="text-sm text-gray-600">Assets Generated</div>
-            </div>
-            <div className="card p-6 text-center">
-              <div className="text-2xl font-bold text-indigo-600 mb-2">95%</div>
-              <div className="text-sm text-gray-600">Customer Satisfaction</div>
+                <ul className="space-y-4 mb-8">
+                  <li className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-success-500 flex-shrink-0" />
+                    <span className="text-gray-700 text-sm">2 LinkedIn posts</span>
+                  </li>
+                  <li className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-success-500 flex-shrink-0" />
+                    <span className="text-gray-700 text-sm">Sales outreach emails</span>
+                  </li>
+                  <li className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-success-500 flex-shrink-0" />
+                    <span className="text-gray-700 text-sm">Basic transcription</span>
+                  </li>
+                </ul>
+
+                <button
+                  onClick={handleTryItFree}
+                  className="w-full btn-secondary py-3"
+                >
+                  Try Free Assets
+                </button>
+              </div>
+
+              {/* Pro Plan */}
+              <div className="card p-8 border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 relative">
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
+                    Most Popular
+                  </span>
+                </div>
+                
+                <div className="text-center mb-8">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg">
+                    <Crown className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Full Campaign Kit</h3>
+                  <p className="text-gray-600 text-sm">Everything you need for a complete campaign</p>
+                </div>
+                
+                <div className="text-center mb-8">
+                  <div className="flex items-baseline justify-center space-x-1">
+                    <span className="text-4xl font-bold text-gray-900">$4.99</span>
+                    <span className="text-gray-600">/webinar</span>
+                  </div>
+                </div>
+
+                <ul className="space-y-4 mb-8">
+                  <li className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-gray-700 text-sm">All 7 asset types</span>
+                  </li>
+                  <li className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-gray-700 text-sm">Brand-styled quote cards</span>
+                  </li>
+                  <li className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-gray-700 text-sm">Professional infographics</span>
+                  </li>
+                  <li className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-gray-700 text-sm">Nurture email sequences</span>
+                  </li>
+                  <li className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-gray-700 text-sm">One-pager recap document</span>
+                  </li>
+                </ul>
+
+                <button
+                  onClick={handleTryItFree}
+                  className="w-full btn-primary py-3"
+                >
+                  Get Full Campaign Kit
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -306,24 +434,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
             <p className="text-lg text-gray-600 mb-8">
               Stop spending hours creating marketing assets. Let AI do the heavy lifting while you focus on strategy.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={onStartUpload}
-                className="btn-primary text-lg px-8 py-4 inline-flex items-center space-x-2"
-              >
-                <span>Get Started {user ? (isProUser ? 'Pro' : 'Free') : 'Free'}</span>
-                <ArrowRight className="w-5 h-5" />
-              </button>
-              {!user && (
-                <button
-                  onClick={onShowAuth}
-                  className="btn-secondary text-lg px-8 py-4 inline-flex items-center space-x-2"
-                >
-                  <User className="w-5 h-5" />
-                  <span>Sign Up for Pro</span>
-                </button>
-              )}
-            </div>
+            <button
+              onClick={handleTryItFree}
+              className="btn-primary text-xl px-12 py-5 inline-flex items-center space-x-3"
+            >
+              <span>Try It Free – No Credit Card Needed</span>
+              <ArrowRight className="w-6 h-6" />
+            </button>
           </div>
         </div>
 
@@ -337,6 +454,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
           </div>
         </footer>
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onContinueWithoutAuth={handleContinueWithoutAuth}
+        onAuthSuccess={handleAuthSuccess}
+      />
     </div>
   );
 };

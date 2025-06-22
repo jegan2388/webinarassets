@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, ArrowLeft, Link, Check, FileVideo, Youtube, Users, Target, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, BarChart3, UserCheck, TrendingUp, CreditCard, User } from 'lucide-react';
+import { Upload, ArrowLeft, Check, FileVideo, Youtube, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, BarChart3, UserCheck, TrendingUp, CreditCard, User, Crown } from 'lucide-react';
 import { WebinarData } from '../App';
 import { createCheckoutSession } from '../lib/stripe';
 import { useAuth } from '../hooks/useAuth';
@@ -27,21 +27,9 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
-
-  const personas = [
-    'Marketing Teams',
-    'Sales Teams', 
-    'Finance Teams',
-    'Executive Leadership',
-    'Product Teams',
-    'Customer Success'
-  ];
-
-  const funnelStages = [
-    'Top of Funnel (Awareness)',
-    'Middle of Funnel (Consideration)', 
-    'Bottom of Funnel (Decision)'
-  ];
+  const [assetTier, setAssetTier] = useState<'free' | 'pro'>('free');
+  const [combinedDescription, setCombinedDescription] = useState('');
+  const [showProSummary, setShowProSummary] = useState(false);
 
   const assetTypes = [
     { 
@@ -74,7 +62,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
     },
     { 
       name: 'Sales Snippets', 
-      icon: <Target className="w-4 h-4" />, 
+      icon: <TrendingUp className="w-4 h-4" />, 
       color: 'border-orange-200 bg-orange-50',
       description: 'Ready-to-use outreach messages',
       isFree: false
@@ -118,35 +106,93 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
     if (file) handleFileUpload(file);
   };
 
-  const handleAssetToggle = (assetName: string) => {
-    setFormData(prev => ({
-      ...prev,
-      selectedAssets: prev.selectedAssets.includes(assetName)
-        ? prev.selectedAssets.filter(a => a !== assetName)
-        : [...prev.selectedAssets, assetName]
-    }));
+  const handleAssetTierChange = (tier: 'free' | 'pro') => {
+    setAssetTier(tier);
+    if (tier === 'free') {
+      setFormData(prev => ({
+        ...prev,
+        selectedAssets: ['LinkedIn Posts', 'Sales Outreach Emails']
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        selectedAssets: assetTypes.map(asset => asset.name)
+      }));
+    }
   };
 
-  const hasPaidAssets = formData.selectedAssets.some(asset => 
-    !assetTypes.find(type => type.name === asset)?.isFree
-  );
+  // Parse combined description to extract persona and funnel stage (simplified)
+  const parseDescription = (description: string) => {
+    // Simple keyword matching - in production, you'd use GPT for this
+    const lowerDesc = description.toLowerCase();
+    
+    let persona = 'Marketing Teams';
+    if (lowerDesc.includes('sales') || lowerDesc.includes('prospect')) persona = 'Sales Teams';
+    else if (lowerDesc.includes('executive') || lowerDesc.includes('leadership')) persona = 'Executive Leadership';
+    else if (lowerDesc.includes('product') || lowerDesc.includes('development')) persona = 'Product Teams';
+    else if (lowerDesc.includes('finance') || lowerDesc.includes('budget')) persona = 'Finance Teams';
+    else if (lowerDesc.includes('customer success') || lowerDesc.includes('support')) persona = 'Customer Success';
+
+    let funnelStage = 'Middle of Funnel (Consideration)';
+    if (lowerDesc.includes('awareness') || lowerDesc.includes('introduction') || lowerDesc.includes('overview')) {
+      funnelStage = 'Top of Funnel (Awareness)';
+    } else if (lowerDesc.includes('decision') || lowerDesc.includes('purchase') || lowerDesc.includes('buy')) {
+      funnelStage = 'Bottom of Funnel (Decision)';
+    }
+
+    return { persona, funnelStage };
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.description || !formData.persona || !formData.funnelStage || 
-        (!formData.file && !formData.youtubeUrl) || formData.selectedAssets.length === 0) {
+    if (!combinedDescription || (!formData.file && !formData.youtubeUrl)) {
       return;
     }
+
+    // Parse the combined description
+    const { persona, funnelStage } = parseDescription(combinedDescription);
+    const updatedFormData = {
+      ...formData,
+      description: combinedDescription,
+      persona,
+      funnelStage
+    };
 
     // If only free assets are selected, proceed directly
-    if (!hasPaidAssets) {
-      onSubmit(formData);
+    if (assetTier === 'free') {
+      onSubmit(updatedFormData);
       return;
     }
 
-    // For paid assets, show email capture
-    setShowEmailCapture(true);
+    // For paid assets, show pro summary first
+    setFormData(updatedFormData);
+    setShowProSummary(true);
+  };
+
+  const handleProPayment = async () => {
+    setShowProSummary(false);
+    
+    if (!user) {
+      setShowEmailCapture(true);
+      return;
+    }
+
+    // User is logged in, proceed to payment
+    try {
+      setIsProcessingPayment(true);
+      const { url, webinarRequestId } = await createCheckoutSession(
+        formData,
+        `${window.location.origin}/payment-success`,
+        `${window.location.origin}/upload`
+      );
+
+      window.location.href = url;
+      onPaymentPending(webinarRequestId, formData);
+    } catch (err) {
+      console.error('Payment initiation error:', err);
+      setIsProcessingPayment(false);
+    }
   };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -156,15 +202,10 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
     try {
       let currentUser = user;
 
-      // If user is not logged in, create account or sign in
       if (!currentUser) {
         try {
-          // Try to sign up first
           await signUp(email, password);
-          // Note: After signup, user might need email verification
-          // For now, we'll proceed with the assumption they're logged in
         } catch (signUpError: any) {
-          // If signup fails (user exists), try to sign in
           if (signUpError.message?.includes('already registered')) {
             await signIn(email, password);
           } else {
@@ -173,31 +214,25 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
         }
       }
 
-      // Create checkout session
       const { url, webinarRequestId } = await createCheckoutSession(
         formData,
         `${window.location.origin}/payment-success`,
         `${window.location.origin}/upload`
       );
 
-      // Redirect to Stripe checkout
       window.location.href = url;
-      
-      // Also call the payment pending handler for state management
       onPaymentPending(webinarRequestId, formData);
       
     } catch (err) {
       console.error('Payment initiation error:', err);
       setIsCreatingAccount(false);
-      // Show error message
     }
   };
 
-  const isFormValid = formData.description && formData.persona && formData.funnelStage && 
-                     (formData.file || formData.youtubeUrl) && formData.selectedAssets.length > 0;
+  const isFormValid = combinedDescription && (formData.file || formData.youtubeUrl);
 
   const freeAssets = assetTypes.filter(asset => asset.isFree);
-  const paidAssets = assetTypes.filter(asset => !asset.isFree);
+  const proAssets = assetTypes.filter(asset => !asset.isFree);
 
   return (
     <div className="bg-gray-50 min-h-screen py-8">
@@ -346,6 +381,25 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
               </div>
             )}
 
+            {/* Combined Description */}
+            <div>
+              <label htmlFor="combined-description" className="block text-sm font-semibold text-gray-900 mb-4">
+                Tell us about your webinar and who it's for
+              </label>
+              <textarea
+                id="combined-description"
+                value={combinedDescription}
+                onChange={(e) => setCombinedDescription(e.target.value)}
+                placeholder="e.g., This is a B2B lead generation webinar for marketing teams showing how to increase conversion rates by 40% using our new automation platform. We covered advanced strategies for nurturing prospects in the consideration stage..."
+                rows={4}
+                className="input-field resize-none"
+                required
+              />
+              <p className="text-sm text-gray-500 mt-2">
+                Include your webinar topic, target audience, and key takeaways. Our AI will automatically categorize this for optimal asset generation.
+              </p>
+            </div>
+
             {/* Company Website URL */}
             <div>
               <label htmlFor="company-website" className="block text-sm font-semibold text-gray-900 mb-4">
@@ -368,221 +422,98 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
               </p>
             </div>
 
-            {/* Webinar Description */}
+            {/* Asset Tier Selection */}
             <div>
-              <label htmlFor="description" className="block text-sm font-semibold text-gray-900 mb-4">
-                What's your webinar about?
+              <label className="block text-sm font-semibold text-gray-900 mb-4">
+                <Sparkles className="w-4 h-4 inline mr-2" />
+                Choose your asset package
               </label>
-              <textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="e.g., B2B lead generation strategies, customer retention tactics, product demo for enterprise teams..."
-                rows={4}
-                className="input-field resize-none"
-                required
-              />
-              <p className="text-sm text-gray-500 mt-2">
-                Be specific - this helps us create more targeted content for your audience
-              </p>
-            </div>
-
-            {/* Target Persona */}
-            <div>
-              <label htmlFor="persona" className="block text-sm font-semibold text-gray-900 mb-4">
-                <Users className="w-4 h-4 inline mr-2" />
-                Who's your target audience?
-              </label>
-              <select
-                id="persona"
-                value={formData.persona}
-                onChange={(e) => setFormData(prev => ({ ...prev, persona: e.target.value }))}
-                className="input-field"
-                required
-              >
-                <option value="">Select your target audience...</option>
-                {personas.map(persona => (
-                  <option key={persona} value={persona}>{persona}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Funnel Stage */}
-            <div>
-              <label htmlFor="funnel-stage" className="block text-sm font-semibold text-gray-900 mb-4">
-                <Target className="w-4 h-4 inline mr-2" />
-                Where are they in your funnel?
-              </label>
-              <select
-                id="funnel-stage"
-                value={formData.funnelStage}
-                onChange={(e) => setFormData(prev => ({ ...prev, funnelStage: e.target.value }))}
-                className="input-field"
-                required
-              >
-                <option value="">Select funnel stage...</option>
-                {funnelStages.map(stage => (
-                  <option key={stage} value={stage}>{stage}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Asset Selection */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <label className="block text-sm font-semibold text-gray-900">
-                  <Sparkles className="w-4 h-4 inline mr-2" />
-                  Which assets do you want?
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Free Assets */}
+                <label
+                  className={`p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                    assetTier === 'free'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="assetTier"
+                    value="free"
+                    checked={assetTier === 'free'}
+                    onChange={() => handleAssetTierChange('free')}
+                    className="sr-only"
+                  />
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      assetTier === 'free' ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
+                    }`}>
+                      {assetTier === 'free' && <div className="w-2 h-2 bg-white rounded-full" />}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Remix into Free Assets</h3>
+                      <p className="text-sm text-gray-600">Perfect for trying out the platform</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {freeAssets.map(asset => (
+                      <div key={asset.name} className="flex items-center space-x-2 text-sm text-gray-700">
+                        <Check className="w-4 h-4 text-success-500" />
+                        <span>{asset.name}</span>
+                      </div>
+                    ))}
+                  </div>
                 </label>
-                <div className="text-sm text-gray-600">
-                  <span className="text-success-600 font-medium">{freeAssets.length} Free</span>
-                  {' • '}
-                  <span className="text-blue-600 font-medium">{paidAssets.length} Premium ($4.99)</span>
-                </div>
-              </div>
-              
-              {/* Free Assets Section */}
-              <div className="mb-6">
-                <div className="flex items-center space-x-2 mb-3">
-                  <div className="w-6 h-6 bg-success-500 rounded-full flex items-center justify-center">
-                    <Check className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-sm font-semibold text-success-700">Free Assets</span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {freeAssets.map(asset => (
-                    <label
-                      key={asset.name}
-                      className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
-                        formData.selectedAssets.includes(asset.name)
-                          ? `border-blue-500 bg-blue-50 ${asset.color}`
-                          : `border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50`
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData.selectedAssets.includes(asset.name)}
-                        onChange={() => handleAssetToggle(asset.name)}
-                        className="sr-only"
-                      />
-                      <div className={`w-5 h-5 rounded-lg border-2 mr-3 flex items-center justify-center transition-all duration-200 ${
-                        formData.selectedAssets.includes(asset.name)
-                          ? 'bg-blue-600 border-blue-600'
-                          : 'border-gray-300'
-                      }`}>
-                        {formData.selectedAssets.includes(asset.name) && (
-                          <Check className="w-3 h-3 text-white" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2">
-                          {asset.icon}
-                          <span className="font-medium text-gray-900">{asset.name}</span>
-                        </div>
-                        <p className="text-xs text-gray-600 mt-1">{asset.description}</p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
 
-              {/* Premium Assets Section */}
-              <div>
-                <div className="flex items-center space-x-2 mb-3">
-                  <div className="w-6 h-6 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
-                    <CreditCard className="w-4 h-4 text-white" />
+                {/* Pro Assets */}
+                <label
+                  className={`p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 relative ${
+                    assetTier === 'pro'
+                      ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50'
+                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="assetTier"
+                    value="pro"
+                    checked={assetTier === 'pro'}
+                    onChange={() => handleAssetTierChange('pro')}
+                    className="sr-only"
+                  />
+                  <div className="absolute top-3 right-3">
+                    <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                      $4.99
+                    </span>
                   </div>
-                  <span className="text-sm font-semibold text-blue-700">Premium Assets</span>
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">$4.99</span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {paidAssets.map(asset => (
-                    <label
-                      key={asset.name}
-                      className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
-                        formData.selectedAssets.includes(asset.name)
-                          ? `border-blue-500 bg-blue-50 ${asset.color}`
-                          : `border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50`
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData.selectedAssets.includes(asset.name)}
-                        onChange={() => handleAssetToggle(asset.name)}
-                        className="sr-only"
-                      />
-                      <div className={`w-5 h-5 rounded-lg border-2 mr-3 flex items-center justify-center transition-all duration-200 ${
-                        formData.selectedAssets.includes(asset.name)
-                          ? 'bg-blue-600 border-blue-600'
-                          : 'border-gray-300'
-                      }`}>
-                        {formData.selectedAssets.includes(asset.name) && (
-                          <Check className="w-3 h-3 text-white" />
-                        )}
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      assetTier === 'pro' ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
+                    }`}>
+                      {assetTier === 'pro' && <div className="w-2 h-2 bg-white rounded-full" />}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 flex items-center space-x-2">
+                        <span>Remix into Full Campaign Kit</span>
+                        <Crown className="w-4 h-4 text-blue-600" />
+                      </h3>
+                      <p className="text-sm text-gray-600">Everything you need for a complete campaign</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-sm text-gray-700 font-medium mb-2">Includes all free assets plus:</div>
+                    {proAssets.map(asset => (
+                      <div key={asset.name} className="flex items-center space-x-2 text-sm text-gray-700">
+                        <Check className="w-4 h-4 text-blue-600" />
+                        <span>{asset.name}</span>
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2">
-                          {asset.icon}
-                          <span className="font-medium text-gray-900">{asset.name}</span>
-                          <CreditCard className="w-4 h-4 text-blue-500" />
-                        </div>
-                        <p className="text-xs text-gray-600 mt-1">{asset.description}</p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Email Asset Descriptions */}
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-red-50 p-3 rounded-lg border border-red-100">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <UserCheck className="w-4 h-4 text-red-600" />
-                    <span className="text-sm font-medium text-red-800">Sales Outreach Emails</span>
-                    <span className="text-xs bg-success-100 text-success-700 px-2 py-1 rounded-full">Free</span>
+                    ))}
                   </div>
-                  <p className="text-xs text-red-700">Direct, value-focused emails for cold/warm prospects. Conversational tone with clear CTAs.</p>
-                </div>
-                <div className="bg-mint-50 p-3 rounded-lg border border-mint-100">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <Mail className="w-4 h-4 text-mint-600" />
-                    <span className="text-sm font-medium text-mint-800">Marketing Nurture Emails</span>
-                    <CreditCard className="w-3 h-3 text-blue-500" />
-                  </div>
-                  <p className="text-xs text-mint-700">Educational, relationship-building emails for existing leads. Helpful tone with soft CTAs.</p>
-                </div>
+                </label>
               </div>
             </div>
-
-            {/* Payment Info - Only show if premium assets selected */}
-            {hasPaidAssets && (
-              <div className="card p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-                <div className="flex items-center space-x-3 mb-4">
-                  <CreditCard className="w-6 h-6 text-blue-600" />
-                  <h3 className="text-lg font-semibold text-blue-900">
-                    Premium Assets: $4.99
-                  </h3>
-                </div>
-                <div className="text-sm text-blue-800 space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Check className="w-4 h-4 text-blue-600" />
-                    <span>All {formData.selectedAssets.length} selected assets included</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Check className="w-4 h-4 text-blue-600" />
-                    <span>Brand-styled visuals and quote cards</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Check className="w-4 h-4 text-blue-600" />
-                    <span>Professional one-pager and infographics</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Check className="w-4 h-4 text-blue-600" />
-                    <span>Secure payment via Stripe</span>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* API Key Notice */}
             {!import.meta.env.VITE_OPENAI_API_KEY && (
@@ -612,7 +543,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                     <CreditCard className="w-5 h-5 animate-pulse" />
                     <span>Processing...</span>
                   </>
-                ) : hasPaidAssets ? (
+                ) : assetTier === 'pro' ? (
                   <>
                     <CreditCard className="w-5 h-5" />
                     <span>Continue to Payment ($4.99)</span>
@@ -626,12 +557,79 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
               </button>
               {!isFormValid && (
                 <p className="text-sm text-gray-500 text-center mt-3">
-                  Please fill in all fields and select at least one asset to continue
+                  Please fill in all required fields to continue
                 </p>
               )}
             </div>
           </form>
         </div>
+
+        {/* Pro Summary Modal */}
+        {showProSummary && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="card max-w-lg w-full p-8 bg-white">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <Crown className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  Full Campaign Kit - $4.99
+                </h3>
+                <div className="inline-flex items-center space-x-2 bg-red-50 text-red-700 px-3 py-1 rounded-full text-sm font-medium border border-red-200">
+                  <span>🔥 50% off today!</span>
+                </div>
+              </div>
+              
+              <div className="space-y-4 mb-6">
+                <h4 className="font-semibold text-gray-900">What's included:</h4>
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+                    <Check className="w-5 h-5 text-blue-600" />
+                    <span className="text-sm text-gray-700">4x more assets than free version</span>
+                  </div>
+                  <div className="flex items-center space-x-3 p-3 bg-indigo-50 rounded-lg">
+                    <Check className="w-5 h-5 text-indigo-600" />
+                    <span className="text-sm text-gray-700">Branded quote visuals with your colors</span>
+                  </div>
+                  <div className="flex items-center space-x-3 p-3 bg-mint-50 rounded-lg">
+                    <Check className="w-5 h-5 text-mint-600" />
+                    <span className="text-sm text-gray-700">Professional nurture email sequences</span>
+                  </div>
+                  <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
+                    <Check className="w-5 h-5 text-purple-600" />
+                    <span className="text-sm text-gray-700">One-pager recap & infographics</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleProPayment}
+                  disabled={isProcessingPayment}
+                  className="flex-1 btn-primary flex items-center justify-center space-x-2"
+                >
+                  {isProcessingPayment ? (
+                    <>
+                      <CreditCard className="w-4 h-4 animate-pulse" />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="w-4 h-4" />
+                      <span>Pay $4.99</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => setShowProSummary(false)}
+                  className="btn-secondary"
+                >
+                  Back
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Email Capture Modal - Only for premium assets */}
         {showEmailCapture && (

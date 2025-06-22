@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, BarChart3, UserCheck, TrendingUp } from 'lucide-react';
+import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, BarChart3, UserCheck, TrendingUp, Zap } from 'lucide-react';
 import { GeneratedAsset } from '../App';
 import { BrandData } from '../services/brandExtraction';
+import { useAuth } from '../hooks/useAuth';
 
 interface OutputViewProps {
   assets: GeneratedAsset[];
@@ -14,6 +15,7 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
   const [copiedAsset, setCopiedAsset] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [showEmailCapture, setShowEmailCapture] = useState(false);
+  const { user, isProUser } = useAuth();
 
   const handleCopyToClipboard = async (content: string, assetId: string) => {
     try {
@@ -26,15 +28,28 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
   };
 
   const handleDownloadAll = () => {
-    setShowEmailCapture(true);
+    if (!user) {
+      setShowEmailCapture(true);
+      return;
+    }
+    
+    // Create downloadable content
+    const content = assets.map(asset => 
+      `${asset.type}: ${asset.title}\n\n${asset.content}\n\n---\n\n`
+    ).join('');
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'webinar-marketing-assets.txt';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (email) {
-      // In a real app, this would send the email and assets
-      console.log('Email submitted:', email);
-      
       // Create downloadable content
       const content = assets.map(asset => 
         `${asset.type}: ${asset.title}\n\n${asset.content}\n\n---\n\n`
@@ -46,6 +61,7 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
       a.href = url;
       a.download = 'webinar-marketing-assets.txt';
       a.click();
+      URL.revokeObjectURL(url);
       
       setShowEmailCapture(false);
     }
@@ -93,8 +109,23 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
     }
   };
 
+  // Check if asset is premium and user doesn't have access
+  const isAssetBlurred = (assetType: string) => {
+    const premiumAssets = ['Marketing Nurture Emails', 'Quote Cards', 'Sales Snippets', 'One-Pager Recap', 'Visual Infographic'];
+    return premiumAssets.includes(assetType) && !isProUser && !user;
+  };
+
+  // Categorize assets by type
+  const categorizedAssets = assets.reduce((acc, asset) => {
+    const category = asset.type;
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(asset);
+    return acc;
+  }, {} as Record<string, GeneratedAsset[]>);
+
   const renderQuoteCard = (content: string, asset: GeneratedAsset) => {
-    // Use brand colors if available, otherwise use default gradient
     const primaryColor = brandData?.primaryColor || '#4f46e5';
     const secondaryColor = brandData?.secondaryColor || '#7c3aed';
     
@@ -108,7 +139,6 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
           className="text-white p-8 rounded-2xl shadow-2xl relative overflow-hidden"
           style={gradientStyle}
         >
-          {/* Brand logo overlay if available */}
           {brandData?.logoUrl && brandData.logoUrl !== 'svg-logo-found' && (
             <div className="absolute top-4 right-4 opacity-20">
               <img 
@@ -116,7 +146,6 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
                 alt="Company logo" 
                 className="h-8 w-auto"
                 onError={(e) => {
-                  // Hide logo if it fails to load
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
               />
@@ -144,23 +173,6 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
             {brandData?.companyName && ` and ${brandData.companyName} branding`}. 
             Perfect for social media, presentations, or email newsletters.
           </p>
-          {brandData?.primaryColor && (
-            <div className="flex items-center space-x-2 mt-2">
-              <span className="text-xs text-gray-500">Brand colors:</span>
-              <div 
-                className="w-4 h-4 rounded border border-gray-300" 
-                style={{ backgroundColor: brandData.primaryColor }}
-                title={`Primary: ${brandData.primaryColor}`}
-              />
-              {brandData.secondaryColor && (
-                <div 
-                  className="w-4 h-4 rounded border border-gray-300" 
-                  style={{ backgroundColor: brandData.secondaryColor }}
-                  title={`Secondary: ${brandData.secondaryColor}`}
-                />
-              )}
-            </div>
-          )}
         </div>
       </div>
     );
@@ -174,7 +186,6 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
       return (
         <div className="space-y-4">
           <div className="bg-white p-8 rounded-2xl border-2 border-gray-200 shadow-lg">
-            {/* Header */}
             <div className="text-center mb-8 pb-6 border-b-2 border-gray-100">
               <div 
                 className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg"
@@ -190,7 +201,6 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
               </p>
             </div>
 
-            {/* Quick Overview */}
             <div className="mb-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
                 <div 
@@ -204,7 +214,6 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
               </p>
             </div>
 
-            {/* Key Quote */}
             <div className="mb-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
                 <div 
@@ -224,7 +233,6 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
               </blockquote>
             </div>
 
-            {/* Key Takeaways */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <div 
@@ -252,21 +260,9 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
               </div>
             </div>
           </div>
-          
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <div className="flex items-center space-x-2 mb-2">
-              <FileText className="w-4 h-4 text-purple-600" />
-              <span className="text-sm font-medium text-gray-700">Professional One-Pager Document</span>
-            </div>
-            <p className="text-sm text-gray-600">
-              💡 <strong>Usage tip:</strong> Perfect for sharing with stakeholders, including in follow-up emails, 
-              or using as a reference document for future presentations.
-            </p>
-          </div>
         </div>
       );
     } catch (error) {
-      // Fallback for non-JSON content
       return (
         <div className="bg-white rounded-xl p-4 border border-gray-200">
           <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium leading-relaxed">
@@ -283,7 +279,6 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
       
       return (
         <div className="space-y-4">
-          {/* Visual Infographic Image */}
           {data.imageUrl && (
             <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-lg">
               <div className="flex items-center space-x-2 mb-4">
@@ -301,7 +296,6 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
             </div>
           )}
           
-          {/* Key Insights Summary */}
           <div className="bg-white p-6 rounded-xl border border-gray-200">
             <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <BarChart3 className="w-5 h-5 text-emerald-600 mr-2" />
@@ -318,43 +312,9 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
               ))}
             </div>
           </div>
-          
-          {/* Usage Tips */}
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <div className="flex items-center space-x-2 mb-2">
-              <BarChart3 className="w-4 h-4 text-emerald-600" />
-              <span className="text-sm font-medium text-gray-700">Professional Visual Infographic</span>
-            </div>
-            <p className="text-sm text-gray-600">
-              💡 <strong>Usage tip:</strong> This infographic is perfect for presentations, social media posts, 
-              website content, or as a standalone marketing piece. The visual format makes complex information 
-              easily digestible for your {data.targetAudience || 'target audience'}.
-            </p>
-          </div>
-          
-          {/* Error Fallback */}
-          {data.error && (
-            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-              <div className="flex items-center space-x-2 mb-2">
-                <ExternalLink className="w-4 h-4 text-yellow-600" />
-                <span className="text-sm font-medium text-yellow-800">Visual Generation Note</span>
-              </div>
-              <p className="text-sm text-yellow-700 mb-3">{data.fallbackMessage}</p>
-              {data.insights && (
-                <div className="space-y-2">
-                  {data.insights.map((insight: string, index: number) => (
-                    <div key={index} className="text-sm text-yellow-800">
-                      <strong>{index + 1}.</strong> {insight}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       );
     } catch (error) {
-      // Fallback for non-JSON content
       return (
         <div className="bg-white rounded-xl p-4 border border-gray-200">
           <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium leading-relaxed">
@@ -373,7 +333,7 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
           className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-8 transition-colors group"
         >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span>Start over</span>
+          <span>Want to remix another webinar?</span>
         </button>
 
         <div className="text-center mb-12 animate-fade-in">
@@ -389,6 +349,12 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
               <span> and styled with <span className="font-semibold text-indigo-600">{brandData.companyName}</span> branding</span>
             )}
           </p>
+          
+          {/* Powered by AI Badge */}
+          <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-8 border border-blue-200">
+            <Zap className="w-4 h-4" />
+            <span>Powered by AI</span>
+          </div>
           
           {/* Brand Data Summary */}
           {brandData && (brandData.primaryColor || brandData.companyName) && (
@@ -436,56 +402,86 @@ const OutputView: React.FC<OutputViewProps> = ({ assets, brandData, onBack, onVi
           </div>
         </div>
 
-        {/* Assets Grid */}
-        <div className="grid lg:grid-cols-2 gap-6 mb-16">
-          {assets.map((asset) => (
-            <div key={asset.id} className={`card p-6 border-2 ${getAssetColor(asset.type)} hover:shadow-lg transition-all duration-200`}>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-3">
-                  <div className="text-2xl">{getAssetIcon(asset.type)}</div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{asset.type}</h3>
-                    <p className="text-sm text-gray-600">{asset.title}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleCopyToClipboard(asset.content, asset.id)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
-                    copiedAsset === asset.id
-                      ? 'bg-gradient-to-r from-success-500 to-mint-500 text-white shadow-lg'
-                      : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'
-                  }`}
-                >
-                  {copiedAsset === asset.id ? (
-                    <>
-                      <Check className="w-4 h-4" />
-                      <span>Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4" />
-                      <span>Copy</span>
-                    </>
+        {/* Categorized Assets */}
+        {Object.entries(categorizedAssets).map(([category, categoryAssets]) => (
+          <div key={category} className="mb-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+              <span className="text-3xl mr-3">{getAssetIcon(category)}</span>
+              {category}
+              <span className="ml-3 text-sm bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
+                {categoryAssets.length} asset{categoryAssets.length > 1 ? 's' : ''}
+              </span>
+            </h2>
+            
+            <div className="grid lg:grid-cols-2 gap-6">
+              {categoryAssets.map((asset) => (
+                <div key={asset.id} className={`card p-6 border-2 ${getAssetColor(asset.type)} hover:shadow-lg transition-all duration-200 relative`}>
+                  {isAssetBlurred(asset.type) && (
+                    <div className="absolute inset-0 bg-white bg-opacity-90 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
+                      <div className="text-center p-6">
+                        <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <ExternalLink className="w-6 h-6 text-white" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Unlock Pro to access this</h3>
+                        <p className="text-sm text-gray-600 mb-4">Get the full campaign kit for just $4.99</p>
+                        <button
+                          onClick={onViewPricing}
+                          className="btn-primary text-sm px-4 py-2"
+                        >
+                          Upgrade Now
+                        </button>
+                      </div>
+                    </div>
                   )}
-                </button>
-              </div>
+                  
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="text-2xl">{getAssetIcon(asset.type)}</div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">{asset.type}</h3>
+                        <p className="text-sm text-gray-600">{asset.title}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleCopyToClipboard(asset.content, asset.id)}
+                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                        copiedAsset === asset.id
+                          ? 'bg-gradient-to-r from-success-500 to-mint-500 text-white shadow-lg'
+                          : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                      }`}
+                    >
+                      {copiedAsset === asset.id ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          <span>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4" />
+                          <span>Copy</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
 
-              {asset.type === 'Quote Cards' ? (
-                renderQuoteCard(asset.content, asset)
-              ) : asset.type === 'One-Pager Recap' ? (
-                renderOnePager(asset.content)
-              ) : asset.type === 'Visual Infographic' ? (
-                renderVisualInfographic(asset)
-              ) : (
-                <div className="bg-white rounded-xl p-4 border border-gray-200">
-                  <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium leading-relaxed">
-                    {asset.content}
-                  </pre>
+                  {asset.type === 'Quote Cards' ? (
+                    renderQuoteCard(asset.content, asset)
+                  ) : asset.type === 'One-Pager Recap' ? (
+                    renderOnePager(asset.content)
+                  ) : asset.type === 'Visual Infographic' ? (
+                    renderVisualInfographic(asset)
+                  ) : (
+                    <div className="bg-white rounded-xl p-4 border border-gray-200">
+                      <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium leading-relaxed">
+                        {asset.content}
+                      </pre>
+                    </div>
+                  )}
                 </div>
-              )}
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
 
         {/* Usage Tips */}
         <div className="card p-8 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100 mb-16">

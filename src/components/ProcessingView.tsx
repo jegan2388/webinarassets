@@ -14,37 +14,38 @@ const ProcessingView: React.FC<ProcessingViewProps> = ({
   progress = 0 
 }) => {
   const [displayProgress, setDisplayProgress] = useState(0);
+  const [previewAsset, setPreviewAsset] = useState<string | null>(null);
 
-  const steps = [
+  const wittySteps = [
     {
       icon: <FileText className="w-6 h-6" />,
       title: "Transcribing Audio",
       description: "Converting your webinar to text using advanced AI",
-      status: "Analyzing audio patterns and speech recognition..."
+      status: "Listening to every word (even the 'ums')..."
     },
     {
       icon: <Brain className="w-6 h-6" />,
       title: "Analyzing Content",
       description: "Understanding key themes, insights, and messaging",
-      status: "Extracting valuable insights and key takeaways..."
+      status: "Finding the golden nuggets in your content..."
     },
     {
       icon: <MessageSquare className="w-6 h-6" />,
-      title: "Creating LinkedIn Posts",
+      title: "Writing Spicy Subject Lines",
       description: "Crafting engaging social media content",
-      status: "Writing compelling posts for professional networks..."
+      status: "Writing LinkedIn posts that actually get engagement..."
     },
     {
       icon: <Mail className="w-6 h-6" />,
-      title: "Writing Email Copy",
+      title: "Designing Quote Cards Marketers Will Actually Use",
       description: "Generating personalized email sequences",
-      status: "Crafting nurture emails for your funnel stage..."
+      status: "Creating visuals that don't look like stock photos..."
     },
     {
       icon: <Quote className="w-6 h-6" />,
-      title: "Finalizing Assets",
+      title: "Unleashing the AI Creativity",
       description: "Creating shareable visual content and sales snippets",
-      status: "Generating quote cards and sales materials..."
+      status: "Putting the finishing touches on your campaign magic..."
     }
   ];
 
@@ -61,6 +62,27 @@ const ProcessingView: React.FC<ProcessingViewProps> = ({
 
     return () => clearInterval(interval);
   }, [progress]);
+
+  // Show preview asset early
+  useEffect(() => {
+    if (progress > 30 && !previewAsset) {
+      // Mock LinkedIn post preview
+      const mockPost = `🚀 Just discovered a game-changing insight from our latest webinar on "${webinarData.description}"
+
+The biggest takeaway? Most ${webinarData.persona?.toLowerCase() || 'teams'} are missing this one crucial step that could 3x their results.
+
+Here's what we learned:
+→ [Key insight will be generated from your actual content]
+→ [Specific strategy mentioned in your webinar]
+→ [Actionable tip your audience can implement today]
+
+What's your experience with this? Drop a comment below! 👇
+
+#Marketing #B2B #Strategy`;
+      
+      setPreviewAsset(mockPost);
+    }
+  }, [progress, webinarData, previewAsset]);
 
   // Determine current step index based on progress
   const getCurrentStepIndex = () => {
@@ -84,7 +106,7 @@ const ProcessingView: React.FC<ProcessingViewProps> = ({
             Remixing Your Webinar Into Campaign Magic...
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Our AI is analyzing <span className="font-semibold text-blue-600">"{webinarData.description}"</span> for <span className="font-semibold text-indigo-600">{webinarData.persona.toLowerCase()}</span> teams
+            Our AI is analyzing <span className="font-semibold text-blue-600">"{webinarData.description}"</span> for <span className="font-semibold text-indigo-600">{webinarData.persona?.toLowerCase() || 'your audience'}</span>
           </p>
 
           {/* Progress Bar */}
@@ -114,9 +136,30 @@ const ProcessingView: React.FC<ProcessingViewProps> = ({
           )}
         </div>
 
+        {/* Preview Asset Box */}
+        {previewAsset && (
+          <div className="max-w-2xl mx-auto mb-12">
+            <div className="card p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+              <div className="flex items-center space-x-2 mb-4">
+                <MessageSquare className="w-5 h-5 text-blue-600" />
+                <span className="font-semibold text-blue-900">Preview: LinkedIn Post</span>
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Generated Early!</span>
+              </div>
+              <div className="bg-white p-4 rounded-lg border border-blue-200">
+                <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium leading-relaxed">
+                  {previewAsset}
+                </pre>
+              </div>
+              <p className="text-xs text-blue-700 mt-2">
+                ✨ This is just a preview - your final assets will be customized with your actual webinar content!
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Processing Steps */}
         <div className="space-y-4 mb-16">
-          {steps.map((step, index) => (
+          {wittySteps.map((step, index) => (
             <div
               key={index}
               className={`card p-6 transition-all duration-500 border-2 ${
@@ -181,7 +224,8 @@ const ProcessingView: React.FC<ProcessingViewProps> = ({
                   {asset.includes('LinkedIn') ? '💼' : 
                    asset.includes('Email') ? '📧' : 
                    asset.includes('Quote') ? '💬' : 
-                   asset.includes('Sales') ? '🎯' : '📄'}
+                   asset.includes('Sales') ? '🎯' : 
+                   asset.includes('Infographic') ? '📊' : '📄'}
                 </div>
                 <p className="text-sm font-medium text-gray-900">{asset}</p>
               </div>
