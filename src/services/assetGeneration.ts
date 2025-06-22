@@ -16,6 +16,224 @@ const getOpenAIClient = (): OpenAI => {
   });
 };
 
+// Generate mock assets for demo purposes when API key is not available
+const generateMockAssets = (contentData: ContentData): GeneratedAsset[] => {
+  const mockAssets: GeneratedAsset[] = [];
+
+  // Always include free assets
+  if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('linkedin posts'))) {
+    mockAssets.push(
+      {
+        id: 'linkedin-1',
+        type: 'LinkedIn Posts',
+        title: 'Engaging LinkedIn Post 1',
+        content: `🚀 Just discovered a game-changing insight from "${contentData.description}"
+
+The biggest takeaway? Most ${contentData.persona?.toLowerCase() || 'teams'} are missing this one crucial step that could 3x their results.
+
+Here's what we learned:
+→ Focus on quality over quantity in your approach
+→ Leverage data-driven insights for better decisions  
+→ Build authentic relationships with your audience
+
+What's your experience with this? Drop a comment below! 👇
+
+#Marketing #B2B #Strategy #ContentMarketing #Leadership`
+      },
+      {
+        id: 'linkedin-2',
+        type: 'LinkedIn Posts',
+        title: 'Engaging LinkedIn Post 2',
+        content: `💡 Here's a counterintuitive truth about ${contentData.description.toLowerCase()}:
+
+Everyone thinks success comes from doing MORE.
+
+But the real secret? Doing LESS, but doing it exceptionally well.
+
+In our latest analysis, we found that companies focusing on 3 key areas instead of 10 saw:
+• 40% better results
+• 60% less stress
+• 2x faster implementation
+
+Sometimes the best strategy is subtraction, not addition.
+
+What would you eliminate to get better results? 🤔
+
+#Productivity #Strategy #BusinessGrowth #Focus`
+      }
+    );
+  }
+
+  if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('sales outreach emails'))) {
+    mockAssets.push(
+      {
+        id: 'sales-cold-outreach',
+        type: 'Sales Outreach Emails',
+        title: 'Cold Prospect Outreach',
+        content: `Subject: Quick question about your ${contentData.persona?.toLowerCase() || 'team'} strategy
+
+Hi [Name],
+
+I noticed you're focused on scaling [Company] and thought you'd find this interesting.
+
+We just analyzed data showing how companies like yours are increasing results by 40% using a simple approach most teams overlook.
+
+The key insight? Most ${contentData.persona?.toLowerCase() || 'teams'} are optimizing the wrong metrics.
+
+Worth a 15-minute conversation to share what we learned?
+
+Best,
+[Your name]
+
+P.S. Happy to send over the one-page summary first if that's more helpful.`
+      },
+      {
+        id: 'sales-warm-followup',
+        type: 'Sales Outreach Emails',
+        title: 'Warm Follow-up Email',
+        content: `Subject: Following up on ${contentData.description}
+
+Hi [Name],
+
+Thanks for your interest in our recent content on "${contentData.description}".
+
+Since you engaged with the material, I thought you'd appreciate this quick insight:
+
+The #1 mistake we see ${contentData.persona?.toLowerCase() || 'teams'} make is focusing on tactics before strategy. The companies that get this right see 2-3x better results.
+
+I'd love to hear your thoughts on this. Are you seeing similar patterns in your work?
+
+Best,
+[Your name]`
+      }
+    );
+  }
+
+  // Add pro assets if selected
+  if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('marketing nurture emails'))) {
+    mockAssets.push(
+      {
+        id: 'marketing-educational',
+        type: 'Marketing Nurture Emails',
+        title: 'Educational Value Email',
+        content: `Subject: 3 insights from "${contentData.description}" you'll want to bookmark
+
+Hi [Name],
+
+Thanks for your interest in our recent content on "${contentData.description}".
+
+Here are the 3 key takeaways that are already helping ${contentData.persona?.toLowerCase() || 'teams'} like yours:
+
+• **Focus on fundamentals first** - Before adding complexity, master the basics that drive 80% of results
+• **Measure what matters** - Track leading indicators, not just lagging metrics  
+• **Build systems, not just processes** - Create repeatable frameworks that scale with your growth
+
+I've also attached a one-page summary you can share with your team.
+
+Questions? Just reply to this email.
+
+Best,
+[Your name]`
+      },
+      {
+        id: 'marketing-resource',
+        type: 'Marketing Nurture Emails',
+        title: 'Resource Sharing Email',
+        content: `Subject: Thought you'd find this helpful
+
+Hi [Name],
+
+After our conversation about "${contentData.description}", I remembered this resource that might be valuable for your ${contentData.persona?.toLowerCase() || 'team'}.
+
+The key insight that resonates with most people: Success isn't about having all the answers—it's about asking better questions.
+
+I've put together a simple framework that helps teams like yours identify the right priorities. Would you like me to send it over?
+
+No strings attached—just thought it might be useful given what you're working on.
+
+Best,
+[Your name]`
+      }
+    );
+  }
+
+  if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('quote'))) {
+    mockAssets.push(
+      {
+        id: 'quote-1',
+        type: 'Quote Cards',
+        title: 'Insightful Quote 1',
+        content: 'The biggest mistake teams make is optimizing for the wrong metrics. Focus on quality over quantity, and watch your results soar.'
+      },
+      {
+        id: 'quote-2',
+        type: 'Quote Cards',
+        title: 'Insightful Quote 2',
+        content: 'Success isn\'t about having all the answers—it\'s about asking better questions and taking consistent action.'
+      }
+    );
+  }
+
+  if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('sales snippets'))) {
+    mockAssets.push(
+      {
+        id: 'sales-linkedin',
+        type: 'Sales Snippets',
+        title: 'LinkedIn Connection Request',
+        content: `Hi [Name], I saw your post about ${contentData.description.toLowerCase()} and thought you'd appreciate the insights we shared on this topic. Would love to connect and share ideas!`
+      },
+      {
+        id: 'sales-phone',
+        type: 'Sales Snippets',
+        title: 'Phone Call Opener',
+        content: `Hi [Name], this is [Your name] from [Company]. I noticed you're working on ${contentData.description.toLowerCase()} and wanted to share a quick insight that's helping ${contentData.persona?.toLowerCase() || 'teams'} like yours get better results. Do you have 2 minutes?`
+      }
+    );
+  }
+
+  if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('one-pager'))) {
+    const onePagerContent = {
+      overview: `This content covered key strategies for ${contentData.description.toLowerCase()}, providing actionable insights for ${contentData.persona?.toLowerCase() || 'teams'} looking to improve their results.`,
+      quote: "The key to success is focusing on what matters most and executing consistently.",
+      takeaways: [
+        "Prioritize quality over quantity in all your initiatives",
+        "Use data-driven insights to guide your decision making",
+        "Build systems and processes that scale with growth",
+        "Focus on leading indicators rather than lagging metrics"
+      ]
+    };
+
+    mockAssets.push({
+      id: 'one-pager-recap',
+      type: 'One-Pager Recap',
+      title: 'Content Session Recap',
+      content: JSON.stringify(onePagerContent)
+    });
+  }
+
+  if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('visual infographic'))) {
+    const infographicContent = {
+      error: 'Visual generation requires OpenAI API access',
+      insights: [
+        "Focus on fundamentals before adding complexity",
+        "Measure leading indicators for better predictions", 
+        "Build repeatable systems that scale",
+        "Quality beats quantity in sustainable growth"
+      ],
+      fallbackMessage: 'Visual generation temporarily unavailable. Key insights are provided below.'
+    };
+
+    mockAssets.push({
+      id: 'visual-infographic',
+      type: 'Visual Infographic',
+      title: 'Professional Content Infographic',
+      content: JSON.stringify(infographicContent)
+    });
+  }
+
+  return mockAssets;
+};
+
 // Extract key insights from content transcript
 const extractInsights = async (transcript: string, description: string): Promise<string[]> => {
   const openai = getOpenAIClient();
@@ -719,6 +937,20 @@ export const generateMarketingAssets = async (
   onProgress?: (step: string, progress: number) => void
 ): Promise<GeneratedAsset[]> => {
   try {
+    // Check if OpenAI API key is available
+    const hasApiKey = !!import.meta.env.VITE_OPENAI_API_KEY;
+    
+    if (!hasApiKey) {
+      console.log('No OpenAI API key found, generating mock assets for demo');
+      onProgress?.('Generating demo assets...', 50);
+      
+      // Simulate processing time for better UX
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      onProgress?.('Finalizing your demo assets...', 100);
+      
+      return generateMockAssets(contentData);
+    }
+
     onProgress?.('Analyzing content for key insights...', 15);
     
     // Extract key insights from transcript
@@ -781,6 +1013,19 @@ export const generateMarketingAssets = async (
     
   } catch (error) {
     console.error('Asset generation error:', error);
+    
+    // If it's an API key error, fall back to mock assets
+    if (error instanceof Error && error.message.includes('API key')) {
+      console.log('API key error, falling back to mock assets');
+      onProgress?.('Generating demo assets...', 50);
+      
+      // Simulate processing time
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      onProgress?.('Finalizing your demo assets...', 100);
+      
+      return generateMockAssets(contentData);
+    }
+    
     throw error;
   }
 };

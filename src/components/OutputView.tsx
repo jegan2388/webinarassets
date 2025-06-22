@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, BarChart3, UserCheck, TrendingUp, Zap, Crown, CreditCard } from 'lucide-react';
+import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, BarChart3, UserCheck, TrendingUp, Zap, Crown, CreditCard, AlertCircle } from 'lucide-react';
 import { GeneratedAsset } from '../App';
 import { BrandData } from '../services/brandExtraction';
 import { useAuth } from '../hooks/useAuth';
@@ -10,8 +10,8 @@ interface OutputViewProps {
   brandData?: BrandData | null;
   onBack: () => void;
   onViewPricing: () => void;
-  webinarRequestId?: string;
-  currentWebinarData?: any;
+  contentRequestId?: string;
+  currentContentData?: any;
 }
 
 const OutputView: React.FC<OutputViewProps> = ({ 
@@ -19,8 +19,8 @@ const OutputView: React.FC<OutputViewProps> = ({
   brandData, 
   onBack, 
   onViewPricing,
-  webinarRequestId,
-  currentWebinarData
+  contentRequestId,
+  currentContentData
 }) => {
   const [copiedAsset, setCopiedAsset] = useState<string | null>(null);
   const [email, setEmail] = useState('');
@@ -29,8 +29,11 @@ const OutputView: React.FC<OutputViewProps> = ({
   const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
   const { user, isProUser } = useAuth();
 
+  // Check if this is a demo (no API key)
+  const isDemoMode = !import.meta.env.VITE_OPENAI_API_KEY;
+
   // Check if this is a free user viewing free assets (can upgrade)
-  const canUpgradeThisWebinar = user && !isProUser && webinarRequestId && currentWebinarData;
+  const canUpgradeThisContent = user && !isProUser && contentRequestId && currentContentData;
   const hasOnlyFreeAssets = assets.every(asset => 
     ['LinkedIn Posts', 'Sales Outreach Emails'].includes(asset.type)
   );
@@ -46,7 +49,7 @@ const OutputView: React.FC<OutputViewProps> = ({
   };
 
   const handleDownloadAll = () => {
-    if (!user) {
+    if (!user && !isDemoMode) {
       setShowEmailCapture(true);
       return;
     }
@@ -60,21 +63,21 @@ const OutputView: React.FC<OutputViewProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'webinar-marketing-assets.txt';
+    a.download = 'content-marketing-assets.txt';
     a.click();
     URL.revokeObjectURL(url);
   };
 
-  const handleUpgradeWebinar = async () => {
-    if (!webinarRequestId || !currentWebinarData) return;
+  const handleUpgradeContent = async () => {
+    if (!contentRequestId || !currentContentData) return;
     
     setIsProcessingUpgrade(true);
     try {
       const { url } = await createCheckoutSession(
-        currentWebinarData,
+        currentContentData,
         `${window.location.origin}/dashboard`,
         `${window.location.origin}/dashboard`,
-        webinarRequestId // Pass existing webinar request ID
+        contentRequestId // Pass existing content request ID
       );
       
       window.location.href = url;
@@ -96,7 +99,7 @@ const OutputView: React.FC<OutputViewProps> = ({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'webinar-marketing-assets.txt';
+      a.download = 'content-marketing-assets.txt';
       a.click();
       URL.revokeObjectURL(url);
       
@@ -149,7 +152,7 @@ const OutputView: React.FC<OutputViewProps> = ({
   // Check if asset is premium and user doesn't have access
   const isAssetBlurred = (assetType: string) => {
     const premiumAssets = ['Marketing Nurture Emails', 'Quote Cards', 'Sales Snippets', 'One-Pager Recap', 'Visual Infographic'];
-    return premiumAssets.includes(assetType) && !isProUser && !user;
+    return premiumAssets.includes(assetType) && !isProUser && !user && !isDemoMode;
   };
 
   // Categorize assets by type
@@ -196,7 +199,7 @@ const OutputView: React.FC<OutputViewProps> = ({
             {content}
           </p>
           <div className="text-sm opacity-80 font-medium">
-            — {brandData?.companyName || 'Your Webinar Insights'}
+            — {brandData?.companyName || 'Your Content Insights'}
           </div>
         </div>
         
@@ -231,7 +234,7 @@ const OutputView: React.FC<OutputViewProps> = ({
                 <FileText className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Webinar Session Recap
+                Content Session Recap
               </h2>
               <p className="text-gray-600">
                 {brandData?.companyName || 'Professional'} Summary Document
@@ -257,7 +260,7 @@ const OutputView: React.FC<OutputViewProps> = ({
                   className="w-6 h-6 rounded-full mr-3"
                   style={{ backgroundColor: primaryColor }}
                 ></div>
-                Key Quote from Speaker
+                Key Quote from Content
               </h3>
               <blockquote 
                 className="text-lg italic text-white p-6 rounded-xl shadow-lg relative"
@@ -348,6 +351,18 @@ const OutputView: React.FC<OutputViewProps> = ({
                 </div>
               ))}
             </div>
+            
+            {data.error && (
+              <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                <div className="flex items-center space-x-2">
+                  <AlertCircle className="w-4 h-4 text-yellow-600" />
+                  <span className="text-sm font-medium text-yellow-900">Demo Mode</span>
+                </div>
+                <p className="text-yellow-800 text-xs mt-1">
+                  Visual generation requires OpenAI API access. The key insights are provided above.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       );
@@ -370,7 +385,7 @@ const OutputView: React.FC<OutputViewProps> = ({
           className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-8 transition-colors group"
         >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span>Want to remix another webinar?</span>
+          <span>Want to remix more content?</span>
         </button>
 
         <div className="text-center mb-12 animate-fade-in">
@@ -381,11 +396,19 @@ const OutputView: React.FC<OutputViewProps> = ({
             🎉 Your Marketing Assets Are Ready!
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            <span className="font-semibold text-blue-600">{assets.length} campaign-ready assets</span> generated from your webinar
+            <span className="font-semibold text-blue-600">{assets.length} campaign-ready assets</span> generated from your content
             {brandData?.companyName && (
               <span> and styled with <span className="font-semibold text-indigo-600">{brandData.companyName}</span> branding</span>
             )}
           </p>
+          
+          {/* Demo Mode Notice */}
+          {isDemoMode && (
+            <div className="inline-flex items-center space-x-2 bg-yellow-50 text-yellow-700 px-4 py-2 rounded-full text-sm font-medium mb-6 border border-yellow-200">
+              <AlertCircle className="w-4 h-4" />
+              <span>Demo Mode - Sample assets generated for preview</span>
+            </div>
+          )}
           
           {/* Powered by AI Badge */}
           <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-8 border border-blue-200">
@@ -440,14 +463,14 @@ const OutputView: React.FC<OutputViewProps> = ({
         </div>
 
         {/* Upgrade Section - Show if user has only free assets and can upgrade */}
-        {canUpgradeThisWebinar && hasOnlyFreeAssets && (
+        {canUpgradeThisContent && hasOnlyFreeAssets && !isDemoMode && (
           <div className="card p-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 mb-12">
             <div className="text-center">
               <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                 <Crown className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Want more assets from this webinar?
+                Want more assets from this content?
               </h2>
               <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
                 Get 4x more content including branded visuals, nurture emails, and extra posts.
@@ -457,7 +480,7 @@ const OutputView: React.FC<OutputViewProps> = ({
                 className="btn-primary text-lg px-8 py-4 inline-flex items-center space-x-2"
               >
                 <Crown className="w-5 h-5" />
-                <span>Unlock Full Campaign Kit ($4.99)</span>
+                <span>Unlock Full Campaign Kit</span>
               </button>
             </div>
           </div>
@@ -484,7 +507,7 @@ const OutputView: React.FC<OutputViewProps> = ({
                           <ExternalLink className="w-6 h-6 text-white" />
                         </div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-2">Unlock Pro to access this</h3>
-                        <p className="text-sm text-gray-600 mb-4">Get the full campaign kit for just $4.99</p>
+                        <p className="text-sm text-gray-600 mb-4">Get the full campaign kit</p>
                         <button
                           onClick={onViewPricing}
                           className="btn-primary text-sm px-4 py-2"
@@ -556,7 +579,7 @@ const OutputView: React.FC<OutputViewProps> = ({
                 <Share2 className="w-6 h-6 text-white" />
               </div>
               <h4 className="font-semibold text-gray-900 mb-2">LinkedIn Posts</h4>
-              <p className="text-sm text-gray-600">Post 2-3 times per week with webinar insights to build thought leadership</p>
+              <p className="text-sm text-gray-600">Post 2-3 times per week with content insights to build thought leadership</p>
             </div>
             <div className="text-center p-4">
               <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
@@ -585,16 +608,19 @@ const OutputView: React.FC<OutputViewProps> = ({
         {/* Next Steps */}
         <div className="card p-8 text-center">
           <h3 className="text-2xl font-bold text-gray-900 mb-4">
-            Want More Assets From This Webinar?
+            Want More Assets From Your Content?
           </h3>
           <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-            Unlock additional asset types, custom branding, and advanced AI features with our Pro plan
+            {isDemoMode 
+              ? "This was a demo with sample assets. Sign up to process your real content and get personalized marketing materials."
+              : "Unlock additional asset types, custom branding, and advanced AI features with our Pro plan"
+            }
           </p>
           <button
             onClick={onViewPricing}
             className="btn-primary inline-flex items-center space-x-2"
           >
-            <span>View Pricing Plans</span>
+            <span>{isDemoMode ? "Get Started for Real" : "View Pricing Plans"}</span>
             <ExternalLink className="w-4 h-4" />
           </button>
         </div>
@@ -608,15 +634,15 @@ const OutputView: React.FC<OutputViewProps> = ({
                   <Crown className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  Unlock Full Campaign Kit - $4.99
+                  Unlock Full Campaign Kit
                 </h3>
                 <div className="inline-flex items-center space-x-2 bg-red-50 text-red-700 px-3 py-1 rounded-full text-sm font-medium border border-red-200">
-                  <span>🔥 50% off today!</span>
+                  <span>🔥 Pro subscription includes this!</span>
                 </div>
               </div>
               
               <div className="space-y-4 mb-6">
-                <h4 className="font-semibold text-gray-900">Get 4x more assets from this same webinar:</h4>
+                <h4 className="font-semibold text-gray-900">Get 4x more assets from this same content:</h4>
                 <div className="grid grid-cols-1 gap-3">
                   <div className="flex items-center space-x-3 p-3 bg-mint-50 rounded-lg">
                     <Check className="w-5 h-5 text-mint-600" />
@@ -643,7 +669,7 @@ const OutputView: React.FC<OutputViewProps> = ({
 
               <div className="flex space-x-3">
                 <button
-                  onClick={handleUpgradeWebinar}
+                  onClick={handleUpgradeContent}
                   disabled={isProcessingUpgrade}
                   className="flex-1 btn-primary flex items-center justify-center space-x-2"
                 >
@@ -655,7 +681,7 @@ const OutputView: React.FC<OutputViewProps> = ({
                   ) : (
                     <>
                       <CreditCard className="w-4 h-4" />
-                      <span>Upgrade for $4.99</span>
+                      <span>Upgrade to Pro</span>
                     </>
                   )}
                 </button>
