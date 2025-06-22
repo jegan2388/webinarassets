@@ -134,16 +134,25 @@ export const transcribeAudio = async (file: File): Promise<TranscriptionResult> 
   try {
     console.log('Starting transcription for file:', file.name);
     
-    // Validate file type
-    const validTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 'video/mp4', 'video/webm'];
-    if (!validTypes.some(type => file.type.includes(type.split('/')[1]))) {
-      throw new Error('Unsupported file type. Please upload MP3, WAV, M4A, MP4, or WebM files.');
+    // Validate file type - expanded to support more formats
+    const validTypes = [
+      'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 'audio/aac', 'audio/ogg', 'audio/flac',
+      'video/mp4', 'video/webm', 'video/mov', 'video/avi', 'video/quicktime', 'video/x-msvideo'
+    ];
+    
+    const isValidType = validTypes.some(type => 
+      file.type.includes(type.split('/')[1]) || 
+      file.name.toLowerCase().includes(type.split('/')[1])
+    );
+    
+    if (!isValidType) {
+      throw new Error('Unsupported file type. Please upload MP3, WAV, M4A, MP4, WebM, MOV, or AVI files.');
     }
 
-    // Check file size (Whisper has a 25MB limit)
-    const maxSize = 25 * 1024 * 1024; // 25MB
+    // Check file size - increased to 100MB to match the UI
+    const maxSize = 100 * 1024 * 1024; // 100MB
     if (file.size > maxSize) {
-      throw new Error('File too large. Please upload files smaller than 25MB.');
+      throw new Error(`File too large. Please upload files smaller than ${Math.round(maxSize / (1024 * 1024))}MB.`);
     }
 
     // Initialize OpenAI client only when transcribing

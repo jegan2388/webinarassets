@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, ArrowLeft, Check, FileVideo, Youtube, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, BarChart3, UserCheck, TrendingUp, CreditCard, User, Crown } from 'lucide-react';
+import { Upload, ArrowLeft, Check, FileVideo, Youtube, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, BarChart3, UserCheck, TrendingUp, CreditCard, User, Crown, Link, Video } from 'lucide-react';
 import { WebinarData } from '../App';
 import { createCheckoutSession } from '../lib/stripe';
 import { useAuth } from '../hooks/useAuth';
@@ -20,7 +20,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
     funnelStage: '',
     selectedAssets: ['LinkedIn Posts', 'Sales Outreach Emails'] // Default free assets
   });
-  const [uploadType, setUploadType] = useState<'file' | 'youtube'>('file');
+  const [uploadType, setUploadType] = useState<'file' | 'link'>('file');
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showEmailCapture, setShowEmailCapture] = useState(false);
@@ -30,6 +30,10 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
   const [assetTier, setAssetTier] = useState<'free' | 'pro'>('free');
   const [combinedDescription, setCombinedDescription] = useState('');
   const [showProSummary, setShowProSummary] = useState(false);
+  const [videoUrl, setVideoUrl] = useState('');
+
+  // Increased file size limit to 100MB
+  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
 
   const assetTypes = [
     { 
@@ -83,9 +87,72 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
     }
   ];
 
+  // Detect video platform from URL
+  const detectVideoPlatform = (url: string): string => {
+    if (!url) return 'Unknown';
+    
+    const lowerUrl = url.toLowerCase();
+    
+    if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+      return 'YouTube';
+    } else if (lowerUrl.includes('vimeo.com')) {
+      return 'Vimeo';
+    } else if (lowerUrl.includes('hubspot.com') || lowerUrl.includes('hs-sites.com')) {
+      return 'HubSpot';
+    } else if (lowerUrl.includes('wistia.com') || lowerUrl.includes('wi.st')) {
+      return 'Wistia';
+    } else if (lowerUrl.includes('loom.com')) {
+      return 'Loom';
+    } else if (lowerUrl.includes('zoom.us')) {
+      return 'Zoom';
+    } else if (lowerUrl.includes('teams.microsoft.com')) {
+      return 'Microsoft Teams';
+    } else if (lowerUrl.includes('webex.com')) {
+      return 'Webex';
+    } else if (lowerUrl.includes('gotomeeting.com')) {
+      return 'GoToMeeting';
+    } else if (lowerUrl.includes('brightcove.com')) {
+      return 'Brightcove';
+    } else if (lowerUrl.includes('kaltura.com')) {
+      return 'Kaltura';
+    } else if (lowerUrl.includes('vidyard.com')) {
+      return 'Vidyard';
+    } else if (lowerUrl.includes('twitch.tv')) {
+      return 'Twitch';
+    } else if (lowerUrl.includes('facebook.com') || lowerUrl.includes('fb.watch')) {
+      return 'Facebook';
+    } else if (lowerUrl.includes('linkedin.com')) {
+      return 'LinkedIn';
+    } else if (lowerUrl.includes('dailymotion.com')) {
+      return 'Dailymotion';
+    } else if (lowerUrl.includes('streamable.com')) {
+      return 'Streamable';
+    }
+    
+    return 'Video Platform';
+  };
+
+  // Validate video URL
+  const isValidVideoUrl = (url: string): boolean => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const handleFileUpload = (file: File) => {
+    // Check file size
+    if (file.size > MAX_FILE_SIZE) {
+      alert(`File too large. Please upload files smaller than ${MAX_FILE_SIZE / (1024 * 1024)}MB.`);
+      return;
+    }
+
     if (file && (file.type.startsWith('video/') || file.type.startsWith('audio/'))) {
       setFormData(prev => ({ ...prev, file }));
+    } else {
+      alert('Please upload a valid audio or video file.');
     }
   };
 
@@ -146,7 +213,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!combinedDescription || (!formData.file && !formData.youtubeUrl)) {
+    if (!combinedDescription || (!formData.file && !videoUrl)) {
       return;
     }
 
@@ -156,7 +223,8 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
       ...formData,
       description: combinedDescription,
       persona,
-      funnelStage
+      funnelStage,
+      youtubeUrl: uploadType === 'link' ? videoUrl : undefined
     };
 
     // If only free assets are selected, proceed directly
@@ -229,10 +297,18 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
     }
   };
 
-  const isFormValid = combinedDescription && (formData.file || formData.youtubeUrl);
+  const isFormValid = combinedDescription && (formData.file || (uploadType === 'link' && isValidVideoUrl(videoUrl)));
 
   const freeAssets = assetTypes.filter(asset => asset.isFree);
   const proAssets = assetTypes.filter(asset => !asset.isFree);
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen py-8">
@@ -289,29 +365,32 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                 >
                   <FileVideo className="w-5 h-5 mb-2" />
                   <div className="font-medium">Upload File</div>
-                  <div className="text-sm text-gray-600">MP4, MP3, or other formats</div>
+                  <div className="text-sm text-gray-600">MP4, MP3, WAV, M4A (up to 100MB)</div>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setUploadType('youtube')}
+                  onClick={() => setUploadType('link')}
                   className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
-                    uploadType === 'youtube'
+                    uploadType === 'link'
                       ? 'border-blue-500 bg-blue-50 text-blue-900'
                       : 'border-gray-200 hover:border-gray-300 bg-white'
                   }`}
                 >
-                  <Youtube className="w-5 h-5 mb-2" />
-                  <div className="font-medium">YouTube Link</div>
-                  <div className="text-sm text-gray-600">Coming soon - use file upload</div>
+                  <Link className="w-5 h-5 mb-2" />
+                  <div className="font-medium">Video Link</div>
+                  <div className="text-sm text-gray-600">YouTube, Vimeo, HubSpot, etc.</div>
                 </button>
               </div>
             </div>
 
-            {/* File Upload or YouTube URL */}
+            {/* File Upload or Video URL */}
             {uploadType === 'file' ? (
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-4">
                   Upload your webinar recording
+                  <span className="text-sm font-normal text-gray-600 ml-2">
+                    (Maximum file size: {formatFileSize(MAX_FILE_SIZE)})
+                  </span>
                 </label>
                 <div
                   onDragOver={handleDragOver}
@@ -330,8 +409,13 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                       <Check className="w-12 h-12 mx-auto mb-3" />
                       <p className="font-semibold text-lg">{formData.file.name}</p>
                       <p className="text-sm text-gray-600 mt-1">
-                        {(formData.file.size / (1024 * 1024)).toFixed(1)} MB • Ready to process
+                        {formatFileSize(formData.file.size)} • Ready to process
                       </p>
+                      {formData.file.size > MAX_FILE_SIZE && (
+                        <p className="text-red-600 text-sm mt-2">
+                          ⚠️ File exceeds {formatFileSize(MAX_FILE_SIZE)} limit
+                        </p>
+                      )}
                     </div>
                   ) : (
                     <div>
@@ -339,7 +423,9 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                       <p className="text-lg font-semibold text-gray-700 mb-2">
                         Drop your webinar file here
                       </p>
-                      <p className="text-gray-500 mb-6">or click to browse your files</p>
+                      <p className="text-gray-500 mb-6">
+                        or click to browse your files
+                      </p>
                       <input
                         type="file"
                         accept="video/*,audio/*"
@@ -354,30 +440,62 @@ const UploadForm: React.FC<UploadFormProps> = ({ onSubmit, onBack, onPaymentPend
                         <Upload className="w-4 h-4" />
                         <span>Choose File</span>
                       </label>
+                      <p className="text-xs text-gray-500 mt-4">
+                        Supported formats: MP4, MP3, WAV, M4A, WebM, MOV, AVI
+                        <br />
+                        Maximum file size: {formatFileSize(MAX_FILE_SIZE)}
+                      </p>
                     </div>
                   )}
                 </div>
               </div>
             ) : (
               <div>
-                <label htmlFor="youtube-url" className="block text-sm font-semibold text-gray-900 mb-4">
-                  YouTube URL (Coming Soon)
+                <label htmlFor="video-url" className="block text-sm font-semibold text-gray-900 mb-4">
+                  <Video className="w-4 h-4 inline mr-2" />
+                  Video URL
                 </label>
                 <div className="relative">
-                  <Youtube className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Link className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="url"
-                    id="youtube-url"
-                    value={formData.youtubeUrl || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, youtubeUrl: e.target.value }))}
-                    placeholder="YouTube processing coming soon - please use file upload"
+                    id="video-url"
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    placeholder="https://youtube.com/watch?v=... or any video platform URL"
                     className="input-field pl-12"
-                    disabled
                   />
                 </div>
+                {videoUrl && (
+                  <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center space-x-2">
+                      <Video className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-medium text-blue-900">
+                        Detected: {detectVideoPlatform(videoUrl)}
+                      </span>
+                      {isValidVideoUrl(videoUrl) ? (
+                        <Check className="w-4 h-4 text-success-600" />
+                      ) : (
+                        <AlertCircle className="w-4 h-4 text-red-600" />
+                      )}
+                    </div>
+                    {!isValidVideoUrl(videoUrl) && (
+                      <p className="text-red-600 text-xs mt-1">Please enter a valid URL</p>
+                    )}
+                  </div>
+                )}
                 <p className="text-sm text-gray-500 mt-2">
-                  YouTube URL processing requires backend integration. Please upload a file for now.
+                  <strong>Supported platforms:</strong> YouTube, Vimeo, HubSpot, Wistia, Loom, Zoom, Microsoft Teams, Webex, GoToMeeting, Brightcove, Kaltura, Vidyard, and more.
                 </p>
+                <div className="mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 text-yellow-600" />
+                    <span className="text-sm font-medium text-yellow-900">Note:</span>
+                  </div>
+                  <p className="text-yellow-800 text-xs mt-1">
+                    Video link processing requires backend integration. For now, please use file upload for best results.
+                  </p>
+                </div>
               </div>
             )}
 
