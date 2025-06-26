@@ -22,19 +22,22 @@ const getOpenAIClient = (): OpenAI => {
 // Generate mock assets for demo purposes when API key is not available
 const generateMockAssets = (contentData: ContentData): GeneratedAsset[] => {
   const mockAssets: GeneratedAsset[] = [];
+  const isWebinar = contentData.contentType === 'file' || contentData.contentType === 'link';
+  const isBlog = contentData.contentType === 'text';
 
   // Always include free assets
   if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('linkedin posts'))) {
-    mockAssets.push(
-      {
-        id: 'linkedin-1',
-        type: 'LinkedIn Posts',
-        title: 'Engaging LinkedIn Post 1',
-        content: `🚀 Just discovered a game-changing insight from "${contentData.description}"
+    if (isWebinar) {
+      mockAssets.push(
+        {
+          id: 'linkedin-1',
+          type: 'LinkedIn Posts',
+          title: 'Engaging LinkedIn Post 1',
+          content: `🚀 Just wrapped up an incredible session on "${contentData.description}"
 
 The biggest takeaway? Most ${contentData.persona?.toLowerCase() || 'teams'} are missing this one crucial step that could 3x their results.
 
-Here's what we learned:
+Here's what we covered:
 → Focus on quality over quantity in your approach
 → Leverage data-driven insights for better decisions  
 → Build authentic relationships with your audience
@@ -42,18 +45,18 @@ Here's what we learned:
 What's your experience with this? Drop a comment below! 👇
 
 #Marketing #B2B #Strategy #ContentMarketing #Leadership`
-      },
-      {
-        id: 'linkedin-2',
-        type: 'LinkedIn Posts',
-        title: 'Engaging LinkedIn Post 2',
-        content: `💡 Here's a counterintuitive truth about ${contentData.description.toLowerCase()}:
+        },
+        {
+          id: 'linkedin-2',
+          type: 'LinkedIn Posts',
+          title: 'Engaging LinkedIn Post 2',
+          content: `💡 Here's a counterintuitive truth about ${contentData.description.toLowerCase()}:
 
 Everyone thinks success comes from doing MORE.
 
 But the real secret? Doing LESS, but doing it exceptionally well.
 
-In our latest analysis, we found that companies focusing on 3 key areas instead of 10 saw:
+In our latest session, we found that companies focusing on 3 key areas instead of 10 saw:
 • 40% better results
 • 60% less stress
 • 2x faster implementation
@@ -63,23 +66,71 @@ Sometimes the best strategy is subtraction, not addition.
 What would you eliminate to get better results? 🤔
 
 #Productivity #Strategy #BusinessGrowth #Focus`
-      }
-    );
+        }
+      );
+    } else {
+      mockAssets.push(
+        {
+          id: 'linkedin-1',
+          type: 'LinkedIn Posts',
+          title: 'Thought Leadership Post',
+          content: `📝 Just published a deep dive on "${contentData.description}"
+
+After researching this topic extensively, here's what surprised me most:
+
+The conventional wisdom around this is completely backwards.
+
+Most ${contentData.persona?.toLowerCase() || 'professionals'} focus on the wrong metrics entirely.
+
+Here's what actually moves the needle:
+→ Quality insights over quantity of content
+→ Authentic engagement over vanity metrics
+→ Long-term relationships over quick wins
+
+The full breakdown is in my latest article. What's been your experience?
+
+#ThoughtLeadership #ContentStrategy #B2B #Marketing`
+        },
+        {
+          id: 'linkedin-2',
+          type: 'LinkedIn Posts',
+          title: 'Educational Post',
+          content: `🎯 Key insight from my latest article on ${contentData.description.toLowerCase()}:
+
+The biggest mistake I see ${contentData.persona?.toLowerCase() || 'teams'} make is trying to boil the ocean.
+
+Instead of tackling everything at once, focus on these 3 fundamentals:
+
+1. Master the basics before adding complexity
+2. Measure what actually matters to your goals
+3. Build systems that scale with your growth
+
+Simple? Yes. Easy? Not always.
+
+But this approach consistently delivers better results than trying to do everything at once.
+
+What's one thing you'd focus on first? 💭
+
+#Strategy #Focus #BusinessGrowth #Productivity`
+        }
+      );
+    }
   }
 
   if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('sales outreach emails'))) {
-    mockAssets.push(
-      {
-        id: 'sales-cold-outreach',
-        type: 'Sales Outreach Emails',
-        title: 'Cold Prospect Outreach',
-        content: `Subject: Quick question about your ${contentData.persona?.toLowerCase() || 'team'} strategy
+    if (isWebinar) {
+      mockAssets.push(
+        {
+          id: 'sales-cold-outreach',
+          type: 'Sales Outreach Emails',
+          title: 'Cold Prospect Outreach',
+          content: `Subject: Quick question about your ${contentData.persona?.toLowerCase() || 'team'} strategy
 
 Hi [Name],
 
 I noticed you're focused on scaling [Company] and thought you'd find this interesting.
 
-We just analyzed data showing how companies like yours are increasing results by 40% using a simple approach most teams overlook.
+We just hosted a session showing how companies like yours are increasing results by 40% using a simple approach most teams overlook.
 
 The key insight? Most ${contentData.persona?.toLowerCase() || 'teams'} are optimizing the wrong metrics.
 
@@ -88,17 +139,17 @@ Worth a 15-minute conversation to share what we learned?
 Best,
 [Your name]
 
-P.S. Happy to send over the one-page summary first if that's more helpful.`
-      },
-      {
-        id: 'sales-warm-followup',
-        type: 'Sales Outreach Emails',
-        title: 'Warm Follow-up Email',
-        content: `Subject: Following up on ${contentData.description}
+P.S. Happy to send over the session recap first if that's more helpful.`
+        },
+        {
+          id: 'sales-warm-followup',
+          type: 'Sales Outreach Emails',
+          title: 'Warm Follow-up Email',
+          content: `Subject: Following up on ${contentData.description}
 
 Hi [Name],
 
-Thanks for your interest in our recent content on "${contentData.description}".
+Thanks for your interest in our recent session on "${contentData.description}".
 
 Since you engaged with the material, I thought you'd appreciate this quick insight:
 
@@ -108,22 +159,67 @@ I'd love to hear your thoughts on this. Are you seeing similar patterns in your 
 
 Best,
 [Your name]`
-      }
-    );
+        }
+      );
+    } else {
+      mockAssets.push(
+        {
+          id: 'sales-cold-outreach',
+          type: 'Sales Outreach Emails',
+          title: 'Cold Prospect Outreach',
+          content: `Subject: Thought you'd find this insight valuable
+
+Hi [Name],
+
+I noticed you're working on [relevant challenge] at [Company] and thought you'd find this interesting.
+
+I just published research on "${contentData.description}" that reveals a counterintuitive approach most ${contentData.persona?.toLowerCase() || 'teams'} miss.
+
+The key finding? The conventional wisdom is actually holding teams back.
+
+Worth a quick call to share the specific insights that apply to your situation?
+
+Best,
+[Your name]
+
+P.S. Happy to send the article first if you'd prefer to review it.`
+        },
+        {
+          id: 'sales-warm-followup',
+          type: 'Sales Outreach Emails',
+          title: 'Content Follow-up',
+          content: `Subject: Re: ${contentData.description}
+
+Hi [Name],
+
+Thanks for reading my article on "${contentData.description}".
+
+Since you found it valuable, I thought you might be interested in how [similar company] applied these insights to achieve [specific result].
+
+The approach is surprisingly simple, but the execution requires getting a few key details right.
+
+Would you be open to a brief conversation about how this might apply to your situation at [Company]?
+
+Best,
+[Your name]`
+        }
+      );
+    }
   }
 
-  // Add pro assets if selected
+  // Add other assets if selected
   if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('marketing nurture emails'))) {
+    const emailType = isWebinar ? 'session' : 'article';
     mockAssets.push(
       {
         id: 'marketing-educational',
         type: 'Marketing Nurture Emails',
         title: 'Educational Value Email',
-        content: `Subject: 3 insights from "${contentData.description}" you'll want to bookmark
+        content: `Subject: 3 insights from our ${emailType} on "${contentData.description}"
 
 Hi [Name],
 
-Thanks for your interest in our recent content on "${contentData.description}".
+Thanks for your interest in our recent ${emailType} on "${contentData.description}".
 
 Here are the 3 key takeaways that are already helping ${contentData.persona?.toLowerCase() || 'teams'} like yours:
 
@@ -177,26 +273,9 @@ Best,
     );
   }
 
-  if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('sales snippets'))) {
-    mockAssets.push(
-      {
-        id: 'sales-linkedin',
-        type: 'Sales Snippets',
-        title: 'LinkedIn Connection Request',
-        content: `Hi [Name], I saw your post about ${contentData.description.toLowerCase()} and thought you'd appreciate the insights we shared on this topic. Would love to connect and share ideas!`
-      },
-      {
-        id: 'sales-phone',
-        type: 'Sales Snippets',
-        title: 'Phone Call Opener',
-        content: `Hi [Name], this is [Your name] from [Company]. I noticed you're working on ${contentData.description.toLowerCase()} and wanted to share a quick insight that's helping ${contentData.persona?.toLowerCase() || 'teams'} like yours get better results. Do you have 2 minutes?`
-      }
-    );
-  }
-
   if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('one-pager'))) {
     const onePagerContent = {
-      overview: `This content covered key strategies for ${contentData.description.toLowerCase()}, providing actionable insights for ${contentData.persona?.toLowerCase() || 'teams'} looking to improve their results.`,
+      overview: `This ${isWebinar ? 'session' : 'article'} covered key strategies for ${contentData.description.toLowerCase()}, providing actionable insights for ${contentData.persona?.toLowerCase() || 'teams'} looking to improve their results.`,
       quote: "The key to success is focusing on what matters most and executing consistently.",
       takeaways: [
         "Prioritize quality over quantity in all your initiatives",
@@ -238,20 +317,24 @@ Best,
 };
 
 // Extract key insights from content transcript
-const extractInsights = async (transcript: string, description: string): Promise<string[]> => {
+const extractInsights = async (transcript: string, description: string, contentType: 'file' | 'link' | 'text'): Promise<string[]> => {
   const openai = getOpenAIClient();
+  
+  const contentTypeContext = contentType === 'text' ? 'blog post or article' : 'webinar or presentation';
   
   const response = await openai.chat.completions.create({
     model: 'gpt-4',
     messages: [
       {
         role: 'system',
-        content: `You are an expert content strategist. Extract the 5-7 most valuable, actionable insights from this content. Focus on:
+        content: `You are an expert content strategist analyzing a ${contentTypeContext}. Extract the 5-7 most valuable, actionable insights from this content. Focus on:
+        
+        For ${contentTypeContext}:
         - Key takeaways that would be valuable to share
         - Actionable strategies or frameworks mentioned
         - Surprising statistics or data points
         - Memorable quotes or statements that reveal new perspectives or challenge assumptions
-        - Practical tips that attendees can implement immediately
+        - Practical tips that readers/attendees can implement immediately
         - Profound realizations or "aha!" moments
         - Statements that encapsulate core messages or key findings
         
@@ -265,7 +348,7 @@ const extractInsights = async (transcript: string, description: string): Promise
       },
       {
         role: 'user',
-        content: `Content Topic: ${description}\n\nContent: ${transcript.slice(0, 8000)}` // Limit to avoid token limits
+        content: `Content Topic: ${description}\nContent Type: ${contentTypeContext}\n\nContent: ${transcript.slice(0, 8000)}` // Limit to avoid token limits
       }
     ],
     temperature: 0.3,
@@ -281,163 +364,7 @@ const extractInsights = async (transcript: string, description: string): Promise
   }
 };
 
-// Generate One-Pager Recap
-const generateOnePagerRecap = async (
-  transcript: string,
-  contentData: ContentData,
-  brandData?: BrandData | null
-): Promise<GeneratedAsset> => {
-  const openai = getOpenAIClient();
-  
-  const brandContext = brandData?.companyName 
-    ? `Company: ${brandData.companyName}. ` 
-    : '';
-  
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4',
-    messages: [
-      {
-        role: 'system',
-        content: `You are a professional content strategist creating a one-page content recap document. Create a structured document with exactly these sections and word limits:
-
-        STRUCTURE REQUIREMENTS:
-        1. Quick Session Overview (50 words max) - Brief summary of what was covered
-        2. Key Quote from Content (20 words max) - Most impactful direct quote from the content
-        3. 4 Key Takeaways (25 words each) - Most valuable insights readers can implement
-        
-        FORMAT REQUIREMENTS:
-        - Return as structured JSON with sections: "overview", "quote", "takeaways" (array of 4 strings)
-        - Each section must stay within word limits
-        - Use professional, engaging language appropriate for ${contentData.persona}
-        - Focus on actionable insights and practical value
-        - Make it scannable and easy to digest
-        
-        CONTENT FOCUS:
-        - Highlight the most valuable and actionable content
-        - Use specific examples or data points when available
-        - Ensure takeaways are implementable immediately
-        - Match the tone and sophistication level for the target audience`
-      },
-      {
-        role: 'user',
-        content: `${brandContext}Create a one-page recap for the content "${contentData.description}" targeting ${contentData.persona}.
-        
-        Use this content to extract the information (focus on the most valuable parts):
-        ${transcript.slice(0, 6000)}
-        
-        Funnel Stage: ${contentData.funnelStage}
-        
-        Remember: Follow the exact structure and word limits specified.`
-      }
-    ],
-    temperature: 0.4,
-    max_tokens: 800
-  });
-
-  try {
-    const content = JSON.parse(response.choices[0].message.content || '{}');
-    return {
-      id: 'one-pager-recap',
-      type: 'One-Pager Recap',
-      title: 'Content Session Recap',
-      content: JSON.stringify(content)
-    };
-  } catch (error) {
-    console.error('Failed to parse one-pager content:', error);
-    return {
-      id: 'one-pager-recap',
-      type: 'One-Pager Recap',
-      title: 'Content Session Recap',
-      content: response.choices[0].message.content || ''
-    };
-  }
-};
-
-// Generate Visual Infographic using DALL-E
-const generateVisualInfographic = async (
-  insights: string[],
-  contentData: ContentData,
-  brandData?: BrandData | null
-): Promise<GeneratedAsset> => {
-  const openai = getOpenAIClient();
-  
-  try {
-    // Create a comprehensive visual prompt for the infographic
-    const brandColors = brandData?.primaryColor && brandData?.secondaryColor 
-      ? `using brand colors ${brandData.primaryColor} and ${brandData.secondaryColor}` 
-      : 'using professional blue (#2563eb) and teal (#0d9488) colors';
-    
-    const companyName = brandData?.companyName || 'Professional Content';
-    
-    // Take the top 4 insights for the infographic
-    const topInsights = insights.slice(0, 4);
-    
-    const visualPrompt = `Create a professional business infographic titled "${contentData.description}" for ${contentData.persona}. 
-    
-    Design requirements:
-    - Clean, modern corporate design ${brandColors}
-    - Include 4 key sections/boxes for main insights
-    - Professional typography with clear hierarchy
-    - Icons and visual elements that represent business concepts
-    - Minimal text overlay - focus on visual design structure
-    - Company branding space for "${companyName}"
-    - Layout: vertical infographic format, well-organized sections
-    - Style: corporate, professional, high-quality business presentation
-    - Include subtle geometric patterns and professional gradients
-    - Ensure readability and visual balance
-    
-    The infographic should look like it belongs in a professional business presentation or marketing material.`;
-
-    const response = await openai.images.generate({
-      model: 'dall-e-3',
-      prompt: visualPrompt,
-      n: 1,
-      size: '1024x1792', // Vertical infographic format
-      quality: 'hd',
-      style: 'natural'
-    });
-
-    const imageUrl = response.data[0]?.url;
-    
-    if (!imageUrl) {
-      throw new Error('Failed to generate infographic image');
-    }
-
-    // Create content that includes both the image and key insights
-    const infographicContent = {
-      imageUrl: imageUrl,
-      title: `${contentData.description} - Key Insights`,
-      insights: topInsights,
-      targetAudience: contentData.persona,
-      companyName: brandData?.companyName
-    };
-
-    return {
-      id: 'visual-infographic',
-      type: 'Visual Infographic',
-      title: 'Professional Content Infographic',
-      content: JSON.stringify(infographicContent),
-      imageUrl: imageUrl
-    };
-
-  } catch (error) {
-    console.error('Visual infographic generation failed:', error);
-    
-    // Return a fallback asset with error information
-    return {
-      id: 'visual-infographic',
-      type: 'Visual Infographic',
-      title: 'Professional Content Infographic',
-      content: JSON.stringify({
-        error: 'Failed to generate visual infographic',
-        insights: insights.slice(0,4),
-        fallbackMessage: 'Visual generation temporarily unavailable. Key insights are provided below.'
-      })
-    };
-  }
-};
-
-// Generate LinkedIn posts
+// Generate LinkedIn posts with content-type awareness
 const generateLinkedInPosts = async (
   insights: string[], 
   contentData: ContentData,
@@ -446,6 +373,8 @@ const generateLinkedInPosts = async (
   const openai = getOpenAIClient();
   
   const posts: GeneratedAsset[] = [];
+  const isWebinar = contentData.contentType === 'file' || contentData.contentType === 'link';
+  const isBlog = contentData.contentType === 'text';
   
   // Generate 2-3 different LinkedIn posts
   for (let i = 0; i < Math.min(3, insights.length); i++) {
@@ -455,12 +384,29 @@ const generateLinkedInPosts = async (
       ? `Company: ${brandData.companyName}. ` 
       : '';
     
+    const contentTypeContext = isWebinar 
+      ? 'webinar/presentation session' 
+      : 'article/blog post';
+    
     const response = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
           role: 'system',
           content: `You are a B2B marketing expert specializing in viral LinkedIn content. Create highly engaging LinkedIn posts that:
+          
+          CONTENT TYPE AWARENESS:
+          ${isWebinar ? `
+          - Reference the session/webinar naturally ("Just wrapped up an incredible session on...")
+          - Use language that suggests live interaction and real-time insights
+          - Mention "we covered" or "the session revealed" to indicate live content
+          - Include phrases like "during the session" or "one attendee asked"
+          ` : `
+          - Reference the article/research naturally ("Just published a deep dive on...")
+          - Use language that suggests thoughtful analysis and research
+          - Mention "after researching" or "the article explores" to indicate written content
+          - Include phrases like "in the full article" or "the research shows"
+          `}
           
           HOOK REQUIREMENTS:
           - Start with a powerful, attention-grabbing hook (question, bold statement, surprising statistic, or contrarian take)
@@ -495,12 +441,13 @@ const generateLinkedInPosts = async (
         },
         {
           role: 'user',
-          content: `${brandContext}Create a highly engaging LinkedIn post based on this insight from our content "${contentData.description}" for ${contentData.persona}:
+          content: `${brandContext}Create a highly engaging LinkedIn post based on this insight from our ${contentTypeContext} "${contentData.description}" for ${contentData.persona}:
 
           Key Insight: ${insight}
           
           Funnel Stage: ${contentData.funnelStage}
           Target Audience: ${contentData.persona}
+          Content Type: ${contentTypeContext}
           
           Make this post irresistible to read and share. Focus on creating genuine engagement and discussion.`
         }
@@ -522,7 +469,7 @@ const generateLinkedInPosts = async (
   return posts;
 };
 
-// Generate Sales Outreach Emails
+// Generate Sales Outreach Emails with improved best practices
 const generateSalesOutreachEmails = async (
   insights: string[], 
   contentData: ContentData,
@@ -531,10 +478,16 @@ const generateSalesOutreachEmails = async (
   const openai = getOpenAIClient();
   
   const emails: GeneratedAsset[] = [];
+  const isWebinar = contentData.contentType === 'file' || contentData.contentType === 'link';
+  const isBlog = contentData.contentType === 'text';
   
   const brandContext = brandData?.companyName 
     ? `Company: ${brandData.companyName}. ` 
     : '';
+  
+  const contentTypeContext = isWebinar 
+    ? 'session/webinar' 
+    : 'article/research';
   
   // Cold outreach email
   const coldResponse = await openai.chat.completions.create({
@@ -542,38 +495,58 @@ const generateSalesOutreachEmails = async (
     messages: [
       {
         role: 'system',
-        content: `Create a cold sales outreach email following these strict guidelines:
+        content: `Create a cold sales outreach email following these strict best practices:
 
-        TONE & APPROACH:
-        - Direct, confident, and value-focused
-        - Conversational like talking to a peer, not corporate-speak
-        - Assume they're busy - get to the point quickly
-        - Sound like a real person, not a sales bot
+        SALES EMAIL BEST PRACTICES:
+        - Keep it SHORT (60-80 words max) - busy prospects scan, don't read
+        - Lead with VALUE, not your agenda
+        - Use a compelling, curiosity-driven subject line (under 50 characters)
+        - Make it about THEM, not you
+        - Include ONE specific insight as immediate value
+        - End with a low-commitment ask (15-min call, quick question)
+        - Sound human and conversational, not corporate
         
-        STRUCTURE (80-100 words max):
+        CONTENT TYPE AWARENESS:
+        ${isWebinar ? `
+        - Reference "session" or "webinar" naturally
+        - Mention insights "we shared" or "came up during the session"
+        - Use language suggesting live interaction and real-time learning
+        ` : `
+        - Reference "research" or "article" naturally  
+        - Mention insights "we discovered" or "the research revealed"
+        - Use language suggesting thoughtful analysis and investigation
+        `}
+
+        STRUCTURE:
         - Subject line: Curiosity-driven, specific, under 50 characters
-        - Brief personal connection or relevant observation
-        - ONE valuable insight from the content as immediate value
-        - Clear, specific ask for a brief conversation
+        - Brief personal connection or relevant observation (1 sentence)
+        - ONE valuable insight as immediate value (1-2 sentences)
+        - Clear, specific ask for brief conversation (1 sentence)
         - Professional but warm sign-off
         
-        BEST PRACTICES:
-        - Use "you" language, focus on their potential benefit
-        - Include social proof (content insights)
-        - Make the ask low-commitment (15-min call, quick chat)
-        - Avoid: "I hope this email finds you well" and other clichés
-        - Sound human: use contractions, natural language
+        TONE:
+        - Direct and confident, not pushy
+        - Conversational like talking to a peer
+        - Assume they're busy - respect their time
+        - Sound like a real person, not a sales bot
+        
+        AVOID:
+        - "I hope this email finds you well" and other clichés
+        - Long paragraphs or multiple asks
+        - Being vague about the value you're offering
+        - Sounding desperate or overly eager
         
         FORMAT: Subject: [subject line]\n\n[email body]`
       },
       {
         role: 'user',
-        content: `${brandContext}Create a cold sales outreach email referencing our content "${contentData.description}" for ${contentData.persona}.
+        content: `${brandContext}Create a cold sales outreach email referencing our ${contentTypeContext} "${contentData.description}" for ${contentData.persona}.
         
         Key insight to include: ${insights[0]}
         Funnel stage: ${contentData.funnelStage}
+        Content type: ${contentTypeContext}
         
-        Make it feel personal, valuable, and impossible to ignore.`
+        Make it feel personal, valuable, and impossible to ignore. Keep it SHORT and punchy.`
       }
     ],
     temperature: 0.7,
@@ -595,36 +568,49 @@ const generateSalesOutreachEmails = async (
         role: 'system',
         content: `Create a warm sales follow-up email for someone who engaged with the content:
 
-        TONE & APPROACH:
-        - Warm but professional, building on existing relationship
+        WARM EMAIL BEST PRACTICES:
+        - Even SHORTER than cold emails (40-60 words max)
+        - Build on existing relationship/engagement
+        - Reference their specific engagement with the content
+        - Provide additional value based on their interest
+        - Make the next step feel natural and beneficial
+        - Use a subject line that references their engagement
+        
+        CONTENT TYPE AWARENESS:
+        ${isWebinar ? `
+        - Reference their "attendance" or "participation" in the session
+        - Mention follow-up insights or additional session materials
+        - Use language like "since you joined the session" or "following up on the webinar"
+        ` : `
+        - Reference their "reading" or "engagement" with the article
+        - Mention related insights or additional research
+        - Use language like "since you read the article" or "following up on the research"
+        `}
+
+        STRUCTURE:
+        - Subject line: Reference their engagement, create urgency
+        - Brief thanks for engaging (1 sentence)
+        - Connect their engagement to specific next value (1-2 sentences)
+        - Suggest logical next step (1 sentence)
+        
+        TONE:
+        - Warm but professional
         - Appreciative but not overly grateful
         - Consultative, focused on their success
-        - Natural conversation starter
-        
-        STRUCTURE (60-80 words max):
-        - Subject line: Reference content engagement, create urgency
-        - Brief thanks for engaging
-        - Connect their engagement to a specific next step
-        - Reference value they received
-        - Suggest logical progression based on their funnel stage
-        
-        BEST PRACTICES:
-        - Assume they found value in the content
-        - Reference specific content they engaged with
-        - Make the next step feel natural and beneficial
-        - Keep it short - they already know you
+        - Natural conversation progression
         
         FORMAT: Subject: [subject line]\n\n[email body]`
       },
       {
         role: 'user',
-        content: `${brandContext}Create a warm follow-up email for people who engaged with "${contentData.description}".
+        content: `${brandContext}Create a warm follow-up email for people who engaged with our ${contentTypeContext} "${contentData.description}".
         
         Key value they received: ${insights[0]}
         Target: ${contentData.persona}
         Stage: ${contentData.funnelStage}
+        Content type: ${contentTypeContext}
         
-        Make it feel like a natural next step in the conversation.`
+        Make it feel like a natural next step in the conversation. Keep it VERY short.`
       }
     ],
     temperature: 0.6,
@@ -641,7 +627,7 @@ const generateSalesOutreachEmails = async (
   return emails;
 };
 
-// Generate Marketing Nurture Emails
+// Generate Marketing Nurture Emails with non-pushy approach
 const generateMarketingNurtureEmails = async (
   insights: string[], 
   contentData: ContentData,
@@ -650,10 +636,16 @@ const generateMarketingNurtureEmails = async (
   const openai = getOpenAIClient();
   
   const emails: GeneratedAsset[] = [];
+  const isWebinar = contentData.contentType === 'file' || contentData.contentType === 'link';
+  const isBlog = contentData.contentType === 'text';
   
   const brandContext = brandData?.companyName 
     ? `Company: ${brandData.companyName}. ` 
     : '';
+  
+  const contentTypeContext = isWebinar 
+    ? 'session/webinar' 
+    : 'article/research';
   
   // Educational nurture email
   const educationalResponse = await openai.chat.completions.create({
@@ -663,39 +655,58 @@ const generateMarketingNurtureEmails = async (
         role: 'system',
         content: `Create an educational marketing nurture email following these guidelines:
 
-        TONE & APPROACH:
+        NURTURE EMAIL BEST PRACTICES:
+        - NEVER be pushy or sales-y - focus purely on education and value
+        - Be generous with insights, ask for nothing in return
+        - Sound like a helpful colleague sharing valuable information
+        - Build trust through consistent value delivery
+        - Use a warm, educational tone throughout
+        - Make it about their success, not your offering
+        
+        CONTENT TYPE AWARENESS:
+        ${isWebinar ? `
+        - Reference the "session" or "webinar" they attended/showed interest in
+        - Use language like "from our recent session" or "session attendees asked"
+        - Mention additional insights that came up during or after the session
+        ` : `
+        - Reference the "article" or "research" they engaged with
+        - Use language like "from our recent article" or "readers have been asking"
+        - Mention additional insights from the research or related studies
+        `}
+
+        STRUCTURE (120-150 words max):
+        - Subject line: Value-focused, educational angle
+        - Warm greeting acknowledging their interest
+        - 2-3 key takeaways with brief explanations
+        - Soft resource offer (no pressure)
+        - Helpful sign-off with open door for questions
+        
+        TONE:
         - Helpful, educational, and relationship-building
         - Generous with insights, not pushy
         - Friendly and approachable, like a helpful colleague
         - Focus on their success, not your offering
-        
-        STRUCTURE (120-150 words max):
-        - Subject line: Value-focused, educational angle
-        - Warm greeting acknowledging their interest
-        - 2-3 key takeaways from the content with brief explanations
-        - Soft call-to-action (resource, next content, etc.)
-        - Helpful sign-off
-        
-        BEST PRACTICES:
-        - Lead with education, not promotion
-        - Use bullet points for easy scanning
-        - Include actionable tips they can implement
-        - Soft CTA appropriate for nurture sequence
-        - Build trust through valuable content
         - Sound like a helpful expert, not a salesperson
+        
+        SOFT CTA OPTIONS:
+        - "Questions? Just reply to this email"
+        - "I've attached a resource that might help"
+        - "Feel free to reach out if you'd like to discuss"
+        - NO hard sales language or pressure
         
         FORMAT: Subject: [subject line]\n\n[email body]`
       },
       {
         role: 'user',
-        content: `${brandContext}Create an educational nurture email for leads interested in "${contentData.description}" targeting ${contentData.persona}.
+        content: `${brandContext}Create an educational nurture email for leads interested in our ${contentTypeContext} "${contentData.description}" targeting ${contentData.persona}.
         
         Key insights to share:
         ${insights.slice(0, 3).map((insight, i) => `${i + 1}. ${insight}`).join('\n')}
         
         Funnel Stage: ${contentData.funnelStage}
+        Content Type: ${contentTypeContext}
         
-        Focus on building trust and providing value.`
+        Focus on building trust and providing value. Be helpful, not pushy.`
       }
     ],
     temperature: 0.6,
@@ -717,36 +728,49 @@ const generateMarketingNurtureEmails = async (
         role: 'system',
         content: `Create a resource-sharing nurture email:
 
-        TONE & APPROACH:
+        RESOURCE SHARING BEST PRACTICES:
+        - Frame as "thought you might find this helpful" - no pressure
+        - Be genuinely helpful, like sharing with a colleague
+        - Reference their specific challenges or interests
+        - Offer multiple ways to engage (all low pressure)
+        - End with genuine offer to help, no sales agenda
+        
+        CONTENT TYPE AWARENESS:
+        ${isWebinar ? `
+        - Reference insights from the session they attended/were interested in
+        - Mention additional resources that complement the session content
+        - Use language like "after the session" or "session follow-up"
+        ` : `
+        - Reference insights from the article they read/engaged with
+        - Mention additional resources that complement the article
+        - Use language like "after reading" or "article follow-up"
+        `}
+
+        STRUCTURE (100-120 words max):
+        - Subject line: Resource/tool focused, helpful tone
+        - Context about why you're sharing this
+        - Brief recap of content value
+        - Offer additional resources or tools (no pressure)
+        - Gentle invitation to engage further
+        
+        TONE:
         - Supportive and resourceful
         - Positioned as sharing valuable tools/insights
         - Collaborative, like sharing with a colleague
         - No pressure, just helpful resources
-        
-        STRUCTURE (100-120 words max):
-        - Subject line: Resource/tool focused
-        - Context about why you're sharing this
-        - Brief recap of content value
-        - Offer additional resources or tools
-        - Gentle invitation to engage further
-        
-        BEST PRACTICES:
-        - Frame as "thought you might find this helpful"
-        - Reference their specific challenges/goals
-        - Offer multiple ways to engage (low pressure)
-        - Include social proof if relevant
-        - End with open door for questions
+        - Genuine desire to help them succeed
         
         FORMAT: Subject: [subject line]\n\n[email body]`
       },
       {
         role: 'user',
-        content: `${brandContext}Create a resource-sharing email for "${contentData.description}" audience.
+        content: `${brandContext}Create a resource-sharing email for people interested in our ${contentTypeContext} "${contentData.description}".
         
         Key insight to build on: ${insights[1] || insights[0]}
         Target: ${contentData.persona}
+        Content Type: ${contentTypeContext}
         
-        Focus on being helpful and building the relationship.`
+        Focus on being helpful and building the relationship. No sales pressure.`
       }
     ],
     temperature: 0.6,
@@ -830,106 +854,175 @@ const generateQuoteCards = async (
   }
 };
 
-// Generate sales snippets
-const generateSalesSnippets = async (
-  insights: string[], 
+// Generate One-Pager Recap
+const generateOnePagerRecap = async (
+  transcript: string,
   contentData: ContentData,
   brandData?: BrandData | null
-): Promise<GeneratedAsset[]> => {
+): Promise<GeneratedAsset> => {
   const openai = getOpenAIClient();
-  
-  const snippets: GeneratedAsset[] = [];
   
   const brandContext = brandData?.companyName 
     ? `Company: ${brandData.companyName}. ` 
     : '';
   
-  // LinkedIn connection request
-  const linkedinResponse = await openai.chat.completions.create({
-    model: 'gpt-4',
-    messages: [
-      {
-        role: 'system',
-        content: `Create a LinkedIn connection request message:
-        
-        REQUIREMENTS:
-        - Under 200 characters (LinkedIn limit)
-        - Reference the content as credible social proof
-        - Personalized for ${contentData.persona}
-        - Conversational and professional tone
-        - Clear value proposition
-        
-        STRUCTURE:
-        - Brief personal connection
-        - Content reference
-        - Value offer
-        - Connection request
-        
-        Keep it short, valuable, and human.`
-      },
-      {
-        role: 'user',
-        content: `${brandContext}Create a LinkedIn connection request for ${contentData.persona} referencing our content "${contentData.description}".
-        
-        Key insight: ${insights[0]}
-        
-        Make it personal and valuable within LinkedIn's character limit.`
-      }
-    ],
-    temperature: 0.6,
-    max_tokens: 150
-  });
-
-  snippets.push({
-    id: 'sales-linkedin',
-    type: 'Sales Snippets',
-    title: 'LinkedIn Connection Request',
-    content: linkedinResponse.choices[0].message.content || ''
-  });
-
-  // Phone call opener
-  const phoneResponse = await openai.chat.completions.create({
-    model: 'gpt-4',
-    messages: [
-      {
-        role: 'system',
-        content: `Create a phone call opening script:
-        
-        APPROACH:
-        - Confident but respectful
-        - Reference content engagement or interest
-        - Quick value statement
-        - Permission-based conversation starter
-        
-        STRUCTURE (30-40 words):
-        - Greeting and introduction
-        - Content reference
-        - Value proposition
-        - Permission to continue
-        
-        Sound natural and conversational, not scripted.`
-      },
-      {
-        role: 'user',
-        content: `${brandContext}Create a phone call opener for ${contentData.persona} who engaged with "${contentData.description}".
-        
-        Key value: ${insights[0]}
-        
-        Make it sound natural and permission-based.`
-      }
-    ],
-    temperature: 0.6,
-    max_tokens: 200
-  });
-
-  snippets.push({
-    id: 'sales-phone',
-    type: 'Sales Snippets',
-    title: 'Phone Call Opener',
-    content: phoneResponse.choices[0].message.content || ''
-  });
+  const isWebinar = contentData.contentType === 'file' || contentData.contentType === 'link';
+  const contentTypeContext = isWebinar ? 'session' : 'article';
   
-  return snippets;
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4',
+    messages: [
+      {
+        role: 'system',
+        content: `You are a professional content strategist creating a one-page content recap document. Create a structured document with exactly these sections and word limits:
+
+        STRUCTURE REQUIREMENTS:
+        1. Quick ${contentTypeContext.charAt(0).toUpperCase() + contentTypeContext.slice(1)} Overview (50 words max) - Brief summary of what was covered
+        2. Key Quote from Content (20 words max) - Most impactful direct quote from the content
+        3. 4 Key Takeaways (25 words each) - Most valuable insights readers can implement
+        
+        CONTENT TYPE AWARENESS:
+        ${isWebinar ? `
+        - Use language appropriate for a session/webinar recap
+        - Reference "session insights," "discussion points," "attendee questions"
+        - Frame as live interaction and real-time learning
+        ` : `
+        - Use language appropriate for an article/research recap
+        - Reference "research findings," "analysis," "key conclusions"
+        - Frame as thoughtful investigation and written insights
+        `}
+        
+        FORMAT REQUIREMENTS:
+        - Return as structured JSON with sections: "overview", "quote", "takeaways" (array of 4 strings)
+        - Each section must stay within word limits
+        - Use professional, engaging language appropriate for ${contentData.persona}
+        - Focus on actionable insights and practical value
+        - Make it scannable and easy to digest
+        
+        CONTENT FOCUS:
+        - Highlight the most valuable and actionable content
+        - Use specific examples or data points when available
+        - Ensure takeaways are implementable immediately
+        - Match the tone and sophistication level for the target audience`
+      },
+      {
+        role: 'user',
+        content: `${brandContext}Create a one-page recap for the ${contentTypeContext} "${contentData.description}" targeting ${contentData.persona}.
+        
+        Use this content to extract the information (focus on the most valuable parts):
+        ${transcript.slice(0, 6000)}
+        
+        Funnel Stage: ${contentData.funnelStage}
+        Content Type: ${contentTypeContext}
+        
+        Remember: Follow the exact structure and word limits specified.`
+      }
+    ],
+    temperature: 0.4,
+    max_tokens: 800
+  });
+
+  try {
+    const content = JSON.parse(response.choices[0].message.content || '{}');
+    return {
+      id: 'one-pager-recap',
+      type: 'One-Pager Recap',
+      title: 'Content Session Recap',
+      content: JSON.stringify(content)
+    };
+  } catch (error) {
+    console.error('Failed to parse one-pager content:', error);
+    return {
+      id: 'one-pager-recap',
+      type: 'One-Pager Recap',
+      title: 'Content Session Recap',
+      content: response.choices[0].message.content || ''
+    };
+  }
+};
+
+// Generate Visual Infographic using DALL-E
+const generateVisualInfographic = async (
+  insights: string[],
+  contentData: ContentData,
+  brandData?: BrandData | null
+): Promise<GeneratedAsset> => {
+  const openai = getOpenAIClient();
+  
+  try {
+    // Create a comprehensive visual prompt for the infographic
+    const brandColors = brandData?.primaryColor && brandData?.secondaryColor 
+      ? `using brand colors ${brandData.primaryColor} and ${brandData.secondaryColor}` 
+      : 'using professional emerald (#10b981) and teal (#14b8a6) colors';
+    
+    const companyName = brandData?.companyName || 'Professional Content';
+    
+    // Take the top 4 insights for the infographic
+    const topInsights = insights.slice(0, 4);
+    
+    const visualPrompt = `Create a professional business infographic titled "${contentData.description}" for ${contentData.persona}. 
+    
+    Design requirements:
+    - Clean, modern corporate design ${brandColors}
+    - Include 4 key sections/boxes for main insights
+    - Professional typography with clear hierarchy
+    - Icons and visual elements that represent business concepts
+    - Minimal text overlay - focus on visual design structure
+    - Company branding space for "${companyName}"
+    - Layout: vertical infographic format, well-organized sections
+    - Style: corporate, professional, high-quality business presentation
+    - Include subtle geometric patterns and professional gradients
+    - Ensure readability and visual balance
+    
+    The infographic should look like it belongs in a professional business presentation or marketing material.`;
+
+    const response = await openai.images.generate({
+      model: 'dall-e-3',
+      prompt: visualPrompt,
+      n: 1,
+      size: '1024x1792', // Vertical infographic format
+      quality: 'hd',
+      style: 'natural'
+    });
+
+    const imageUrl = response.data[0]?.url;
+    
+    if (!imageUrl) {
+      throw new Error('Failed to generate infographic image');
+    }
+
+    // Create content that includes both the image and key insights
+    const infographicContent = {
+      imageUrl: imageUrl,
+      title: `${contentData.description} - Key Insights`,
+      insights: topInsights,
+      targetAudience: contentData.persona,
+      companyName: brandData?.companyName
+    };
+
+    return {
+      id: 'visual-infographic',
+      type: 'Visual Infographic',
+      title: 'Professional Content Infographic',
+      content: JSON.stringify(infographicContent),
+      imageUrl: imageUrl
+    };
+
+  } catch (error) {
+    console.error('Visual infographic generation failed:', error);
+    
+    // Return a fallback asset with error information
+    return {
+      id: 'visual-infographic',
+      type: 'Visual Infographic',
+      title: 'Professional Content Infographic',
+      content: JSON.stringify({
+        error: 'Failed to generate visual infographic',
+        insights: insights.slice(0,4),
+        fallbackMessage: 'Visual generation temporarily unavailable. Key insights are provided below.'
+      })
+    };
+  }
 };
 
 // Main function to generate all assets
@@ -959,7 +1052,7 @@ export const generateMarketingAssets = async (
     onProgress?.('Analyzing content for key insights...', 15);
     
     // Extract key insights from transcript
-    const insights = await extractInsights(transcript, contentData.description);
+    const insights = await extractInsights(transcript, contentData.description, contentData.contentType);
     
     if (insights.length === 0) {
       throw new Error('Could not extract meaningful insights from the content. Please ensure your content contains substantial discussion or valuable information.');
@@ -992,12 +1085,6 @@ export const generateMarketingAssets = async (
       onProgress?.('Extracting most insightful quotes...', 75);
       const quoteCards = await generateQuoteCards(insights, contentData, brandData);
       allAssets.push(...quoteCards);
-    }
-    
-    if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('sales snippets'))) {
-      onProgress?.('Creating personalized sales snippets...', 85);
-      const salesSnippets = await generateSalesSnippets(insights, contentData, brandData);
-      allAssets.push(...salesSnippets);
     }
     
     if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('one-pager'))) {

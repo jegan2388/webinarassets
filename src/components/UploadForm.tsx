@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, ArrowLeft, Check, FileVideo, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, BarChart3, UserCheck, TrendingUp, Link, Video, ExternalLink } from 'lucide-react';
+import { Upload, ArrowLeft, Check, FileVideo, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, BarChart3, UserCheck, TrendingUp, Link, Video, ExternalLink, Brain } from 'lucide-react';
 import { ContentData } from '../App';
 
 interface UploadFormProps {
@@ -17,7 +17,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
     description: '',
     persona: '',
     funnelStage: '',
-    selectedAssets: ['LinkedIn Posts', 'Sales Outreach Emails', 'Marketing Nurture Emails', 'Quote Cards', 'Sales Snippets', 'One-Pager Recap', 'Visual Infographic'], // All assets selected by default
+    selectedAssets: ['LinkedIn Posts', 'Sales Outreach Emails', 'Marketing Nurture Emails', 'Quote Cards', 'One-Pager Recap', 'Visual Infographic'], // Removed Sales Snippets
     contentType: 'file'
   });
   const [uploadType, setUploadType] = useState<'file' | 'link' | 'text'>('file');
@@ -33,43 +33,37 @@ const UploadForm: React.FC<UploadFormProps> = ({
     { 
       name: 'LinkedIn Posts', 
       icon: <MessageSquare className="w-4 h-4" />, 
-      color: 'border-blue-200 bg-blue-50',
+      color: 'border-emerald-200 bg-emerald-50',
       description: 'Engaging social content for thought leadership'
     },
     { 
       name: 'Sales Outreach Emails', 
       icon: <UserCheck className="w-4 h-4" />, 
-      color: 'border-red-200 bg-red-50',
+      color: 'border-orange-200 bg-orange-50',
       description: 'Direct, value-focused emails for prospects'
     },
     { 
       name: 'Marketing Nurture Emails', 
       icon: <Mail className="w-4 h-4" />, 
-      color: 'border-mint-200 bg-mint-50',
+      color: 'border-purple-200 bg-purple-50',
       description: 'Educational, relationship-building emails'
     },
     { 
       name: 'Quote Cards', 
       icon: <Quote className="w-4 h-4" />, 
-      color: 'border-indigo-200 bg-indigo-50',
+      color: 'border-teal-200 bg-teal-50',
       description: 'Share-worthy graphics with key insights'
-    },
-    { 
-      name: 'Sales Snippets', 
-      icon: <TrendingUp className="w-4 h-4" />, 
-      color: 'border-orange-200 bg-orange-50',
-      description: 'Ready-to-use outreach messages'
     },
     { 
       name: 'One-Pager Recap', 
       icon: <FileText className="w-4 h-4" />, 
-      color: 'border-purple-200 bg-purple-50',
+      color: 'border-indigo-200 bg-indigo-50',
       description: 'Professional summary document'
     },
     { 
       name: 'Visual Infographic', 
       icon: <BarChart3 className="w-4 h-4" />, 
-      color: 'border-emerald-200 bg-emerald-50',
+      color: 'border-cyan-200 bg-cyan-50',
       description: 'Professional visual content'
     }
   ];
@@ -267,11 +261,11 @@ const UploadForm: React.FC<UploadFormProps> = ({
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen py-8">
+    <div className="bg-gradient-to-br from-slate-50 via-white to-emerald-50 min-h-screen py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <button
           onClick={onBack}
-          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-8 transition-colors group"
+          className="flex items-center space-x-2 text-slate-600 hover:text-slate-900 mb-8 transition-colors group"
         >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           <span>Back to home</span>
@@ -279,7 +273,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
 
         {/* Error Message */}
         {error && (
-          <div className="card p-6 border-red-200 bg-red-50 mb-8">
+          <div className="bg-white/60 backdrop-blur-sm p-6 border-red-200 bg-red-50 mb-8 rounded-2xl border-2">
             <div className="flex items-center space-x-3">
               <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
               <div>
@@ -290,15 +284,15 @@ const UploadForm: React.FC<UploadFormProps> = ({
           </div>
         )}
 
-        <div className="card p-8 lg:p-12">
+        <div className="bg-white/60 backdrop-blur-sm p-8 lg:p-12 rounded-3xl border border-white/20 shadow-xl">
           <div className="mb-10 text-center">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <Upload className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <Brain className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-3">
+            <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-3">
               Upload Your Content
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
               Transform any content into targeted marketing assets that resonate with your audience
             </p>
           </div>
@@ -306,7 +300,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Upload Type Toggle */}
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-4">
+              <label className="block text-sm font-semibold text-slate-900 mb-4">
                 What type of content do you want to remix?
               </label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -315,39 +309,39 @@ const UploadForm: React.FC<UploadFormProps> = ({
                   onClick={() => setUploadType('file')}
                   className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
                     uploadType === 'file'
-                      ? 'border-blue-500 bg-blue-50 text-blue-900'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                      ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
+                      : 'border-slate-200 hover:border-slate-300 bg-white/60'
                   }`}
                 >
                   <FileVideo className="w-5 h-5 mb-2" />
                   <div className="font-medium">Upload File</div>
-                  <div className="text-sm text-gray-600">MP4, MP3, WAV, M4A (up to 100MB)</div>
+                  <div className="text-sm text-slate-600">MP4, MP3, WAV, M4A (up to 100MB)</div>
                 </button>
                 <button
                   type="button"
                   onClick={() => setUploadType('link')}
                   className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
                     uploadType === 'link'
-                      ? 'border-blue-500 bg-blue-50 text-blue-900'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                      ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
+                      : 'border-slate-200 hover:border-slate-300 bg-white/60'
                   }`}
                 >
                   <Video className="w-5 h-5 mb-2" />
                   <div className="font-medium">Video Link</div>
-                  <div className="text-sm text-gray-600">YouTube, Vimeo, HubSpot, etc.</div>
+                  <div className="text-sm text-slate-600">YouTube, Vimeo, HubSpot, etc.</div>
                 </button>
                 <button
                   type="button"
                   onClick={() => setUploadType('text')}
                   className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
                     uploadType === 'text'
-                      ? 'border-blue-500 bg-blue-50 text-blue-900'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                      ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
+                      : 'border-slate-200 hover:border-slate-300 bg-white/60'
                   }`}
                 >
                   <ExternalLink className="w-5 h-5 mb-2" />
                   <div className="font-medium">Article/Blog Link</div>
-                  <div className="text-sm text-gray-600">Medium, LinkedIn, blog posts</div>
+                  <div className="text-sm text-slate-600">Medium, LinkedIn, blog posts</div>
                 </button>
               </div>
             </div>
@@ -355,9 +349,9 @@ const UploadForm: React.FC<UploadFormProps> = ({
             {/* Content Input Based on Type */}
             {uploadType === 'file' ? (
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-4">
+                <label className="block text-sm font-semibold text-slate-900 mb-4">
                   Upload your content recording
-                  <span className="text-sm font-normal text-gray-600 ml-2">
+                  <span className="text-sm font-normal text-slate-600 ml-2">
                     (Maximum file size: {formatFileSize(MAX_FILE_SIZE)})
                   </span>
                 </label>
@@ -367,17 +361,17 @@ const UploadForm: React.FC<UploadFormProps> = ({
                   onDrop={handleDrop}
                   className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 ${
                     isDragging
-                      ? 'border-blue-400 bg-blue-50'
+                      ? 'border-emerald-400 bg-emerald-50'
                       : formData.file
-                      ? 'border-success-400 bg-success-50'
-                      : 'border-gray-300 hover:border-gray-400 bg-white'
+                      ? 'border-emerald-400 bg-emerald-50'
+                      : 'border-slate-300 hover:border-slate-400 bg-white/60'
                   }`}
                 >
                   {formData.file ? (
-                    <div className="text-success-700">
+                    <div className="text-emerald-700">
                       <Check className="w-12 h-12 mx-auto mb-3" />
                       <p className="font-semibold text-lg">{formData.file.name}</p>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-slate-600 mt-1">
                         {formatFileSize(formData.file.size)} • Ready to process
                       </p>
                       {formData.file.size > MAX_FILE_SIZE && (
@@ -388,11 +382,11 @@ const UploadForm: React.FC<UploadFormProps> = ({
                     </div>
                   ) : (
                     <div>
-                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-lg font-semibold text-gray-700 mb-2">
+                      <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                      <p className="text-lg font-semibold text-slate-700 mb-2">
                         Drop your content file here
                       </p>
-                      <p className="text-gray-500 mb-6">
+                      <p className="text-slate-500 mb-6">
                         or click to browse your files
                       </p>
                       <input
@@ -404,12 +398,12 @@ const UploadForm: React.FC<UploadFormProps> = ({
                       />
                       <label
                         htmlFor="file-upload"
-                        className="btn-primary cursor-pointer inline-flex items-center space-x-2"
+                        className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer inline-flex items-center space-x-2"
                       >
                         <Upload className="w-4 h-4" />
                         <span>Choose File</span>
                       </label>
-                      <p className="text-xs text-gray-500 mt-4">
+                      <p className="text-xs text-slate-500 mt-4">
                         Supported formats: MP4, MP3, WAV, M4A, WebM, MOV, AVI
                         <br />
                         Maximum file size: {formatFileSize(MAX_FILE_SIZE)}
@@ -420,30 +414,30 @@ const UploadForm: React.FC<UploadFormProps> = ({
               </div>
             ) : uploadType === 'link' ? (
               <div>
-                <label htmlFor="video-url" className="block text-sm font-semibold text-gray-900 mb-4">
+                <label htmlFor="video-url" className="block text-sm font-semibold text-slate-900 mb-4">
                   <Video className="w-4 h-4 inline mr-2" />
                   Video URL
                 </label>
                 <div className="relative">
-                  <Link className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Link className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
                     type="url"
                     id="video-url"
                     value={videoUrl}
                     onChange={(e) => setVideoUrl(e.target.value)}
                     placeholder="https://youtube.com/watch?v=... or any video platform URL"
-                    className="input-field pl-12"
+                    className="w-full px-4 py-3 pl-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/60"
                   />
                 </div>
                 {videoUrl && (
-                  <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="mt-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
                     <div className="flex items-center space-x-2">
-                      <Video className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-900">
+                      <Video className="w-4 h-4 text-emerald-600" />
+                      <span className="text-sm font-medium text-emerald-900">
                         Detected: {detectVideoPlatform(videoUrl)}
                       </span>
                       {isValidUrl(videoUrl) ? (
-                        <Check className="w-4 h-4 text-success-600" />
+                        <Check className="w-4 h-4 text-emerald-600" />
                       ) : (
                         <AlertCircle className="w-4 h-4 text-red-600" />
                       )}
@@ -453,7 +447,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                     )}
                   </div>
                 )}
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-slate-500 mt-2">
                   <strong>Supported platforms:</strong> YouTube, Vimeo, HubSpot, Wistia, Loom, Zoom, Microsoft Teams, Webex, GoToMeeting, Brightcove, Kaltura, Vidyard, and more.
                 </p>
                 <div className="mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
@@ -468,31 +462,31 @@ const UploadForm: React.FC<UploadFormProps> = ({
               </div>
             ) : (
               <div>
-                <label htmlFor="article-url" className="block text-sm font-semibold text-gray-900 mb-4">
+                <label htmlFor="article-url" className="block text-sm font-semibold text-slate-900 mb-4">
                   <ExternalLink className="w-4 h-4 inline mr-2" />
                   Article or Blog Post URL
                 </label>
                 <div className="relative">
-                  <Link className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Link className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
                     type="url"
                     id="article-url"
                     value={articleUrl}
                     onChange={(e) => setArticleUrl(e.target.value)}
                     placeholder="https://medium.com/@author/article or any blog post URL"
-                    className="input-field pl-12"
+                    className="w-full px-4 py-3 pl-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/60"
                     required
                   />
                 </div>
                 {articleUrl && (
-                  <div className="mt-3 p-3 bg-mint-50 rounded-lg border border-mint-200">
+                  <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
                     <div className="flex items-center space-x-2">
-                      <ExternalLink className="w-4 h-4 text-mint-600" />
-                      <span className="text-sm font-medium text-mint-900">
+                      <ExternalLink className="w-4 h-4 text-purple-600" />
+                      <span className="text-sm font-medium text-purple-900">
                         Detected: {detectContentPlatform(articleUrl)}
                       </span>
                       {isValidUrl(articleUrl) ? (
-                        <Check className="w-4 h-4 text-success-600" />
+                        <Check className="w-4 h-4 text-emerald-600" />
                       ) : (
                         <AlertCircle className="w-4 h-4 text-red-600" />
                       )}
@@ -502,15 +496,15 @@ const UploadForm: React.FC<UploadFormProps> = ({
                     )}
                   </div>
                 )}
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-slate-500 mt-2">
                   <strong>Supported platforms:</strong> Medium, Substack, LinkedIn Articles, HubSpot Blog, WordPress, Ghost, Notion, Dev.to, Hashnode, and most blog platforms.
                 </p>
-                <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="mt-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
                   <div className="flex items-center space-x-2">
-                    <AlertCircle className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-900">How it works:</span>
+                    <AlertCircle className="w-4 h-4 text-emerald-600" />
+                    <span className="text-sm font-medium text-emerald-900">How it works:</span>
                   </div>
-                  <p className="text-blue-800 text-xs mt-1">
+                  <p className="text-emerald-800 text-xs mt-1">
                     We'll extract the text content from your article/blog post and use it to generate marketing assets. Make sure the URL is publicly accessible.
                   </p>
                 </div>
@@ -519,7 +513,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
 
             {/* Combined Description */}
             <div>
-              <label htmlFor="combined-description" className="block text-sm font-semibold text-gray-900 mb-4">
+              <label htmlFor="combined-description" className="block text-sm font-semibold text-slate-900 mb-4">
                 Tell us about your content and who it's for
               </label>
               <textarea
@@ -528,39 +522,39 @@ const UploadForm: React.FC<UploadFormProps> = ({
                 onChange={(e) => setCombinedDescription(e.target.value)}
                 placeholder="e.g., This is a B2B lead generation webinar for marketing teams showing how to increase conversion rates by 40% using our new automation platform. We covered advanced strategies for nurturing prospects in the consideration stage..."
                 rows={4}
-                className="input-field resize-none"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/60 resize-none"
                 required
               />
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-slate-500 mt-2">
                 Include your content topic, target audience, and key takeaways. Our AI will automatically categorize this for optimal asset generation.
               </p>
             </div>
 
             {/* Company Website URL */}
             <div>
-              <label htmlFor="company-website" className="block text-sm font-semibold text-gray-900 mb-4">
+              <label htmlFor="company-website" className="block text-sm font-semibold text-slate-900 mb-4">
                 <Globe className="w-4 h-4 inline mr-2" />
                 Company Website (Optional)
               </label>
               <div className="relative">
-                <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="url"
                   id="company-website"
                   value={formData.companyWebsiteUrl || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, companyWebsiteUrl: e.target.value }))}
                   placeholder="https://yourcompany.com"
-                  className="input-field pl-12"
+                  className="w-full px-4 py-3 pl-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/60"
                 />
               </div>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-slate-500 mt-2">
                 We'll extract your brand colors and logo to create branded quote cards and visuals
               </p>
             </div>
 
             {/* Asset Selection */}
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-4">
+              <label className="block text-sm font-semibold text-slate-900 mb-4">
                 <Sparkles className="w-4 h-4 inline mr-2" />
                 Select the marketing assets you want to generate
               </label>
@@ -572,7 +566,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                     className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
                       formData.selectedAssets.includes(asset.name)
                         ? `${asset.color} border-current`
-                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                        : 'border-slate-200 hover:border-slate-300 bg-white/60'
                     }`}
                   >
                     <input
@@ -584,8 +578,8 @@ const UploadForm: React.FC<UploadFormProps> = ({
                     <div className="flex items-center space-x-3">
                       <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
                         formData.selectedAssets.includes(asset.name)
-                          ? 'border-blue-600 bg-blue-600'
-                          : 'border-gray-300'
+                          ? 'border-emerald-600 bg-emerald-600'
+                          : 'border-slate-300'
                       }`}>
                         {formData.selectedAssets.includes(asset.name) && (
                           <Check className="w-3 h-3 text-white" />
@@ -594,9 +588,9 @@ const UploadForm: React.FC<UploadFormProps> = ({
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-1">
                           {asset.icon}
-                          <span className="font-medium text-gray-900">{asset.name}</span>
+                          <span className="font-medium text-slate-900">{asset.name}</span>
                         </div>
-                        <p className="text-sm text-gray-600">{asset.description}</p>
+                        <p className="text-sm text-slate-600">{asset.description}</p>
                       </div>
                     </div>
                   </label>
@@ -610,7 +604,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
 
             {/* API Key Notice */}
             {!import.meta.env.VITE_OPENAI_API_KEY && (
-              <div className="card p-6 border-yellow-200 bg-yellow-50">
+              <div className="bg-white/60 backdrop-blur-sm p-6 border-yellow-200 bg-yellow-50 rounded-2xl border-2">
                 <div className="flex items-center space-x-3">
                   <AlertCircle className="w-6 h-6 text-yellow-600 flex-shrink-0" />
                   <div>
@@ -629,13 +623,13 @@ const UploadForm: React.FC<UploadFormProps> = ({
               <button
                 type="submit"
                 disabled={!isFormValid}
-                className="w-full btn-primary text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
+                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold text-lg py-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
               >
                 <Sparkles className="w-5 h-5" />
                 <span>Generate Marketing Assets</span>
               </button>
               {!isFormValid && (
-                <p className="text-sm text-gray-500 text-center mt-3">
+                <p className="text-sm text-slate-500 text-center mt-3">
                   Please fill in all required fields and select at least one asset type
                 </p>
               )}
