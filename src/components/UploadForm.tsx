@@ -62,7 +62,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
       icon: <Video className="w-4 h-4" />, 
       color: 'border-cyan-200 bg-cyan-50',
       description: 'Short video clips and social media snippets (30-60 seconds)',
-      availableFor: ['file', 'text']
+      availableFor: ['file'] // Only available for webinars/recordings
     },
     { 
       name: 'Twitter Thread', 
@@ -485,6 +485,11 @@ const UploadForm: React.FC<UploadFormProps> = ({
                     Includes Twitter Thread for blogs!
                   </span>
                 )}
+                {uploadType === 'file' && (
+                  <span className="ml-2 text-xs bg-cyan-100 text-cyan-700 px-2 py-1 rounded-full">
+                    Includes Video Repurposing for webinars!
+                  </span>
+                )}
               </label>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -520,6 +525,11 @@ const UploadForm: React.FC<UploadFormProps> = ({
                           {asset.name === 'Twitter Thread' && (
                             <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
                               Blog Only
+                            </span>
+                          )}
+                          {asset.name === 'Video Repurposing Ideas' && (
+                            <span className="text-xs bg-cyan-100 text-cyan-700 px-2 py-1 rounded-full">
+                              Webinar Only
                             </span>
                           )}
                         </div>
