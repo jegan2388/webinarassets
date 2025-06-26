@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, ArrowLeft, Check, FileVideo, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, UserCheck, TrendingUp, Brain, Video } from 'lucide-react';
+import { Upload, ArrowLeft, Check, FileVideo, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, UserCheck, TrendingUp, Brain, Video, Twitter } from 'lucide-react';
 import { ContentData } from '../App';
 
 interface UploadFormProps {
@@ -33,33 +33,50 @@ const UploadForm: React.FC<UploadFormProps> = ({
       name: 'LinkedIn Posts', 
       icon: <MessageSquare className="w-4 h-4" />, 
       color: 'border-emerald-200 bg-emerald-50',
-      description: 'Engaging social content for thought leadership'
+      description: 'Engaging social content for thought leadership',
+      availableFor: ['file', 'text']
     },
     { 
       name: 'Sales Outreach Emails', 
       icon: <UserCheck className="w-4 h-4" />, 
       color: 'border-orange-200 bg-orange-50',
-      description: 'Direct, value-focused emails for prospects'
+      description: 'Direct, value-focused emails for prospects',
+      availableFor: ['file', 'text']
     },
     { 
       name: 'Marketing Nurture Emails', 
       icon: <Mail className="w-4 h-4" />, 
       color: 'border-purple-200 bg-purple-50',
-      description: 'Educational, relationship-building emails'
+      description: 'Educational, relationship-building emails',
+      availableFor: ['file', 'text']
     },
     { 
       name: 'Quote Cards', 
       icon: <Quote className="w-4 h-4" />, 
       color: 'border-teal-200 bg-teal-50',
-      description: 'Share-worthy graphics with key insights'
+      description: 'Share-worthy graphics with key insights',
+      availableFor: ['file', 'text']
     },
     { 
       name: 'Video Repurposing Ideas', 
       icon: <Video className="w-4 h-4" />, 
       color: 'border-cyan-200 bg-cyan-50',
-      description: 'Short video clips and social media snippets (30-60 seconds)'
+      description: 'Short video clips and social media snippets (30-60 seconds)',
+      availableFor: ['file', 'text']
+    },
+    { 
+      name: 'Twitter Thread', 
+      icon: <Twitter className="w-4 h-4" />, 
+      color: 'border-blue-200 bg-blue-50',
+      description: 'Engaging Twitter thread that breaks down your blog content',
+      availableFor: ['text'] // Only available for blog content
     }
   ];
+
+  // Filter assets based on content type
+  const availableAssets = assetTypes.filter(asset => 
+    asset.availableFor.includes(uploadType)
+  );
 
   // Detect content platform from URL
   const detectContentPlatform = (url: string): string => {
@@ -139,6 +156,27 @@ const UploadForm: React.FC<UploadFormProps> = ({
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
     if (file) handleFileUpload(file);
+  };
+
+  const handleUploadTypeChange = (newType: 'file' | 'text') => {
+    setUploadType(newType);
+    
+    // Update selected assets to only include those available for the new content type
+    const newAvailableAssets = assetTypes.filter(asset => 
+      asset.availableFor.includes(newType)
+    );
+    
+    const updatedSelectedAssets = formData.selectedAssets.filter(selected =>
+      newAvailableAssets.some(asset => asset.name === selected)
+    );
+    
+    // If no assets remain selected, select the first few available ones
+    if (updatedSelectedAssets.length === 0) {
+      const defaultAssets = newAvailableAssets.slice(0, 4).map(asset => asset.name);
+      setFormData(prev => ({ ...prev, selectedAssets: defaultAssets }));
+    } else {
+      setFormData(prev => ({ ...prev, selectedAssets: updatedSelectedAssets }));
+    }
   };
 
   const handleAssetToggle = (assetName: string) => {
@@ -252,7 +290,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setUploadType('file')}
+                  onClick={() => handleUploadTypeChange('file')}
                   className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
                     uploadType === 'file'
                       ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
@@ -265,7 +303,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setUploadType('text')}
+                  onClick={() => handleUploadTypeChange('text')}
                   className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
                     uploadType === 'text'
                       ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
@@ -442,10 +480,15 @@ const UploadForm: React.FC<UploadFormProps> = ({
               <label className="block text-sm font-semibold text-slate-900 mb-4">
                 <TrendingUp className="w-4 h-4 inline mr-2" />
                 Select the marketing assets you want to generate
+                {uploadType === 'text' && (
+                  <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                    Includes Twitter Thread for blogs!
+                  </span>
+                )}
               </label>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {assetTypes.map((asset) => (
+                {availableAssets.map((asset) => (
                   <label
                     key={asset.name}
                     className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
@@ -474,6 +517,11 @@ const UploadForm: React.FC<UploadFormProps> = ({
                         <div className="flex items-center space-x-2 mb-1">
                           {asset.icon}
                           <span className="font-medium text-slate-900">{asset.name}</span>
+                          {asset.name === 'Twitter Thread' && (
+                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                              Blog Only
+                            </span>
+                          )}
                         </div>
                         <p className="text-sm text-slate-600">{asset.description}</p>
                       </div>

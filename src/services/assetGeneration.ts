@@ -377,6 +377,61 @@ Best,
     );
   }
 
+  // Add Twitter Thread for blog content only
+  if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('twitter thread')) && isBlog) {
+    mockAssets.push(
+      {
+        id: 'twitter-thread-1',
+        type: 'Twitter Thread',
+        title: 'Engaging Twitter Thread',
+        content: `🧵 THREAD: Everything you think you know about ${contentData.description.toLowerCase()} is wrong.
+
+After deep research, here's what I discovered... (1/8)
+
+2/ The conventional approach most ${contentData.persona?.toLowerCase() || 'professionals'} use actually creates more problems than it solves.
+
+Here's why: [Key insight from your content]
+
+3/ Instead, the companies that are winning focus on 3 core principles:
+
+→ Quality over quantity
+→ Systems over tactics  
+→ Long-term thinking over quick fixes
+
+4/ Let me break down each one:
+
+**Quality over quantity** means focusing on fewer initiatives but executing them exceptionally well.
+
+Most teams spread themselves too thin.
+
+5/ **Systems over tactics** means building repeatable processes that scale.
+
+Tactics change. Systems endure.
+
+The best companies invest in frameworks, not just individual campaigns.
+
+6/ **Long-term thinking** means optimizing for sustainable growth, not just this quarter's numbers.
+
+This is where most ${contentData.persona?.toLowerCase() || 'teams'} get it wrong.
+
+7/ The result? Companies that follow this approach see:
+• 40% better results
+• 60% less stress
+• 2x faster implementation
+
+It's not about working harder. It's about working smarter.
+
+8/ Want to dive deeper into this framework?
+
+I've written a complete breakdown in my latest article: [Link to your blog post]
+
+What's your experience with this approach? Reply and let me know! 👇
+
+#Strategy #BusinessGrowth #${contentData.persona?.replace(/\s+/g, '') || 'Marketing'}`
+      }
+    );
+  }
+
   return mockAssets;
 };
 
@@ -426,6 +481,84 @@ const extractInsights = async (transcript: string, description: string, contentT
     console.error('Failed to parse insights:', error);
     return [];
   }
+};
+
+// Generate Twitter Thread (Blog content only)
+const generateTwitterThread = async (
+  insights: string[], 
+  contentData: ContentData,
+  brandData?: BrandData | null
+): Promise<GeneratedAsset[]> => {
+  const openai = getOpenAIClient();
+  
+  const brandContext = brandData?.companyName 
+    ? `Company: ${brandData.companyName}. ` 
+    : '';
+  
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4',
+    messages: [
+      {
+        role: 'system',
+        content: `You are a Twitter expert specializing in viral thread creation. Create an engaging Twitter thread that:
+
+        TWITTER THREAD BEST PRACTICES:
+        - Start with a compelling hook that promises value
+        - Use the 🧵 emoji and "THREAD:" to signal it's a thread
+        - Keep each tweet under 280 characters
+        - Number each tweet (1/X, 2/X, etc.)
+        - Use bullet points (→) and emojis strategically
+        - Include a strong call-to-action at the end
+        - Reference the original blog post/article
+        - Make it highly shareable and engaging
+        
+        CONTENT STRUCTURE:
+        - Tweet 1: Hook + thread announcement (1/X)
+        - Tweet 2-3: Problem/challenge setup
+        - Tweet 4-6: Key insights and solutions
+        - Tweet 7-8: Results/benefits
+        - Tweet 9: CTA + link to full article
+        
+        ENGAGEMENT TACTICS:
+        - Use contrarian takes or surprising insights
+        - Include specific numbers and data points
+        - Ask questions to encourage replies
+        - Use relevant hashtags (2-3 max)
+        - Make each tweet valuable on its own
+        
+        TONE:
+        - Conversational and accessible
+        - Confident but not arrogant
+        - Educational and helpful
+        - Appropriate for ${contentData.persona}
+        
+        FORMAT: Return as a single string with each tweet separated by double line breaks. Include tweet numbers.`
+      },
+      {
+        role: 'user',
+        content: `${brandContext}Create an engaging Twitter thread based on the blog post/article "${contentData.description}" for ${contentData.persona}.
+        
+        Key insights to include:
+        ${insights.slice(0, 5).map((insight, i) => `${i + 1}. ${insight}`).join('\n')}
+        
+        Funnel Stage: ${contentData.funnelStage}
+        Target Audience: ${contentData.persona}
+        
+        Make this thread irresistible to read and share. Focus on creating viral potential while providing genuine value.`
+      }
+    ],
+    temperature: 0.7,
+    max_tokens: 800
+  });
+
+  const threadContent = response.choices[0].message.content || '';
+
+  return [{
+    id: 'twitter-thread-1',
+    type: 'Twitter Thread',
+    title: 'Engaging Twitter Thread',
+    content: threadContent
+  }];
 };
 
 // Generate LinkedIn posts with content-type awareness
@@ -1063,6 +1196,13 @@ export const generateMarketingAssets = async (
       onProgress?.('Creating video repurposing strategy...', 85);
       const videoIdeas = await generateVideoRepurposingIdeas(insights, contentData, brandData);
       allAssets.push(...videoIdeas);
+    }
+    
+    // Generate Twitter Thread (only for blog content)
+    if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('twitter thread')) && contentData.contentType === 'text') {
+      onProgress?.('Creating engaging Twitter thread...', 90);
+      const twitterThread = await generateTwitterThread(insights, contentData, brandData);
+      allAssets.push(...twitterThread);
     }
     
     onProgress?.('Finalizing your campaign-ready assets...', 100);

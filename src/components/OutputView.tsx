@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, BarChart3, UserCheck, TrendingUp, Zap, AlertCircle, Video, Clock, Play } from 'lucide-react';
+import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, BarChart3, UserCheck, TrendingUp, Zap, AlertCircle, Video, Clock, Play, Twitter } from 'lucide-react';
 import { GeneratedAsset } from '../App';
 import { BrandData } from '../services/brandExtraction';
 
@@ -66,6 +66,8 @@ const OutputView: React.FC<OutputViewProps> = ({
         return '💬';
       case 'video repurposing ideas':
         return '🎬';
+      case 'twitter thread':
+        return '🐦';
       default:
         return '📄';
     }
@@ -83,6 +85,8 @@ const OutputView: React.FC<OutputViewProps> = ({
         return 'border-teal-200 bg-teal-50';
       case 'video repurposing ideas':
         return 'border-cyan-200 bg-cyan-50';
+      case 'twitter thread':
+        return 'border-blue-200 bg-blue-50';
       default:
         return 'border-slate-200 bg-slate-50';
     }
@@ -174,6 +178,59 @@ const OutputView: React.FC<OutputViewProps> = ({
           <p className="text-sm text-slate-600">
             🎬 <strong>Pro tip:</strong> These video ideas are optimized for 30-60 second clips perfect for LinkedIn, Instagram, TikTok, and YouTube Shorts. 
             Focus on the first 3 seconds to grab attention and always include a clear call-to-action.
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  const renderTwitterThread = (content: string) => {
+    // Split the thread into individual tweets
+    const tweets = content.split('\n\n').filter(tweet => tweet.trim());
+    
+    return (
+      <div className="space-y-4">
+        <div className="bg-white/60 backdrop-blur-sm p-6 rounded-xl border border-white/20 shadow-lg">
+          <div className="flex items-center space-x-2 mb-4">
+            <Twitter className="w-5 h-5 text-blue-600" />
+            <span className="text-lg font-semibold text-slate-900">Twitter Thread</span>
+            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+              {tweets.length} tweets
+            </span>
+          </div>
+          
+          <div className="space-y-3">
+            {tweets.map((tweet, index) => (
+              <div key={index} className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
+                      {tweet.trim()}
+                    </p>
+                    <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+                      <span>{tweet.trim().length} characters</span>
+                      {tweet.trim().length > 280 && (
+                        <span className="text-red-600 font-medium">Over 280 chars</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <div className="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-white/20">
+          <div className="flex items-center space-x-2 mb-2">
+            <Twitter className="w-4 h-4 text-blue-600" />
+            <span className="text-sm font-medium text-slate-700">Twitter Thread Guide</span>
+          </div>
+          <p className="text-sm text-slate-600">
+            🐦 <strong>Pro tip:</strong> Post this as a thread on Twitter by copying each numbered section as a separate tweet. 
+            Start with tweet 1, then reply to your own tweet with tweet 2, and so on. Include relevant hashtags and engage with replies!
           </p>
         </div>
       </div>
@@ -274,6 +331,11 @@ const OutputView: React.FC<OutputViewProps> = ({
               <span className="ml-3 text-sm bg-slate-100 text-slate-600 px-3 py-1 rounded-full">
                 {categoryAssets.length} asset{categoryAssets.length > 1 ? 's' : ''}
               </span>
+              {category === 'Twitter Thread' && (
+                <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                  Blog Only
+                </span>
+              )}
             </h2>
             
             <div className="grid lg:grid-cols-2 gap-6">
@@ -313,6 +375,8 @@ const OutputView: React.FC<OutputViewProps> = ({
                     renderQuoteCard(asset.content, asset)
                   ) : asset.type === 'Video Repurposing Ideas' ? (
                     renderVideoRepurposingIdeas(asset.content)
+                  ) : asset.type === 'Twitter Thread' ? (
+                    renderTwitterThread(asset.content)
                   ) : (
                     <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                       <pre className="whitespace-pre-wrap text-sm text-slate-800 font-medium leading-relaxed">
@@ -355,11 +419,11 @@ const OutputView: React.FC<OutputViewProps> = ({
               <p className="text-sm text-slate-600">Educational, relationship-building emails for existing leads and prospects</p>
             </div>
             <div className="text-center p-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-                <Video className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <Twitter className="w-6 h-6 text-white" />
               </div>
-              <h4 className="font-semibold text-slate-900 mb-2">Video Content</h4>
-              <p className="text-sm text-slate-600">Short clips for social media platforms and video marketing campaigns</p>
+              <h4 className="font-semibold text-slate-900 mb-2">Twitter Threads</h4>
+              <p className="text-sm text-slate-600">Break down complex topics into engaging, shareable Twitter content</p>
             </div>
           </div>
         </div>
