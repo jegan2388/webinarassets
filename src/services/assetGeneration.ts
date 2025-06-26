@@ -6,6 +6,9 @@ import { BrandData } from './brandExtraction';
 const getOpenAIClient = (): OpenAI => {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   
+  console.log('Checking OpenAI API key:', apiKey ? 'Found' : 'Not found');
+  console.log('Environment variables:', import.meta.env);
+  
   if (!apiKey) {
     throw new Error('OpenAI API key not configured. Please add your API key to continue.');
   }
@@ -939,6 +942,8 @@ export const generateMarketingAssets = async (
   try {
     // Check if OpenAI API key is available
     const hasApiKey = !!import.meta.env.VITE_OPENAI_API_KEY;
+    
+    console.log('API Key check:', hasApiKey ? 'Found' : 'Not found');
     
     if (!hasApiKey) {
       console.log('No OpenAI API key found, generating mock assets for demo');
