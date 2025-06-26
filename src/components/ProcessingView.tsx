@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Zap, Brain, FileText, MessageSquare, Mail, Quote, Loader2, Sparkles, AlertCircle } from 'lucide-react';
-import { WebinarData } from '../App';
+import { ContentData } from '../App';
 
 interface ProcessingViewProps {
-  webinarData: WebinarData;
+  contentData: ContentData;
   currentStep?: string;
   progress?: number;
 }
 
 const ProcessingView: React.FC<ProcessingViewProps> = ({ 
-  webinarData, 
+  contentData, 
   currentStep = '', 
   progress = 0 
 }) => {
@@ -20,7 +20,7 @@ const ProcessingView: React.FC<ProcessingViewProps> = ({
     {
       icon: <FileText className="w-6 h-6" />,
       title: "Transcribing Audio",
-      description: "Converting your webinar to text using advanced AI",
+      description: "Converting your content to text using advanced AI",
       status: "Listening to every word (even the 'ums')..."
     },
     {
@@ -67,13 +67,13 @@ const ProcessingView: React.FC<ProcessingViewProps> = ({
   useEffect(() => {
     if (progress > 30 && !previewAsset) {
       // Mock LinkedIn post preview
-      const mockPost = `🚀 Just discovered a game-changing insight from our latest webinar on "${webinarData.description}"
+      const mockPost = `🚀 Just discovered a game-changing insight from our latest content on "${contentData.description}"
 
-The biggest takeaway? Most ${webinarData.persona?.toLowerCase() || 'teams'} are missing this one crucial step that could 3x their results.
+The biggest takeaway? Most ${contentData.persona?.toLowerCase() || 'teams'} are missing this one crucial step that could 3x their results.
 
 Here's what we learned:
 → [Key insight will be generated from your actual content]
-→ [Specific strategy mentioned in your webinar]
+→ [Specific strategy mentioned in your content]
 → [Actionable tip your audience can implement today]
 
 What's your experience with this? Drop a comment below! 👇
@@ -82,7 +82,7 @@ What's your experience with this? Drop a comment below! 👇
       
       setPreviewAsset(mockPost);
     }
-  }, [progress, webinarData, previewAsset]);
+  }, [progress, contentData, previewAsset]);
 
   // Determine current step index based on progress
   const getCurrentStepIndex = () => {
@@ -103,10 +103,10 @@ What's your experience with this? Drop a comment below! 👇
             <Sparkles className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-            Remixing Your Webinar Into Campaign Magic...
+            Remixing Your Content Into Campaign Magic...
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Our AI is analyzing <span className="font-semibold text-blue-600">"{webinarData.description}"</span> for <span className="font-semibold text-indigo-600">{webinarData.persona?.toLowerCase() || 'your audience'}</span>
+            Our AI is analyzing <span className="font-semibold text-blue-600">"{contentData.description}"</span> for <span className="font-semibold text-indigo-600">{contentData.persona?.toLowerCase() || 'your audience'}</span>
           </p>
 
           {/* Progress Bar */}
@@ -151,7 +151,7 @@ What's your experience with this? Drop a comment below! 👇
                 </pre>
               </div>
               <p className="text-xs text-blue-700 mt-2">
-                ✨ This is just a preview - your final assets will be customized with your actual webinar content!
+                ✨ This is just a preview - your final assets will be customized with your actual content!
               </p>
             </div>
           </div>
@@ -218,7 +218,7 @@ What's your experience with this? Drop a comment below! 👇
             Generating Your Selected Assets
           </h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {webinarData.selectedAssets.map((asset, index) => (
+            {contentData.selectedAssets.map((asset, index) => (
               <div key={index} className="bg-white p-4 rounded-xl border border-gray-200 text-center">
                 <div className="text-2xl mb-2">
                   {asset.includes('LinkedIn') ? '💼' : 

@@ -1,42 +1,25 @@
 import React, { useState } from 'react';
-import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, BarChart3, UserCheck, TrendingUp, Zap, Crown, CreditCard, AlertCircle } from 'lucide-react';
+import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, BarChart3, UserCheck, TrendingUp, Zap, AlertCircle } from 'lucide-react';
 import { GeneratedAsset } from '../App';
 import { BrandData } from '../services/brandExtraction';
-import { useAuth } from '../hooks/useAuth';
-import { createCheckoutSession } from '../lib/stripe';
 
 interface OutputViewProps {
   assets: GeneratedAsset[];
   brandData?: BrandData | null;
   onBack: () => void;
-  onViewPricing: () => void;
-  contentRequestId?: string;
-  currentContentData?: any;
 }
 
 const OutputView: React.FC<OutputViewProps> = ({ 
   assets, 
   brandData, 
-  onBack, 
-  onViewPricing,
-  contentRequestId,
-  currentContentData
+  onBack
 }) => {
   const [copiedAsset, setCopiedAsset] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [showEmailCapture, setShowEmailCapture] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
-  const { user, isProUser } = useAuth();
 
   // Check if this is a demo (no API key)
   const isDemoMode = !import.meta.env.VITE_OPENAI_API_KEY;
-
-  // Check if this is a free user viewing free assets (can upgrade)
-  const canUpgradeThisContent = user && !isProUser && contentRequestId && currentContentData;
-  const hasOnlyFreeAssets = assets.every(asset => 
-    ['LinkedIn Posts', 'Sales Outreach Emails'].includes(asset.type)
-  );
 
   const handleCopyToClipboard = async (content: string, assetId: string) => {
     try {
@@ -49,11 +32,6 @@ const OutputView: React.FC<OutputViewProps> = ({
   };
 
   const handleDownloadAll = () => {
-    if (!user && !isDemoMode) {
-      setShowEmailCapture(true);
-      return;
-    }
-    
     // Create downloadable content
     const content = assets.map(asset => 
       `${asset.type}: ${asset.title}\n\n${asset.content}\n\n---\n\n`
@@ -68,41 +46,10 @@ const OutputView: React.FC<OutputViewProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  const handleUpgradeContent = async () => {
-    if (!contentRequestId || !currentContentData) return;
-    
-    setIsProcessingUpgrade(true);
-    try {
-      const { url } = await createCheckoutSession(
-        currentContentData,
-        `${window.location.origin}/dashboard`,
-        `${window.location.origin}/dashboard`,
-        contentRequestId // Pass existing content request ID
-      );
-      
-      window.location.href = url;
-    } catch (err) {
-      console.error('Upgrade error:', err);
-      setIsProcessingUpgrade(false);
-    }
-  };
-
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (email) {
-      // Create downloadable content
-      const content = assets.map(asset => 
-        `${asset.type}: ${asset.title}\n\n${asset.content}\n\n---\n\n`
-      ).join('');
-      
-      const blob = new Blob([content], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'content-marketing-assets.txt';
-      a.click();
-      URL.revokeObjectURL(url);
-      
+      handleDownloadAll();
       setShowEmailCapture(false);
     }
   };
@@ -147,12 +94,6 @@ const OutputView: React.FC<OutputViewProps> = ({
       default:
         return 'border-gray-200 bg-gray-50';
     }
-  };
-
-  // Check if asset is premium and user doesn't have access
-  const isAssetBlurred = (assetType: string) => {
-    const premiumAssets = ['Marketing Nurture Emails', 'Quote Cards', 'Sales Snippets', 'One-Pager Recap', 'Visual Infographic'];
-    return premiumAssets.includes(assetType) && !isProUser && !user && !isDemoMode;
   };
 
   // Categorize assets by type
@@ -453,38 +394,14 @@ const OutputView: React.FC<OutputViewProps> = ({
               <span>Download All Assets</span>
             </button>
             <button
-              onClick={onViewPricing}
+              onClick={onBack}
               className="btn-secondary text-lg px-8 py-4 flex items-center space-x-2 justify-center"
             >
               <RefreshCw className="w-5 h-5" />
-              <span>Unlock More Remixes</span>
+              <span>Create More Assets</span>
             </button>
           </div>
         </div>
-
-        {/* Upgrade Section - Show if user has only free assets and can upgrade */}
-        {canUpgradeThisContent && hasOnlyFreeAssets && !isDemoMode && (
-          <div className="card p-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 mb-12">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <Crown className="w-8 h-8 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Want more assets from this content?
-              </h2>
-              <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
-                Get 4x more content including branded visuals, nurture emails, and extra posts.
-              </p>
-              <button
-                onClick={() => setShowUpgradeModal(true)}
-                className="btn-primary text-lg px-8 py-4 inline-flex items-center space-x-2"
-              >
-                <Crown className="w-5 h-5" />
-                <span>Unlock Full Campaign Kit</span>
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Categorized Assets */}
         {Object.entries(categorizedAssets).map(([category, categoryAssets]) => (
@@ -500,24 +417,6 @@ const OutputView: React.FC<OutputViewProps> = ({
             <div className="grid lg:grid-cols-2 gap-6">
               {categoryAssets.map((asset) => (
                 <div key={asset.id} className={`card p-6 border-2 ${getAssetColor(asset.type)} hover:shadow-lg transition-all duration-200 relative`}>
-                  {isAssetBlurred(asset.type) && (
-                    <div className="absolute inset-0 bg-white bg-opacity-90 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
-                      <div className="text-center p-6">
-                        <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <ExternalLink className="w-6 h-6 text-white" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Unlock Pro to access this</h3>
-                        <p className="text-sm text-gray-600 mb-4">Get the full campaign kit</p>
-                        <button
-                          onClick={onViewPricing}
-                          className="btn-primary text-sm px-4 py-2"
-                        >
-                          Upgrade Now
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
                       <div className="text-2xl">{getAssetIcon(asset.type)}</div>
@@ -612,89 +511,18 @@ const OutputView: React.FC<OutputViewProps> = ({
           </h3>
           <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
             {isDemoMode 
-              ? "This was a demo with sample assets. Sign up to process your real content and get personalized marketing materials."
-              : "Unlock additional asset types, custom branding, and advanced AI features with our Pro plan"
+              ? "This was a demo with sample assets. Add your OpenAI API key to process real content and get personalized marketing materials."
+              : "Upload more content to create additional marketing assets for your campaigns"
             }
           </p>
           <button
-            onClick={onViewPricing}
+            onClick={onBack}
             className="btn-primary inline-flex items-center space-x-2"
           >
-            <span>{isDemoMode ? "Get Started for Real" : "View Pricing Plans"}</span>
+            <span>{isDemoMode ? "Try With Real Content" : "Create More Assets"}</span>
             <ExternalLink className="w-4 h-4" />
           </button>
         </div>
-
-        {/* Upgrade Modal */}
-        {showUpgradeModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="card max-w-lg w-full p-8 bg-white">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                  <Crown className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  Unlock Full Campaign Kit
-                </h3>
-                <div className="inline-flex items-center space-x-2 bg-red-50 text-red-700 px-3 py-1 rounded-full text-sm font-medium border border-red-200">
-                  <span>🔥 Pro subscription includes this!</span>
-                </div>
-              </div>
-              
-              <div className="space-y-4 mb-6">
-                <h4 className="font-semibold text-gray-900">Get 4x more assets from this same content:</h4>
-                <div className="grid grid-cols-1 gap-3">
-                  <div className="flex items-center space-x-3 p-3 bg-mint-50 rounded-lg">
-                    <Check className="w-5 h-5 text-mint-600" />
-                    <span className="text-sm text-gray-700">Marketing nurture email sequences</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-indigo-50 rounded-lg">
-                    <Check className="w-5 h-5 text-indigo-600" />
-                    <span className="text-sm text-gray-700">Branded quote visuals with your colors</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-orange-50 rounded-lg">
-                    <Check className="w-5 h-5 text-orange-600" />
-                    <span className="text-sm text-gray-700">Sales snippets for calls & LinkedIn</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
-                    <Check className="w-5 h-5 text-purple-600" />
-                    <span className="text-sm text-gray-700">Professional one-pager recap document</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-emerald-50 rounded-lg">
-                    <Check className="w-5 h-5 text-emerald-600" />
-                    <span className="text-sm text-gray-700">Visual infographic for presentations</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex space-x-3">
-                <button
-                  onClick={handleUpgradeContent}
-                  disabled={isProcessingUpgrade}
-                  className="flex-1 btn-primary flex items-center justify-center space-x-2"
-                >
-                  {isProcessingUpgrade ? (
-                    <>
-                      <CreditCard className="w-4 h-4 animate-pulse" />
-                      <span>Processing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="w-4 h-4" />
-                      <span>Upgrade to Pro</span>
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={() => setShowUpgradeModal(false)}
-                  className="btn-secondary"
-                >
-                  Maybe Later
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Email Capture Modal */}
         {showEmailCapture && (

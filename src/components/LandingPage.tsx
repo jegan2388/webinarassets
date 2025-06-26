@@ -1,38 +1,12 @@
-import React, { useState } from 'react';
-import { Upload, Zap, Target, Mail, MessageSquare, Quote, TrendingUp, ArrowRight, Play, Sparkles, Users, Clock, FileAudio, User, Crown, CheckCircle, BarChart3, FileText, Type, Link } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
-import UserMenu from './UserMenu';
-import AuthModal from './AuthModal';
+import React from 'react';
+import { Upload, Zap, Target, Mail, MessageSquare, Quote, TrendingUp, ArrowRight, Play, Sparkles, Users, Clock, FileAudio, FileText, Type, Link } from 'lucide-react';
 
 interface LandingPageProps {
   onStartUpload: () => void;
-  onViewPricing: () => void;
   onViewTranscription: () => void;
-  onShowAuth: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing, onViewTranscription, onShowAuth }) => {
-  const { user, isProUser, subscriptionStatus, monthlyContentLimit, contentProcessedThisMonth } = useAuth();
-  const [showAuthModal, setShowAuthModal] = useState(false);
-
-  const handleTryItFree = () => {
-    if (user) {
-      onStartUpload();
-    } else {
-      setShowAuthModal(true);
-    }
-  };
-
-  const handleContinueWithoutAuth = () => {
-    setShowAuthModal(false);
-    onStartUpload();
-  };
-
-  const handleAuthSuccess = () => {
-    setShowAuthModal(false);
-    onStartUpload();
-  };
-
+const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewTranscription }) => {
   const contentTypes = [
     {
       icon: <FileText className="w-6 h-6 text-blue-600" />,
@@ -89,23 +63,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
               <FileAudio className="w-4 h-4" />
               <span>Transcriber</span>
             </button>
-            <button
-              onClick={onViewPricing}
-              className="text-gray-600 hover:text-gray-900 font-medium transition-colors px-4 py-2 rounded-lg hover:bg-white"
-            >
-              Pricing
-            </button>
-            {user ? (
-              <UserMenu />
-            ) : (
-              <button
-                onClick={onShowAuth}
-                className="btn-primary flex items-center space-x-2"
-              >
-                <User className="w-4 h-4" />
-                <span>Sign In</span>
-              </button>
-            )}
           </div>
         </nav>
 
@@ -128,39 +85,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
               Upload recordings, paste text, or share video links. Get LinkedIn posts, sales emails, and more — crafted for B2B marketers who need results fast.
             </p>
             
-            {/* User Status Banner */}
-            {user && (
-              <div className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium mb-6 ${
-                isProUser 
-                  ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200'
-                  : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
-              }`}>
-                {isProUser ? (
-                  <>
-                    <Crown className="w-4 h-4" />
-                    <span>Pro Account - {monthlyContentLimit - contentProcessedThisMonth} remixes remaining this month</span>
-                  </>
-                ) : (
-                  <>
-                    <User className="w-4 h-4" />
-                    <span>Free Account - {monthlyContentLimit - contentProcessedThisMonth} remix remaining this month</span>
-                  </>
-                )}
-              </div>
-            )}
-            
             {/* Single Primary CTA */}
             <div className="flex flex-col items-center mb-12">
               <button
-                onClick={handleTryItFree}
+                onClick={onStartUpload}
                 className="btn-primary text-xl px-12 py-5 flex items-center space-x-3 group shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300"
               >
                 <Upload className="w-6 h-6" />
-                <span>Start Free – No Credit Card Needed</span>
+                <span>Start Free – No Sign Up Required</span>
                 <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </button>
               <p className="text-sm text-gray-500 mt-3">
-                Start with free assets, upgrade for the full campaign kit
+                Get instant access to AI-generated marketing assets
               </p>
             </div>
 
@@ -307,118 +243,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
           </div>
         </div>
 
-        {/* Pricing Section */}
-        <div className="py-20">
-          <div className="card p-12 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                Simple, Transparent Pricing
-              </h2>
-              <p className="text-lg text-gray-600">
-                Start free, upgrade when you need more
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {/* Free Plan */}
-              <div className="card p-8 border-2 border-gray-200 bg-white">
-                <div className="text-center mb-8">
-                  <div className="w-12 h-12 bg-gray-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg">
-                    <CheckCircle className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Free</h3>
-                  <p className="text-gray-600 text-sm">Perfect for trying out the platform</p>
-                </div>
-                
-                <div className="text-center mb-8">
-                  <div className="flex items-baseline justify-center space-x-1">
-                    <span className="text-4xl font-bold text-gray-900">$0</span>
-                    <span className="text-gray-600">/month</span>
-                  </div>
-                  <p className="text-sm text-gray-500 mt-2">1 content remix/month</p>
-                </div>
-
-                <ul className="space-y-4 mb-8">
-                  <li className="flex items-center space-x-3">
-                    <CheckCircle className="w-5 h-5 text-success-500 flex-shrink-0" />
-                    <span className="text-gray-700 text-sm">2 LinkedIn posts</span>
-                  </li>
-                  <li className="flex items-center space-x-3">
-                    <CheckCircle className="w-5 h-5 text-success-500 flex-shrink-0" />
-                    <span className="text-gray-700 text-sm">Sales outreach emails</span>
-                  </li>
-                  <li className="flex items-center space-x-3">
-                    <CheckCircle className="w-5 h-5 text-success-500 flex-shrink-0" />
-                    <span className="text-gray-700 text-sm">Basic transcription</span>
-                  </li>
-                </ul>
-
-                <button
-                  onClick={handleTryItFree}
-                  className="w-full btn-secondary py-3"
-                >
-                  Start Free
-                </button>
-              </div>
-
-              {/* Pro Plan */}
-              <div className="card p-8 border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 relative">
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
-                    Most Popular
-                  </span>
-                </div>
-                
-                <div className="text-center mb-8">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg">
-                    <Crown className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Pro</h3>
-                  <p className="text-gray-600 text-sm">Everything you need for consistent content creation</p>
-                </div>
-                
-                <div className="text-center mb-8">
-                  <div className="flex items-baseline justify-center space-x-1">
-                    <span className="text-4xl font-bold text-gray-900">$39</span>
-                    <span className="text-gray-600">/month</span>
-                  </div>
-                  <p className="text-sm text-gray-500 mt-2">10 content remixes/month</p>
-                </div>
-
-                <ul className="space-y-4 mb-8">
-                  <li className="flex items-center space-x-3">
-                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                    <span className="text-gray-700 text-sm">All 7 asset types</span>
-                  </li>
-                  <li className="flex items-center space-x-3">
-                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                    <span className="text-gray-700 text-sm">Brand-styled quote cards</span>
-                  </li>
-                  <li className="flex items-center space-x-3">
-                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                    <span className="text-gray-700 text-sm">Professional infographics</span>
-                  </li>
-                  <li className="flex items-center space-x-3">
-                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                    <span className="text-gray-700 text-sm">Nurture email sequences</span>
-                  </li>
-                  <li className="flex items-center space-x-3">
-                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                    <span className="text-gray-700 text-sm">Priority processing</span>
-                  </li>
-                </ul>
-
-                <button
-                  onClick={handleTryItFree}
-                  className="w-full btn-primary py-3"
-                >
-                  Start Pro Trial
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* CTA Section */}
         <div className="text-center py-20">
           <div className="max-w-3xl mx-auto">
@@ -429,10 +253,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
               Stop spending hours creating marketing assets. Let AI do the heavy lifting while you focus on strategy.
             </p>
             <button
-              onClick={handleTryItFree}
+              onClick={onStartUpload}
               className="btn-primary text-xl px-12 py-5 inline-flex items-center space-x-3"
             >
-              <span>Start Free – No Credit Card Needed</span>
+              <span>Start Free – No Sign Up Required</span>
               <ArrowRight className="w-6 h-6" />
             </button>
           </div>
@@ -448,14 +272,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewPricing,
           </div>
         </footer>
       </div>
-
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onContinueWithoutAuth={handleContinueWithoutAuth}
-        onAuthSuccess={handleAuthSuccess}
-      />
     </div>
   );
 };

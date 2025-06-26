@@ -1,48 +1,28 @@
 import React, { useState } from 'react';
-import { Upload, ArrowLeft, Check, FileVideo, Youtube, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, BarChart3, UserCheck, TrendingUp, CreditCard, User, Crown, Link, Video, ExternalLink } from 'lucide-react';
+import { Upload, ArrowLeft, Check, FileVideo, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, BarChart3, UserCheck, TrendingUp, Link, Video, ExternalLink } from 'lucide-react';
 import { ContentData } from '../App';
-import { createCheckoutSession } from '../lib/stripe';
-import { useAuth } from '../hooks/useAuth';
 
 interface UploadFormProps {
   onSubmit: (data: ContentData) => void;
   onBack: () => void;
-  onPaymentPending: (contentRequestId: string, formData: ContentData) => void;
   error?: string | null;
-  isProUser: boolean;
-  subscriptionStatus?: string;
-  monthlyContentLimit?: number;
-  contentProcessedThisMonth?: number;
 }
 
 const UploadForm: React.FC<UploadFormProps> = ({ 
   onSubmit, 
   onBack, 
-  onPaymentPending, 
-  error, 
-  isProUser,
-  subscriptionStatus = 'free',
-  monthlyContentLimit = 1,
-  contentProcessedThisMonth = 0
+  error
 }) => {
-  const { user, signUp, signIn } = useAuth();
   const [formData, setFormData] = useState<ContentData>({
     description: '',
     persona: '',
     funnelStage: '',
-    selectedAssets: ['LinkedIn Posts', 'Sales Outreach Emails'], // Default free assets
+    selectedAssets: ['LinkedIn Posts', 'Sales Outreach Emails', 'Marketing Nurture Emails', 'Quote Cards', 'Sales Snippets', 'One-Pager Recap', 'Visual Infographic'], // All assets selected by default
     contentType: 'file'
   });
   const [uploadType, setUploadType] = useState<'file' | 'link' | 'text'>('file');
   const [isDragging, setIsDragging] = useState(false);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [showEmailCapture, setShowEmailCapture] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
-  const [assetTier, setAssetTier] = useState<'free' | 'pro'>('free');
   const [combinedDescription, setCombinedDescription] = useState('');
-  const [showProSummary, setShowProSummary] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
   const [articleUrl, setArticleUrl] = useState('');
 
@@ -54,56 +34,45 @@ const UploadForm: React.FC<UploadFormProps> = ({
       name: 'LinkedIn Posts', 
       icon: <MessageSquare className="w-4 h-4" />, 
       color: 'border-blue-200 bg-blue-50',
-      description: 'Engaging social content for thought leadership',
-      isFree: true
+      description: 'Engaging social content for thought leadership'
     },
     { 
       name: 'Sales Outreach Emails', 
       icon: <UserCheck className="w-4 h-4" />, 
       color: 'border-red-200 bg-red-50',
-      description: 'Direct, value-focused emails for prospects',
-      isFree: true
+      description: 'Direct, value-focused emails for prospects'
     },
     { 
       name: 'Marketing Nurture Emails', 
       icon: <Mail className="w-4 h-4" />, 
       color: 'border-mint-200 bg-mint-50',
-      description: 'Educational, relationship-building emails',
-      isFree: false
+      description: 'Educational, relationship-building emails'
     },
     { 
       name: 'Quote Cards', 
       icon: <Quote className="w-4 h-4" />, 
       color: 'border-indigo-200 bg-indigo-50',
-      description: 'Share-worthy graphics with key insights',
-      isFree: false
+      description: 'Share-worthy graphics with key insights'
     },
     { 
       name: 'Sales Snippets', 
       icon: <TrendingUp className="w-4 h-4" />, 
       color: 'border-orange-200 bg-orange-50',
-      description: 'Ready-to-use outreach messages',
-      isFree: false
+      description: 'Ready-to-use outreach messages'
     },
     { 
       name: 'One-Pager Recap', 
       icon: <FileText className="w-4 h-4" />, 
       color: 'border-purple-200 bg-purple-50',
-      description: 'Professional summary document',
-      isFree: false
+      description: 'Professional summary document'
     },
     { 
       name: 'Visual Infographic', 
       icon: <BarChart3 className="w-4 h-4" />, 
       color: 'border-emerald-200 bg-emerald-50',
-      description: 'Professional visual content',
-      isFree: false
+      description: 'Professional visual content'
     }
   ];
-
-  // Check if user has reached their monthly limit
-  const hasReachedLimit = contentProcessedThisMonth >= monthlyContentLimit;
-  const remainingContent = Math.max(0, monthlyContentLimit - contentProcessedThisMonth);
 
   // Detect video platform from URL
   const detectVideoPlatform = (url: string): string => {
@@ -230,19 +199,13 @@ const UploadForm: React.FC<UploadFormProps> = ({
     if (file) handleFileUpload(file);
   };
 
-  const handleAssetTierChange = (tier: 'free' | 'pro') => {
-    setAssetTier(tier);
-    if (tier === 'free') {
-      setFormData(prev => ({
-        ...prev,
-        selectedAssets: ['LinkedIn Posts', 'Sales Outreach Emails']
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        selectedAssets: assetTypes.map(asset => asset.name)
-      }));
-    }
+  const handleAssetToggle = (assetName: string) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedAssets: prev.selectedAssets.includes(assetName)
+        ? prev.selectedAssets.filter(asset => asset !== assetName)
+        : [...prev.selectedAssets, assetName]
+    }));
   };
 
   // Parse combined description to extract persona and funnel stage (simplified)
@@ -267,14 +230,8 @@ const UploadForm: React.FC<UploadFormProps> = ({
     return { persona, funnelStage };
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Check if user has reached their monthly limit
-    if (hasReachedLimit && !isProUser) {
-      setShowProSummary(true);
-      return;
-    }
     
     if (!combinedDescription || (!formData.file && !videoUrl && !articleUrl)) {
       return;
@@ -292,84 +249,14 @@ const UploadForm: React.FC<UploadFormProps> = ({
       contentType: uploadType
     };
 
-    // If only free assets are selected and user is within limits, proceed directly
-    if (assetTier === 'free' && !hasReachedLimit) {
-      onSubmit(updatedFormData);
-      return;
-    }
-
-    // For paid assets or limit exceeded, show pro summary first
-    setFormData(updatedFormData);
-    setShowProSummary(true);
-  };
-
-  const handleProPayment = async () => {
-    setShowProSummary(false);
-    
-    if (!user) {
-      setShowEmailCapture(true);
-      return;
-    }
-
-    // User is logged in, proceed to payment
-    try {
-      setIsProcessingPayment(true);
-      const { url, contentRequestId } = await createCheckoutSession(
-        formData,
-        `${window.location.origin}/payment-success`,
-        `${window.location.origin}/upload`
-      );
-
-      window.location.href = url;
-      onPaymentPending(contentRequestId, formData);
-    } catch (err) {
-      console.error('Payment initiation error:', err);
-      setIsProcessingPayment(false);
-    }
-  };
-
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsCreatingAccount(true);
-
-    try {
-      let currentUser = user;
-
-      if (!currentUser) {
-        try {
-          await signUp(email, password);
-        } catch (signUpError: any) {
-          if (signUpError.message?.includes('already registered')) {
-            await signIn(email, password);
-          } else {
-            throw signUpError;
-          }
-        }
-      }
-
-      const { url, contentRequestId } = await createCheckoutSession(
-        formData,
-        `${window.location.origin}/payment-success`,
-        `${window.location.origin}/upload`
-      );
-
-      window.location.href = url;
-      onPaymentPending(contentRequestId, formData);
-      
-    } catch (err) {
-      console.error('Payment initiation error:', err);
-      setIsCreatingAccount(false);
-    }
+    onSubmit(updatedFormData);
   };
 
   const isFormValid = combinedDescription && (
     (uploadType === 'file' && formData.file) ||
     (uploadType === 'link' && isValidUrl(videoUrl)) ||
     (uploadType === 'text' && isValidUrl(articleUrl))
-  );
-
-  const freeAssets = assetTypes.filter(asset => asset.isFree);
-  const proAssets = assetTypes.filter(asset => !asset.isFree);
+  ) && formData.selectedAssets.length > 0;
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
@@ -389,37 +276,6 @@ const UploadForm: React.FC<UploadFormProps> = ({
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           <span>Back to home</span>
         </button>
-
-        {/* Usage Limit Warning */}
-        {hasReachedLimit && !isProUser && (
-          <div className="card p-6 border-yellow-200 bg-yellow-50 mb-8">
-            <div className="flex items-center space-x-3">
-              <AlertCircle className="w-6 h-6 text-yellow-600 flex-shrink-0" />
-              <div>
-                <h3 className="font-semibold text-yellow-900">Monthly Limit Reached</h3>
-                <p className="text-yellow-700 text-sm mt-1">
-                  You've processed {contentProcessedThisMonth} of {monthlyContentLimit} content pieces this month. 
-                  Upgrade to Pro for unlimited processing.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Usage Status for Pro Users */}
-        {isProUser && (
-          <div className="card p-4 border-blue-200 bg-blue-50 mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <Crown className="w-5 h-5 text-blue-600" />
-                <span className="font-semibold text-blue-900">Pro Account</span>
-              </div>
-              <div className="text-sm text-blue-700">
-                {contentProcessedThisMonth} of {monthlyContentLimit} used this month
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Error Message */}
         {error && (
@@ -702,100 +558,55 @@ const UploadForm: React.FC<UploadFormProps> = ({
               </p>
             </div>
 
-            {/* Asset Tier Selection - Only show if user has remaining content or is Pro */}
-            {(!hasReachedLimit || isProUser) && (
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-4">
-                  <Sparkles className="w-4 h-4 inline mr-2" />
-                  Choose your asset package
-                </label>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Free Assets */}
+            {/* Asset Selection */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-4">
+                <Sparkles className="w-4 h-4 inline mr-2" />
+                Select the marketing assets you want to generate
+              </label>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {assetTypes.map((asset) => (
                   <label
-                    className={`p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
-                      assetTier === 'free'
-                        ? 'border-blue-500 bg-blue-50'
+                    key={asset.name}
+                    className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                      formData.selectedAssets.includes(asset.name)
+                        ? `${asset.color} border-current`
                         : 'border-gray-200 hover:border-gray-300 bg-white'
                     }`}
                   >
                     <input
-                      type="radio"
-                      name="assetTier"
-                      value="free"
-                      checked={assetTier === 'free'}
-                      onChange={() => handleAssetTierChange('free')}
+                      type="checkbox"
+                      checked={formData.selectedAssets.includes(asset.name)}
+                      onChange={() => handleAssetToggle(asset.name)}
                       className="sr-only"
                     />
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        assetTier === 'free' ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                        formData.selectedAssets.includes(asset.name)
+                          ? 'border-blue-600 bg-blue-600'
+                          : 'border-gray-300'
                       }`}>
-                        {assetTier === 'free' && <div className="w-2 h-2 bg-white rounded-full" />}
+                        {formData.selectedAssets.includes(asset.name) && (
+                          <Check className="w-3 h-3 text-white" />
+                        )}
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">Free Assets</h3>
-                        <p className="text-sm text-gray-600">Perfect for trying out the platform</p>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      {freeAssets.map(asset => (
-                        <div key={asset.name} className="flex items-center space-x-2 text-sm text-gray-700">
-                          <Check className="w-4 h-4 text-success-500" />
-                          <span>{asset.name}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          {asset.icon}
+                          <span className="font-medium text-gray-900">{asset.name}</span>
                         </div>
-                      ))}
+                        <p className="text-sm text-gray-600">{asset.description}</p>
+                      </div>
                     </div>
                   </label>
-
-                  {/* Pro Assets */}
-                  <label
-                    className={`p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 relative ${
-                      assetTier === 'pro'
-                        ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50'
-                        : 'border-gray-200 hover:border-gray-300 bg-white'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="assetTier"
-                      value="pro"
-                      checked={assetTier === 'pro'}
-                      onChange={() => handleAssetTierChange('pro')}
-                      className="sr-only"
-                    />
-                    <div className="absolute top-3 right-3">
-                      <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                        Pro Only
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        assetTier === 'pro' ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
-                      }`}>
-                        {assetTier === 'pro' && <div className="w-2 h-2 bg-white rounded-full" />}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900 flex items-center space-x-2">
-                          <span>Full Campaign Kit</span>
-                          <Crown className="w-4 h-4 text-blue-600" />
-                        </h3>
-                        <p className="text-sm text-gray-600">Everything you need for a complete campaign</p>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="text-sm text-gray-700 font-medium mb-2">Includes all free assets plus:</div>
-                      {proAssets.map(asset => (
-                        <div key={asset.name} className="flex items-center space-x-2 text-sm text-gray-700">
-                          <Check className="w-4 h-4 text-blue-600" />
-                          <span>{asset.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </label>
-                </div>
+                ))}
               </div>
-            )}
+              
+              {formData.selectedAssets.length === 0 && (
+                <p className="text-sm text-red-600 mt-2">Please select at least one asset type</p>
+              )}
+            </div>
 
             {/* API Key Notice */}
             {!import.meta.env.VITE_OPENAI_API_KEY && (
@@ -817,191 +628,20 @@ const UploadForm: React.FC<UploadFormProps> = ({
             <div className="pt-6">
               <button
                 type="submit"
-                disabled={!isFormValid || isProcessingPayment}
+                disabled={!isFormValid}
                 className="w-full btn-primary text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
               >
-                {isProcessingPayment ? (
-                  <>
-                    <CreditCard className="w-5 h-5 animate-pulse" />
-                    <span>Processing...</span>
-                  </>
-                ) : hasReachedLimit && !isProUser ? (
-                  <>
-                    <Crown className="w-5 h-5" />
-                    <span>Upgrade to Continue</span>
-                  </>
-                ) : assetTier === 'pro' && !isProUser ? (
-                  <>
-                    <Crown className="w-5 h-5" />
-                    <span>Upgrade to Pro</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5" />
-                    <span>Generate Assets</span>
-                  </>
-                )}
+                <Sparkles className="w-5 h-5" />
+                <span>Generate Marketing Assets</span>
               </button>
               {!isFormValid && (
                 <p className="text-sm text-gray-500 text-center mt-3">
-                  Please fill in all required fields to continue
-                </p>
-              )}
-              {remainingContent > 0 && !isProUser && (
-                <p className="text-sm text-gray-600 text-center mt-3">
-                  {remainingContent} content piece{remainingContent !== 1 ? 's' : ''} remaining this month
+                  Please fill in all required fields and select at least one asset type
                 </p>
               )}
             </div>
           </form>
         </div>
-
-        {/* Pro Summary Modal */}
-        {showProSummary && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="card max-w-lg w-full p-8 bg-white">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                  <Crown className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  {hasReachedLimit ? 'Upgrade to Continue' : 'Upgrade to Pro - $39/month'}
-                </h3>
-                {hasReachedLimit && (
-                  <div className="inline-flex items-center space-x-2 bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 mb-4">
-                    <span>Monthly limit reached</span>
-                  </div>
-                )}
-              </div>
-              
-              <div className="space-y-4 mb-6">
-                <h4 className="font-semibold text-gray-900">Pro subscription includes:</h4>
-                <div className="grid grid-cols-1 gap-3">
-                  <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                    <Check className="w-5 h-5 text-blue-600" />
-                    <span className="text-sm text-gray-700">10 content remixes per month</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-indigo-50 rounded-lg">
-                    <Check className="w-5 h-5 text-indigo-600" />
-                    <span className="text-sm text-gray-700">All 7 asset types included</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-mint-50 rounded-lg">
-                    <Check className="w-5 h-5 text-mint-600" />
-                    <span className="text-sm text-gray-700">Branded visuals with your colors</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
-                    <Check className="w-5 h-5 text-purple-600" />
-                    <span className="text-sm text-gray-700">Priority processing & support</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex space-x-3">
-                <button
-                  onClick={handleProPayment}
-                  disabled={isProcessingPayment}
-                  className="flex-1 btn-primary flex items-center justify-center space-x-2"
-                >
-                  {isProcessingPayment ? (
-                    <>
-                      <CreditCard className="w-4 h-4 animate-pulse" />
-                      <span>Processing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="w-4 h-4" />
-                      <span>Upgrade to Pro</span>
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={() => setShowProSummary(false)}
-                  className="btn-secondary"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Email Capture Modal - Only for premium assets */}
-        {showEmailCapture && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="card max-w-md w-full p-8 bg-white">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                Create Account & Subscribe
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Create an account to subscribe to Pro and access unlimited content processing.
-              </p>
-              
-              <form onSubmit={handleEmailSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    className="input-field"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="password" className="block text-sm font-semibold text-gray-900 mb-2">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Create a secure password"
-                    className="input-field"
-                    required
-                    minLength={6}
-                  />
-                </div>
-
-                <div className="flex space-x-3 pt-4">
-                  <button
-                    type="submit"
-                    disabled={isCreatingAccount}
-                    className="flex-1 btn-primary flex items-center justify-center space-x-2"
-                  >
-                    {isCreatingAccount ? (
-                      <>
-                        <CreditCard className="w-4 h-4 animate-pulse" />
-                        <span>Creating Account...</span>
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard className="w-4 h-4" />
-                        <span>Subscribe to Pro</span>
-                      </>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowEmailCapture(false)}
-                    className="btn-secondary"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-              
-              <p className="text-xs text-gray-500 mt-4 text-center">
-                By continuing, you agree to create an account and subscribe to our Pro plan.
-              </p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
