@@ -273,6 +273,110 @@ Best,
     );
   }
 
+  if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('video repurposing'))) {
+    const contentType = isWebinar ? 'webinar' : 'article content';
+    mockAssets.push(
+      {
+        id: 'video-repurposing-1',
+        type: 'Video Repurposing Ideas',
+        title: 'Short Video Clips Strategy',
+        content: `🎬 **Video Repurposing Strategy for "${contentData.description}"**
+
+**5 Short Video Ideas (30-60 seconds each):**
+
+**1. Hook Video (30 seconds)**
+"The biggest mistake ${contentData.persona?.toLowerCase() || 'teams'} make with [topic]..."
+→ Start with the most surprising insight
+→ End with "Want to know what actually works?"
+
+**2. Quick Tip Video (45 seconds)**
+"Here's a 2-minute strategy that changed everything..."
+→ Share one actionable takeaway
+→ Show before/after or step-by-step
+
+**3. Myth-Busting Video (60 seconds)**
+"Everyone thinks [common belief], but here's the truth..."
+→ Challenge conventional wisdom
+→ Provide the real solution
+
+**4. Behind-the-Scenes (30 seconds)**
+"What we learned from analyzing 100+ ${contentData.persona?.toLowerCase() || 'companies'}..."
+→ Share research insights
+→ Make it feel exclusive
+
+**5. Question & Answer (45 seconds)**
+"Someone asked: 'What's the #1 thing to focus on?'"
+→ Answer the most common question
+→ Keep it conversational
+
+**📱 Platform-Specific Tips:**
+• **LinkedIn:** Professional tone, industry insights
+• **Instagram/TikTok:** More casual, visual storytelling
+• **Twitter:** Quick tips, thread-worthy content
+• **YouTube Shorts:** Educational, how-to format
+
+**🎯 Call-to-Action Ideas:**
+• "Comment 'GUIDE' for the full framework"
+• "Follow for more [industry] insights"
+• "Save this for later reference"
+• "Share with your team"`
+      },
+      {
+        id: 'video-repurposing-2',
+        type: 'Video Repurposing Ideas',
+        title: 'Content Timestamps & Clips',
+        content: `⏰ **Best Moments to Clip from Your ${contentType}:**
+
+**High-Impact Timestamps:**
+
+**🔥 Golden Nuggets (15-30 seconds):**
+• Most surprising statistic or data point
+• "Aha moment" revelations
+• Contrarian takes that challenge industry norms
+• Simple frameworks or formulas
+
+**💡 Teaching Moments (30-45 seconds):**
+• Step-by-step explanations
+• Before/after comparisons
+• Common mistakes and solutions
+• Quick wins or immediate actions
+
+**🎯 Engagement Hooks (20-30 seconds):**
+• Questions that make people think
+• "What if I told you..." statements
+• Industry predictions or trends
+• Personal stories or case studies
+
+**📝 Clip Creation Checklist:**
+
+✅ **Start Strong:** First 3 seconds grab attention
+✅ **Clear Audio:** Ensure voice is crisp and clear
+✅ **Visual Interest:** Add text overlays or graphics
+✅ **Single Focus:** One key point per clip
+✅ **Strong Ending:** Clear next step or CTA
+
+**🎨 Visual Enhancement Ideas:**
+• Add captions for accessibility
+• Use brand colors for text overlays
+• Include key statistics as graphics
+• Create thumbnail with compelling text
+• Add progress bars for longer clips
+
+**📊 Performance Tracking:**
+• Monitor which clips get most engagement
+• Test different lengths (15s vs 30s vs 60s)
+• A/B test different hooks and CTAs
+• Track comments for content ideas
+
+**🔄 Repurposing Strategy:**
+• Create 5-7 clips from single ${contentType}
+• Space releases over 2-3 weeks
+• Cross-post on multiple platforms
+• Use clips to drive traffic to full content`
+      }
+    );
+  }
+
   return mockAssets;
 };
 
@@ -814,6 +918,85 @@ const generateQuoteCards = async (
   }
 };
 
+// Generate Video Repurposing Ideas
+const generateVideoRepurposingIdeas = async (
+  insights: string[], 
+  contentData: ContentData,
+  brandData?: BrandData | null
+): Promise<GeneratedAsset[]> => {
+  const openai = getOpenAIClient();
+  
+  const isWebinar = contentData.contentType === 'file';
+  const contentTypeContext = isWebinar ? 'webinar/presentation' : 'article/blog post';
+  
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4',
+    messages: [
+      {
+        role: 'system',
+        content: `You are a video content strategist specializing in short-form video content for social media. Create detailed video repurposing strategies that:
+
+        VIDEO CONTENT BEST PRACTICES:
+        - Focus on 15-60 second clips optimized for social media
+        - Create hooks that grab attention in the first 3 seconds
+        - Make content platform-specific (LinkedIn vs TikTok vs Instagram)
+        - Include specific timestamps and moments to clip
+        - Provide clear instructions for video creation
+        - Focus on high-engagement, shareable content
+        
+        CONTENT TYPE AWARENESS:
+        ${isWebinar ? `
+        - Reference specific moments from the webinar/presentation
+        - Suggest clipping key teaching moments, Q&A sections, and insights
+        - Include behind-the-scenes or "live" moments
+        - Focus on interactive elements and audience engagement
+        ` : `
+        - Transform written insights into visual storytelling
+        - Suggest ways to present article concepts visually
+        - Create educational content that explains key points
+        - Focus on making abstract concepts tangible and visual
+        `}
+
+        STRUCTURE:
+        - Provide 5-7 specific video ideas with exact durations
+        - Include platform-specific optimization tips
+        - Suggest visual elements, text overlays, and CTAs
+        - Provide hooks, content structure, and endings
+        - Include performance tracking suggestions
+        
+        TONE:
+        - Practical and actionable
+        - Platform-aware and trend-conscious
+        - Focused on engagement and shareability
+        - Educational but entertaining`
+      },
+      {
+        role: 'user',
+        content: `Create a comprehensive video repurposing strategy for our ${contentTypeContext} "${contentData.description}" targeting ${contentData.persona}.
+        
+        Key insights to work with:
+        ${insights.slice(0, 5).map((insight, i) => `${i + 1}. ${insight}`).join('\n')}
+        
+        Funnel Stage: ${contentData.funnelStage}
+        Content Type: ${contentTypeContext}
+        
+        Focus on creating viral, engaging short-form video content that drives engagement and shares.`
+      }
+    ],
+    temperature: 0.7,
+    max_tokens: 800
+  });
+
+  const videoIdeas = response.choices[0].message.content || '';
+
+  return [{
+    id: 'video-repurposing-strategy',
+    type: 'Video Repurposing Ideas',
+    title: 'Short Video Content Strategy',
+    content: videoIdeas
+  }];
+};
+
 // Main function to generate all assets
 export const generateMarketingAssets = async (
   transcript: string,
@@ -874,6 +1057,12 @@ export const generateMarketingAssets = async (
       onProgress?.('Extracting most insightful quotes...', 75);
       const quoteCards = await generateQuoteCards(insights, contentData, brandData);
       allAssets.push(...quoteCards);
+    }
+    
+    if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('video repurposing'))) {
+      onProgress?.('Creating video repurposing strategy...', 85);
+      const videoIdeas = await generateVideoRepurposingIdeas(insights, contentData, brandData);
+      allAssets.push(...videoIdeas);
     }
     
     onProgress?.('Finalizing your campaign-ready assets...', 100);

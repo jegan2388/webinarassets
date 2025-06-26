@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, BarChart3, UserCheck, TrendingUp, Zap, AlertCircle } from 'lucide-react';
+import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, BarChart3, UserCheck, TrendingUp, Zap, AlertCircle, Video, Clock, Play } from 'lucide-react';
 import { GeneratedAsset } from '../App';
 import { BrandData } from '../services/brandExtraction';
 
@@ -64,12 +64,8 @@ const OutputView: React.FC<OutputViewProps> = ({
         return '📧';
       case 'quote cards':
         return '💬';
-      case 'sales snippets':
-        return '📞';
-      case 'one-pager recap':
-        return '📄';
-      case 'visual infographic':
-        return '📊';
+      case 'video repurposing ideas':
+        return '🎬';
       default:
         return '📄';
     }
@@ -78,21 +74,17 @@ const OutputView: React.FC<OutputViewProps> = ({
   const getAssetColor = (type: string) => {
     switch (type.toLowerCase()) {
       case 'linkedin posts':
-        return 'border-blue-200 bg-blue-50';
-      case 'sales outreach emails':
-        return 'border-red-200 bg-red-50';
-      case 'marketing nurture emails':
-        return 'border-mint-200 bg-mint-50';
-      case 'quote cards':
-        return 'border-indigo-200 bg-indigo-50';
-      case 'sales snippets':
-        return 'border-orange-200 bg-orange-50';
-      case 'one-pager recap':
-        return 'border-purple-200 bg-purple-50';
-      case 'visual infographic':
         return 'border-emerald-200 bg-emerald-50';
+      case 'sales outreach emails':
+        return 'border-orange-200 bg-orange-50';
+      case 'marketing nurture emails':
+        return 'border-purple-200 bg-purple-50';
+      case 'quote cards':
+        return 'border-teal-200 bg-teal-50';
+      case 'video repurposing ideas':
+        return 'border-cyan-200 bg-cyan-50';
       default:
-        return 'border-gray-200 bg-gray-50';
+        return 'border-slate-200 bg-slate-50';
     }
   };
 
@@ -107,8 +99,8 @@ const OutputView: React.FC<OutputViewProps> = ({
   }, {} as Record<string, GeneratedAsset[]>);
 
   const renderQuoteCard = (content: string, asset: GeneratedAsset) => {
-    const primaryColor = brandData?.primaryColor || '#4f46e5';
-    const secondaryColor = brandData?.secondaryColor || '#7c3aed';
+    const primaryColor = brandData?.primaryColor || '#059669';
+    const secondaryColor = brandData?.secondaryColor || '#0d9488';
     
     const gradientStyle = {
       background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`
@@ -144,12 +136,12 @@ const OutputView: React.FC<OutputViewProps> = ({
           </div>
         </div>
         
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <div className="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-white/20">
           <div className="flex items-center space-x-2 mb-2">
-            <Palette className="w-4 h-4 text-indigo-600" />
-            <span className="text-sm font-medium text-gray-700">Brand-Styled Quote Card</span>
+            <Palette className="w-4 h-4 text-teal-600" />
+            <span className="text-sm font-medium text-slate-700">Brand-Styled Quote Card</span>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-slate-600">
             💡 <strong>Usage tip:</strong> This quote card uses your brand colors
             {brandData?.companyName && ` and ${brandData.companyName} branding`}. 
             Perfect for social media, presentations, or email newsletters.
@@ -159,187 +151,57 @@ const OutputView: React.FC<OutputViewProps> = ({
     );
   };
 
-  const renderOnePager = (content: string) => {
-    try {
-      const data = JSON.parse(content);
-      const primaryColor = brandData?.primaryColor || '#2563eb';
-      
-      return (
-        <div className="space-y-4">
-          <div className="bg-white p-8 rounded-2xl border-2 border-gray-200 shadow-lg">
-            <div className="text-center mb-8 pb-6 border-b-2 border-gray-100">
-              <div 
-                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg"
-                style={{ backgroundColor: primaryColor }}
-              >
-                <FileText className="w-8 h-8 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Content Session Recap
-              </h2>
-              <p className="text-gray-600">
-                {brandData?.companyName || 'Professional'} Summary Document
-              </p>
-            </div>
-
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                <div 
-                  className="w-6 h-6 rounded-full mr-3"
-                  style={{ backgroundColor: primaryColor }}
-                ></div>
-                Quick Session Overview
-              </h3>
-              <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-xl">
-                {data.overview || 'Session overview not available'}
-              </p>
-            </div>
-
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                <div 
-                  className="w-6 h-6 rounded-full mr-3"
-                  style={{ backgroundColor: primaryColor }}
-                ></div>
-                Key Quote from Content
-              </h3>
-              <blockquote 
-                className="text-lg italic text-white p-6 rounded-xl shadow-lg relative"
-                style={{ backgroundColor: primaryColor }}
-              >
-                <div className="text-4xl opacity-30 absolute top-2 left-4">"</div>
-                <p className="relative z-10 pl-6">
-                  {data.quote || 'Key quote not available'}
-                </p>
-              </blockquote>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <div 
-                  className="w-6 h-6 rounded-full mr-3"
-                  style={{ backgroundColor: primaryColor }}
-                ></div>
-                4 Key Takeaways
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {(data.takeaways || []).map((takeaway: string, index: number) => (
-                  <div key={index} className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                    <div className="flex items-start space-x-3">
-                      <div 
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 mt-1"
-                        style={{ backgroundColor: primaryColor }}
-                      >
-                        {index + 1}
-                      </div>
-                      <p className="text-gray-700 text-sm leading-relaxed">
-                        {takeaway}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+  const renderVideoRepurposingIdeas = (content: string) => {
+    return (
+      <div className="space-y-4">
+        <div className="bg-white/60 backdrop-blur-sm p-6 rounded-xl border border-white/20 shadow-lg">
+          <div className="flex items-center space-x-2 mb-4">
+            <Video className="w-5 h-5 text-cyan-600" />
+            <span className="text-lg font-semibold text-slate-900">Video Content Strategy</span>
+          </div>
+          <div className="prose prose-sm max-w-none">
+            <pre className="whitespace-pre-wrap text-sm text-slate-800 font-medium leading-relaxed bg-slate-50 p-4 rounded-lg border border-slate-200">
+              {content}
+            </pre>
           </div>
         </div>
-      );
-    } catch (error) {
-      return (
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
-          <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium leading-relaxed">
-            {content}
-          </pre>
-        </div>
-      );
-    }
-  };
-
-  const renderVisualInfographic = (asset: GeneratedAsset) => {
-    try {
-      const data = JSON.parse(asset.content);
-      
-      return (
-        <div className="space-y-4">
-          {data.imageUrl && (
-            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-lg">
-              <div className="flex items-center space-x-2 mb-4">
-                <BarChart3 className="w-5 h-5 text-emerald-600" />
-                <span className="text-lg font-semibold text-gray-900">Professional Visual Infographic</span>
-              </div>
-              <img 
-                src={data.imageUrl} 
-                alt="Visual infographic" 
-                className="w-full rounded-lg shadow-md"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            </div>
-          )}
-          
-          <div className="bg-white p-6 rounded-xl border border-gray-200">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <BarChart3 className="w-5 h-5 text-emerald-600 mr-2" />
-              Key Insights Featured
-            </h4>
-            <div className="space-y-3">
-              {data.insights && data.insights.map((insight: string, index: number) => (
-                <div key={index} className="flex items-start space-x-3 p-3 bg-emerald-50 rounded-lg border border-emerald-100">
-                  <div className="w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
-                    {index + 1}
-                  </div>
-                  <p className="text-gray-700 text-sm leading-relaxed">{insight}</p>
-                </div>
-              ))}
-            </div>
-            
-            {data.error && (
-              <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                <div className="flex items-center space-x-2">
-                  <AlertCircle className="w-4 h-4 text-yellow-600" />
-                  <span className="text-sm font-medium text-yellow-900">Demo Mode</span>
-                </div>
-                <p className="text-yellow-800 text-xs mt-1">
-                  Visual generation requires OpenAI API access. The key insights are provided above.
-                </p>
-              </div>
-            )}
+        
+        <div className="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-white/20">
+          <div className="flex items-center space-x-2 mb-2">
+            <Play className="w-4 h-4 text-cyan-600" />
+            <span className="text-sm font-medium text-slate-700">Video Repurposing Guide</span>
           </div>
+          <p className="text-sm text-slate-600">
+            🎬 <strong>Pro tip:</strong> These video ideas are optimized for 30-60 second clips perfect for LinkedIn, Instagram, TikTok, and YouTube Shorts. 
+            Focus on the first 3 seconds to grab attention and always include a clear call-to-action.
+          </p>
         </div>
-      );
-    } catch (error) {
-      return (
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
-          <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium leading-relaxed">
-            {asset.content}
-          </pre>
-        </div>
-      );
-    }
+      </div>
+    );
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen py-8">
+    <div className="bg-gradient-to-br from-slate-50 via-white to-emerald-50 min-h-screen py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <button
           onClick={onBack}
-          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-8 transition-colors group"
+          className="flex items-center space-x-2 text-slate-600 hover:text-slate-900 mb-8 transition-colors group"
         >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           <span>Want to remix more content?</span>
         </button>
 
         <div className="text-center mb-12 animate-fade-in">
-          <div className="w-16 h-16 bg-gradient-to-r from-success-500 to-mint-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+          <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
             <Check className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
             🎉 Your Marketing Assets Are Ready!
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            <span className="font-semibold text-blue-600">{assets.length} campaign-ready assets</span> generated from your content
+          <p className="text-xl text-slate-600 mb-8 max-w-3xl mx-auto">
+            <span className="font-semibold text-emerald-600">{assets.length} campaign-ready assets</span> generated from your content
             {brandData?.companyName && (
-              <span> and styled with <span className="font-semibold text-indigo-600">{brandData.companyName}</span> branding</span>
+              <span> and styled with <span className="font-semibold text-teal-600">{brandData.companyName}</span> branding</span>
             )}
           </p>
           
@@ -352,30 +214,30 @@ const OutputView: React.FC<OutputViewProps> = ({
           )}
           
           {/* Powered by AI Badge */}
-          <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-8 border border-blue-200">
+          <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium mb-8 border border-emerald-200">
             <Zap className="w-4 h-4" />
             <span>Powered by AI</span>
           </div>
           
           {/* Brand Data Summary */}
           {brandData && (brandData.primaryColor || brandData.companyName) && (
-            <div className="card p-4 max-w-md mx-auto mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+            <div className="bg-white/60 backdrop-blur-sm p-4 max-w-md mx-auto mb-8 bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200 rounded-2xl border">
               <div className="flex items-center justify-center space-x-2 mb-2">
-                <Palette className="w-5 h-5 text-blue-600" />
-                <span className="font-semibold text-blue-900">Brand Elements Applied</span>
+                <Palette className="w-5 h-5 text-emerald-600" />
+                <span className="font-semibold text-emerald-900">Brand Elements Applied</span>
               </div>
-              <div className="text-sm text-blue-800">
+              <div className="text-sm text-emerald-800">
                 {brandData.companyName && <div>Company: {brandData.companyName}</div>}
                 {brandData.primaryColor && (
                   <div className="flex items-center justify-center space-x-2 mt-1">
                     <span>Colors:</span>
                     <div 
-                      className="w-4 h-4 rounded border border-blue-300" 
+                      className="w-4 h-4 rounded border border-emerald-300" 
                       style={{ backgroundColor: brandData.primaryColor }}
                     />
                     {brandData.secondaryColor && (
                       <div 
-                        className="w-4 h-4 rounded border border-blue-300" 
+                        className="w-4 h-4 rounded border border-emerald-300" 
                         style={{ backgroundColor: brandData.secondaryColor }}
                       />
                     )}
@@ -388,14 +250,14 @@ const OutputView: React.FC<OutputViewProps> = ({
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={handleDownloadAll}
-              className="btn-primary text-lg px-8 py-4 flex items-center space-x-2 justify-center"
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold text-lg px-8 py-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center space-x-2 justify-center"
             >
               <Download className="w-5 h-5" />
               <span>Download All Assets</span>
             </button>
             <button
               onClick={onBack}
-              className="btn-secondary text-lg px-8 py-4 flex items-center space-x-2 justify-center"
+              className="bg-white/60 backdrop-blur-sm border-2 border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 font-semibold text-lg px-8 py-4 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center space-x-2 justify-center"
             >
               <RefreshCw className="w-5 h-5" />
               <span>Create More Assets</span>
@@ -406,31 +268,31 @@ const OutputView: React.FC<OutputViewProps> = ({
         {/* Categorized Assets */}
         {Object.entries(categorizedAssets).map(([category, categoryAssets]) => (
           <div key={category} className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center">
               <span className="text-3xl mr-3">{getAssetIcon(category)}</span>
               {category}
-              <span className="ml-3 text-sm bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
+              <span className="ml-3 text-sm bg-slate-100 text-slate-600 px-3 py-1 rounded-full">
                 {categoryAssets.length} asset{categoryAssets.length > 1 ? 's' : ''}
               </span>
             </h2>
             
             <div className="grid lg:grid-cols-2 gap-6">
               {categoryAssets.map((asset) => (
-                <div key={asset.id} className={`card p-6 border-2 ${getAssetColor(asset.type)} hover:shadow-lg transition-all duration-200 relative`}>
+                <div key={asset.id} className={`bg-white/60 backdrop-blur-sm p-6 border-2 ${getAssetColor(asset.type)} hover:shadow-lg transition-all duration-200 relative rounded-2xl`}>
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
                       <div className="text-2xl">{getAssetIcon(asset.type)}</div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{asset.type}</h3>
-                        <p className="text-sm text-gray-600">{asset.title}</p>
+                        <h3 className="text-lg font-semibold text-slate-900">{asset.type}</h3>
+                        <p className="text-sm text-slate-600">{asset.title}</p>
                       </div>
                     </div>
                     <button
                       onClick={() => handleCopyToClipboard(asset.content, asset.id)}
                       className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
                         copiedAsset === asset.id
-                          ? 'bg-gradient-to-r from-success-500 to-mint-500 text-white shadow-lg'
-                          : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg'
+                          : 'bg-white/60 border border-slate-200 text-slate-700 hover:border-slate-300 hover:shadow-sm'
                       }`}
                     >
                       {copiedAsset === asset.id ? (
@@ -449,13 +311,11 @@ const OutputView: React.FC<OutputViewProps> = ({
 
                   {asset.type === 'Quote Cards' ? (
                     renderQuoteCard(asset.content, asset)
-                  ) : asset.type === 'One-Pager Recap' ? (
-                    renderOnePager(asset.content)
-                  ) : asset.type === 'Visual Infographic' ? (
-                    renderVisualInfographic(asset)
+                  ) : asset.type === 'Video Repurposing Ideas' ? (
+                    renderVideoRepurposingIdeas(asset.content)
                   ) : (
-                    <div className="bg-white rounded-xl p-4 border border-gray-200">
-                      <pre className="whitespace-pre-wrap text-sm text-gray-800 font-medium leading-relaxed">
+                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                      <pre className="whitespace-pre-wrap text-sm text-slate-800 font-medium leading-relaxed">
                         {asset.content}
                       </pre>
                     </div>
@@ -467,49 +327,49 @@ const OutputView: React.FC<OutputViewProps> = ({
         ))}
 
         {/* Usage Tips */}
-        <div className="card p-8 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100 mb-16">
-          <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center flex items-center justify-center">
-            <Sparkles className="w-6 h-6 mr-2 text-blue-600" />
+        <div className="bg-white/60 backdrop-blur-sm p-8 bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-100 mb-16 rounded-3xl border">
+          <h3 className="text-2xl font-bold text-slate-900 mb-8 text-center flex items-center justify-center">
+            <Sparkles className="w-6 h-6 mr-2 text-emerald-600" />
             How to Use Your Assets
           </h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="text-center p-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
                 <Share2 className="w-6 h-6 text-white" />
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">LinkedIn Posts</h4>
-              <p className="text-sm text-gray-600">Post 2-3 times per week with content insights to build thought leadership</p>
+              <h4 className="font-semibold text-slate-900 mb-2">LinkedIn Posts</h4>
+              <p className="text-sm text-slate-600">Post 2-3 times per week with content insights to build thought leadership</p>
             </div>
             <div className="text-center p-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
                 <UserCheck className="w-6 h-6 text-white" />
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Sales Outreach</h4>
-              <p className="text-sm text-gray-600">Direct, value-focused emails for cold and warm prospect outreach</p>
+              <h4 className="font-semibold text-slate-900 mb-2">Sales Outreach</h4>
+              <p className="text-sm text-slate-600">Direct, value-focused emails for cold and warm prospect outreach</p>
             </div>
             <div className="text-center p-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-mint-500 to-mint-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
                 <Mail className="w-6 h-6 text-white" />
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Nurture Emails</h4>
-              <p className="text-sm text-gray-600">Educational, relationship-building emails for existing leads and prospects</p>
+              <h4 className="font-semibold text-slate-900 mb-2">Nurture Emails</h4>
+              <p className="text-sm text-slate-600">Educational, relationship-building emails for existing leads and prospects</p>
             </div>
             <div className="text-center p-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-                <BarChart3 className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <Video className="w-6 h-6 text-white" />
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Infographics</h4>
-              <p className="text-sm text-gray-600">Use in presentations, social media, and marketing materials</p>
+              <h4 className="font-semibold text-slate-900 mb-2">Video Content</h4>
+              <p className="text-sm text-slate-600">Short clips for social media platforms and video marketing campaigns</p>
             </div>
           </div>
         </div>
 
         {/* Next Steps */}
-        <div className="card p-8 text-center">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">
+        <div className="bg-white/60 backdrop-blur-sm p-8 text-center rounded-3xl border border-white/20">
+          <h3 className="text-2xl font-bold text-slate-900 mb-4">
             Want More Assets From Your Content?
           </h3>
-          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+          <p className="text-slate-600 mb-6 max-w-2xl mx-auto">
             {isDemoMode 
               ? "This was a demo with sample assets. Add your OpenAI API key to process real content and get personalized marketing materials."
               : "Upload more content to create additional marketing assets for your campaigns"
@@ -517,7 +377,7 @@ const OutputView: React.FC<OutputViewProps> = ({
           </p>
           <button
             onClick={onBack}
-            className="btn-primary inline-flex items-center space-x-2"
+            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] inline-flex items-center space-x-2"
           >
             <span>{isDemoMode ? "Try With Real Content" : "Create More Assets"}</span>
             <ExternalLink className="w-4 h-4" />
@@ -527,11 +387,11 @@ const OutputView: React.FC<OutputViewProps> = ({
         {/* Email Capture Modal */}
         {showEmailCapture && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="card max-w-md w-full p-8 bg-white">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+            <div className="bg-white/60 backdrop-blur-sm max-w-md w-full p-8 bg-white rounded-3xl border border-white/20">
+              <h3 className="text-2xl font-bold text-slate-900 mb-4">
                 Get Your Assets Delivered
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-slate-600 mb-6">
                 Enter your email to download all assets and receive tips on using them effectively in your campaigns.
               </p>
               
@@ -541,20 +401,20 @@ const OutputView: React.FC<OutputViewProps> = ({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
-                  className="input-field mb-4"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/60 mb-4"
                   required
                 />
                 <div className="flex space-x-3">
                   <button
                     type="submit"
-                    className="flex-1 btn-primary"
+                    className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
                   >
                     Download Assets
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowEmailCapture(false)}
-                    className="btn-secondary"
+                    className="bg-white/60 backdrop-blur-sm border-2 border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
                   >
                     Cancel
                   </button>

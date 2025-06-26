@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, ArrowLeft, Check, FileVideo, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, UserCheck, TrendingUp, Brain } from 'lucide-react';
+import { Upload, ArrowLeft, Check, FileVideo, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, UserCheck, TrendingUp, Brain, Video } from 'lucide-react';
 import { ContentData } from '../App';
 
 interface UploadFormProps {
@@ -52,6 +52,12 @@ const UploadForm: React.FC<UploadFormProps> = ({
       icon: <Quote className="w-4 h-4" />, 
       color: 'border-teal-200 bg-teal-50',
       description: 'Share-worthy graphics with key insights'
+    },
+    { 
+      name: 'Video Repurposing Ideas', 
+      icon: <Video className="w-4 h-4" />, 
+      color: 'border-cyan-200 bg-cyan-50',
+      description: 'Short video clips and social media snippets (30-60 seconds)'
     }
   ];
 
