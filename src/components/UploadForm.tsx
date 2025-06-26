@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, ArrowLeft, Check, FileVideo, Sparkles, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, BarChart3, UserCheck, TrendingUp, Link, Video, ExternalLink, Brain } from 'lucide-react';
+import { Upload, ArrowLeft, Check, FileVideo, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, UserCheck, TrendingUp, Brain } from 'lucide-react';
 import { ContentData } from '../App';
 
 interface UploadFormProps {
@@ -17,13 +17,12 @@ const UploadForm: React.FC<UploadFormProps> = ({
     description: '',
     persona: '',
     funnelStage: '',
-    selectedAssets: ['LinkedIn Posts', 'Sales Outreach Emails', 'Marketing Nurture Emails', 'Quote Cards', 'One-Pager Recap', 'Visual Infographic'], // Removed Sales Snippets
+    selectedAssets: ['LinkedIn Posts', 'Sales Outreach Emails', 'Marketing Nurture Emails', 'Quote Cards'],
     contentType: 'file'
   });
-  const [uploadType, setUploadType] = useState<'file' | 'link' | 'text'>('file');
+  const [uploadType, setUploadType] = useState<'file' | 'text'>('file');
   const [isDragging, setIsDragging] = useState(false);
   const [combinedDescription, setCombinedDescription] = useState('');
-  const [videoUrl, setVideoUrl] = useState('');
   const [articleUrl, setArticleUrl] = useState('');
 
   // Increased file size limit to 100MB
@@ -53,65 +52,8 @@ const UploadForm: React.FC<UploadFormProps> = ({
       icon: <Quote className="w-4 h-4" />, 
       color: 'border-teal-200 bg-teal-50',
       description: 'Share-worthy graphics with key insights'
-    },
-    { 
-      name: 'One-Pager Recap', 
-      icon: <FileText className="w-4 h-4" />, 
-      color: 'border-indigo-200 bg-indigo-50',
-      description: 'Professional summary document'
-    },
-    { 
-      name: 'Visual Infographic', 
-      icon: <BarChart3 className="w-4 h-4" />, 
-      color: 'border-cyan-200 bg-cyan-50',
-      description: 'Professional visual content'
     }
   ];
-
-  // Detect video platform from URL
-  const detectVideoPlatform = (url: string): string => {
-    if (!url) return 'Unknown';
-    
-    const lowerUrl = url.toLowerCase();
-    
-    if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
-      return 'YouTube';
-    } else if (lowerUrl.includes('vimeo.com')) {
-      return 'Vimeo';
-    } else if (lowerUrl.includes('hubspot.com') || lowerUrl.includes('hs-sites.com')) {
-      return 'HubSpot';
-    } else if (lowerUrl.includes('wistia.com') || lowerUrl.includes('wi.st')) {
-      return 'Wistia';
-    } else if (lowerUrl.includes('loom.com')) {
-      return 'Loom';
-    } else if (lowerUrl.includes('zoom.us')) {
-      return 'Zoom';
-    } else if (lowerUrl.includes('teams.microsoft.com')) {
-      return 'Microsoft Teams';
-    } else if (lowerUrl.includes('webex.com')) {
-      return 'Webex';
-    } else if (lowerUrl.includes('gotomeeting.com')) {
-      return 'GoToMeeting';
-    } else if (lowerUrl.includes('brightcove.com')) {
-      return 'Brightcove';
-    } else if (lowerUrl.includes('kaltura.com')) {
-      return 'Kaltura';
-    } else if (lowerUrl.includes('vidyard.com')) {
-      return 'Vidyard';
-    } else if (lowerUrl.includes('twitch.tv')) {
-      return 'Twitch';
-    } else if (lowerUrl.includes('facebook.com') || lowerUrl.includes('fb.watch')) {
-      return 'Facebook';
-    } else if (lowerUrl.includes('linkedin.com')) {
-      return 'LinkedIn';
-    } else if (lowerUrl.includes('dailymotion.com')) {
-      return 'Dailymotion';
-    } else if (lowerUrl.includes('streamable.com')) {
-      return 'Streamable';
-    }
-    
-    return 'Video Platform';
-  };
 
   // Detect content platform from URL
   const detectContentPlatform = (url: string): string => {
@@ -227,7 +169,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!combinedDescription || (!formData.file && !videoUrl && !articleUrl)) {
+    if (!combinedDescription || (!formData.file && !articleUrl)) {
       return;
     }
 
@@ -238,7 +180,6 @@ const UploadForm: React.FC<UploadFormProps> = ({
       description: combinedDescription,
       persona,
       funnelStage,
-      youtubeUrl: uploadType === 'link' && videoUrl ? videoUrl : undefined,
       textContent: uploadType === 'text' && articleUrl ? articleUrl : undefined,
       contentType: uploadType
     };
@@ -248,7 +189,6 @@ const UploadForm: React.FC<UploadFormProps> = ({
 
   const isFormValid = combinedDescription && (
     (uploadType === 'file' && formData.file) ||
-    (uploadType === 'link' && isValidUrl(videoUrl)) ||
     (uploadType === 'text' && isValidUrl(articleUrl))
   ) && formData.selectedAssets.length > 0;
 
@@ -303,7 +243,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
               <label className="block text-sm font-semibold text-slate-900 mb-4">
                 What type of content do you want to remix?
               </label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => setUploadType('file')}
@@ -319,19 +259,6 @@ const UploadForm: React.FC<UploadFormProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setUploadType('link')}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
-                    uploadType === 'link'
-                      ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
-                      : 'border-slate-200 hover:border-slate-300 bg-white/60'
-                  }`}
-                >
-                  <Video className="w-5 h-5 mb-2" />
-                  <div className="font-medium">Video Link</div>
-                  <div className="text-sm text-slate-600">YouTube, Vimeo, HubSpot, etc.</div>
-                </button>
-                <button
-                  type="button"
                   onClick={() => setUploadType('text')}
                   className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
                     uploadType === 'text'
@@ -339,7 +266,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                       : 'border-slate-200 hover:border-slate-300 bg-white/60'
                   }`}
                 >
-                  <ExternalLink className="w-5 h-5 mb-2" />
+                  <FileText className="w-5 h-5 mb-2" />
                   <div className="font-medium">Article/Blog Link</div>
                   <div className="text-sm text-slate-600">Medium, LinkedIn, blog posts</div>
                 </button>
@@ -412,62 +339,14 @@ const UploadForm: React.FC<UploadFormProps> = ({
                   )}
                 </div>
               </div>
-            ) : uploadType === 'link' ? (
-              <div>
-                <label htmlFor="video-url" className="block text-sm font-semibold text-slate-900 mb-4">
-                  <Video className="w-4 h-4 inline mr-2" />
-                  Video URL
-                </label>
-                <div className="relative">
-                  <Link className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    type="url"
-                    id="video-url"
-                    value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
-                    placeholder="https://youtube.com/watch?v=... or any video platform URL"
-                    className="w-full px-4 py-3 pl-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/60"
-                  />
-                </div>
-                {videoUrl && (
-                  <div className="mt-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                    <div className="flex items-center space-x-2">
-                      <Video className="w-4 h-4 text-emerald-600" />
-                      <span className="text-sm font-medium text-emerald-900">
-                        Detected: {detectVideoPlatform(videoUrl)}
-                      </span>
-                      {isValidUrl(videoUrl) ? (
-                        <Check className="w-4 h-4 text-emerald-600" />
-                      ) : (
-                        <AlertCircle className="w-4 h-4 text-red-600" />
-                      )}
-                    </div>
-                    {!isValidUrl(videoUrl) && (
-                      <p className="text-red-600 text-xs mt-1">Please enter a valid URL</p>
-                    )}
-                  </div>
-                )}
-                <p className="text-sm text-slate-500 mt-2">
-                  <strong>Supported platforms:</strong> YouTube, Vimeo, HubSpot, Wistia, Loom, Zoom, Microsoft Teams, Webex, GoToMeeting, Brightcove, Kaltura, Vidyard, and more.
-                </p>
-                <div className="mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <div className="flex items-center space-x-2">
-                    <AlertCircle className="w-4 h-4 text-yellow-600" />
-                    <span className="text-sm font-medium text-yellow-900">Note:</span>
-                  </div>
-                  <p className="text-yellow-800 text-xs mt-1">
-                    Video link processing requires backend integration. For now, please use file upload for best results.
-                  </p>
-                </div>
-              </div>
             ) : (
               <div>
                 <label htmlFor="article-url" className="block text-sm font-semibold text-slate-900 mb-4">
-                  <ExternalLink className="w-4 h-4 inline mr-2" />
+                  <FileText className="w-4 h-4 inline mr-2" />
                   Article or Blog Post URL
                 </label>
                 <div className="relative">
-                  <Link className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
                     type="url"
                     id="article-url"
@@ -481,7 +360,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                 {articleUrl && (
                   <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
                     <div className="flex items-center space-x-2">
-                      <ExternalLink className="w-4 h-4 text-purple-600" />
+                      <FileText className="w-4 h-4 text-purple-600" />
                       <span className="text-sm font-medium text-purple-900">
                         Detected: {detectContentPlatform(articleUrl)}
                       </span>
@@ -555,7 +434,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
             {/* Asset Selection */}
             <div>
               <label className="block text-sm font-semibold text-slate-900 mb-4">
-                <Sparkles className="w-4 h-4 inline mr-2" />
+                <TrendingUp className="w-4 h-4 inline mr-2" />
                 Select the marketing assets you want to generate
               </label>
               
@@ -625,7 +504,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                 disabled={!isFormValid}
                 className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold text-lg py-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
               >
-                <Sparkles className="w-5 h-5" />
+                <TrendingUp className="w-5 h-5" />
                 <span>Generate Marketing Assets</span>
               </button>
               {!isFormValid && (

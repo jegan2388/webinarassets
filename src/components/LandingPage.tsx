@@ -1,12 +1,11 @@
 import React from 'react';
-import { Upload, Zap, Target, Mail, MessageSquare, Quote, TrendingUp, ArrowRight, Sparkles, Users, Clock, FileAudio, FileText, Type, Link, Brain, Lightbulb, Rocket } from 'lucide-react';
+import { Upload, Target, Mail, MessageSquare, Quote, TrendingUp, ArrowRight, Users, Clock, FileText, Type, Brain, Lightbulb, Rocket } from 'lucide-react';
 
 interface LandingPageProps {
   onStartUpload: () => void;
-  onViewTranscription: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewTranscription }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload }) => {
   const contentTypes = [
     {
       icon: <FileText className="w-6 h-6 text-emerald-600" />,
@@ -14,13 +13,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewTranscri
       description: "Webinars, podcasts, meetings, presentations",
       color: "bg-emerald-50 border-emerald-100",
       examples: "MP4, MP3, WAV, M4A files"
-    },
-    {
-      icon: <Link className="w-6 h-6 text-orange-600" />,
-      title: "Video Links",
-      description: "YouTube, Vimeo, HubSpot, Loom, Zoom recordings",
-      color: "bg-orange-50 border-orange-100",
-      examples: "Any video platform URL"
     },
     {
       icon: <Type className="w-6 h-6 text-purple-600" />,
@@ -34,7 +26,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewTranscri
   const stats = [
     { value: "3min", label: "Processing Time", subtext: "From upload to assets" },
     { value: "85%", label: "Time Saved", subtext: "vs manual creation" },
-    { value: "7", label: "Asset Types", subtext: "Generated automatically" }
+    { value: "Multiple", label: "Asset Types", subtext: "Generated automatically" }
   ];
 
   return (
@@ -48,15 +40,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewTranscri
             </div>
             <span className="text-xl font-bold text-slate-900">ContentRemix</span>
           </div>
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={onViewTranscription}
-              className="text-slate-600 hover:text-slate-900 font-medium transition-colors px-4 py-2 rounded-lg hover:bg-white/60 flex items-center space-x-2"
-            >
-              <FileAudio className="w-4 h-4" />
-              <span>Transcriber</span>
-            </button>
-          </div>
         </nav>
 
         {/* Hero Section */}
@@ -64,7 +47,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewTranscri
           <div className="max-w-4xl mx-auto animate-fade-in">
             <div className="inline-flex items-center space-x-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium mb-6 border border-emerald-200">
               <Lightbulb className="w-4 h-4" />
-              <span>AI-Powered Content Intelligence</span>
+              <span>Smart Content Transformation</span>
             </div>
             
             <h1 className="text-5xl lg:text-6xl font-bold text-slate-900 mb-6 leading-tight">
@@ -105,7 +88,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewTranscri
                     <Upload className="w-8 h-8 text-white" />
                   </div>
                   <h4 className="font-semibold text-slate-900 mb-1">Upload</h4>
-                  <p className="text-sm text-slate-600">Drop files, paste text, or share links</p>
+                  <p className="text-sm text-slate-600">Drop files or paste text</p>
                 </div>
                 <ArrowRight className="w-6 h-6 text-slate-300 mx-4" />
                 <div className="text-center flex-1">
@@ -118,7 +101,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewTranscri
                 <ArrowRight className="w-6 h-6 text-slate-300 mx-4" />
                 <div className="text-center flex-1">
                   <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mb-3 mx-auto shadow-lg">
-                    <Sparkles className="w-8 h-8 text-white" />
+                    <Target className="w-8 h-8 text-white" />
                   </div>
                   <h4 className="font-semibold text-slate-900 mb-1">Generate</h4>
                   <p className="text-sm text-slate-600">Get campaign-ready assets</p>
@@ -150,7 +133,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload, onViewTranscri
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {contentTypes.map((type, index) => (
               <div key={index} className={`bg-white/60 backdrop-blur-sm p-6 rounded-2xl group hover:scale-105 transition-all duration-200 border-2 ${type.color} shadow-lg hover:shadow-xl`}>
                 <div className="mb-4">

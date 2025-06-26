@@ -22,7 +22,7 @@ const getOpenAIClient = (): OpenAI => {
 // Generate mock assets for demo purposes when API key is not available
 const generateMockAssets = (contentData: ContentData): GeneratedAsset[] => {
   const mockAssets: GeneratedAsset[] = [];
-  const isWebinar = contentData.contentType === 'file' || contentData.contentType === 'link';
+  const isWebinar = contentData.contentType === 'file';
   const isBlog = contentData.contentType === 'text';
 
   // Always include free assets
@@ -273,51 +273,11 @@ Best,
     );
   }
 
-  if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('one-pager'))) {
-    const onePagerContent = {
-      overview: `This ${isWebinar ? 'session' : 'article'} covered key strategies for ${contentData.description.toLowerCase()}, providing actionable insights for ${contentData.persona?.toLowerCase() || 'teams'} looking to improve their results.`,
-      quote: "The key to success is focusing on what matters most and executing consistently.",
-      takeaways: [
-        "Prioritize quality over quantity in all your initiatives",
-        "Use data-driven insights to guide your decision making",
-        "Build systems and processes that scale with growth",
-        "Focus on leading indicators rather than lagging metrics"
-      ]
-    };
-
-    mockAssets.push({
-      id: 'one-pager-recap',
-      type: 'One-Pager Recap',
-      title: 'Content Session Recap',
-      content: JSON.stringify(onePagerContent)
-    });
-  }
-
-  if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('visual infographic'))) {
-    const infographicContent = {
-      error: 'Visual generation requires OpenAI API access',
-      insights: [
-        "Focus on fundamentals before adding complexity",
-        "Measure leading indicators for better predictions", 
-        "Build repeatable systems that scale",
-        "Quality beats quantity in sustainable growth"
-      ],
-      fallbackMessage: 'Visual generation temporarily unavailable. Key insights are provided below.'
-    };
-
-    mockAssets.push({
-      id: 'visual-infographic',
-      type: 'Visual Infographic',
-      title: 'Professional Content Infographic',
-      content: JSON.stringify(infographicContent)
-    });
-  }
-
   return mockAssets;
 };
 
 // Extract key insights from content transcript
-const extractInsights = async (transcript: string, description: string, contentType: 'file' | 'link' | 'text'): Promise<string[]> => {
+const extractInsights = async (transcript: string, description: string, contentType: 'file' | 'text'): Promise<string[]> => {
   const openai = getOpenAIClient();
   
   const contentTypeContext = contentType === 'text' ? 'blog post or article' : 'webinar or presentation';
@@ -373,7 +333,7 @@ const generateLinkedInPosts = async (
   const openai = getOpenAIClient();
   
   const posts: GeneratedAsset[] = [];
-  const isWebinar = contentData.contentType === 'file' || contentData.contentType === 'link';
+  const isWebinar = contentData.contentType === 'file';
   const isBlog = contentData.contentType === 'text';
   
   // Generate 2-3 different LinkedIn posts
@@ -478,7 +438,7 @@ const generateSalesOutreachEmails = async (
   const openai = getOpenAIClient();
   
   const emails: GeneratedAsset[] = [];
-  const isWebinar = contentData.contentType === 'file' || contentData.contentType === 'link';
+  const isWebinar = contentData.contentType === 'file';
   const isBlog = contentData.contentType === 'text';
   
   const brandContext = brandData?.companyName 
@@ -636,7 +596,7 @@ const generateMarketingNurtureEmails = async (
   const openai = getOpenAIClient();
   
   const emails: GeneratedAsset[] = [];
-  const isWebinar = contentData.contentType === 'file' || contentData.contentType === 'link';
+  const isWebinar = contentData.contentType === 'file';
   const isBlog = contentData.contentType === 'text';
   
   const brandContext = brandData?.companyName 
@@ -854,177 +814,6 @@ const generateQuoteCards = async (
   }
 };
 
-// Generate One-Pager Recap
-const generateOnePagerRecap = async (
-  transcript: string,
-  contentData: ContentData,
-  brandData?: BrandData | null
-): Promise<GeneratedAsset> => {
-  const openai = getOpenAIClient();
-  
-  const brandContext = brandData?.companyName 
-    ? `Company: ${brandData.companyName}. ` 
-    : '';
-  
-  const isWebinar = contentData.contentType === 'file' || contentData.contentType === 'link';
-  const contentTypeContext = isWebinar ? 'session' : 'article';
-  
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4',
-    messages: [
-      {
-        role: 'system',
-        content: `You are a professional content strategist creating a one-page content recap document. Create a structured document with exactly these sections and word limits:
-
-        STRUCTURE REQUIREMENTS:
-        1. Quick ${contentTypeContext.charAt(0).toUpperCase() + contentTypeContext.slice(1)} Overview (50 words max) - Brief summary of what was covered
-        2. Key Quote from Content (20 words max) - Most impactful direct quote from the content
-        3. 4 Key Takeaways (25 words each) - Most valuable insights readers can implement
-        
-        CONTENT TYPE AWARENESS:
-        ${isWebinar ? `
-        - Use language appropriate for a session/webinar recap
-        - Reference "session insights," "discussion points," "attendee questions"
-        - Frame as live interaction and real-time learning
-        ` : `
-        - Use language appropriate for an article/research recap
-        - Reference "research findings," "analysis," "key conclusions"
-        - Frame as thoughtful investigation and written insights
-        `}
-        
-        FORMAT REQUIREMENTS:
-        - Return as structured JSON with sections: "overview", "quote", "takeaways" (array of 4 strings)
-        - Each section must stay within word limits
-        - Use professional, engaging language appropriate for ${contentData.persona}
-        - Focus on actionable insights and practical value
-        - Make it scannable and easy to digest
-        
-        CONTENT FOCUS:
-        - Highlight the most valuable and actionable content
-        - Use specific examples or data points when available
-        - Ensure takeaways are implementable immediately
-        - Match the tone and sophistication level for the target audience`
-      },
-      {
-        role: 'user',
-        content: `${brandContext}Create a one-page recap for the ${contentTypeContext} "${contentData.description}" targeting ${contentData.persona}.
-        
-        Use this content to extract the information (focus on the most valuable parts):
-        ${transcript.slice(0, 6000)}
-        
-        Funnel Stage: ${contentData.funnelStage}
-        Content Type: ${contentTypeContext}
-        
-        Remember: Follow the exact structure and word limits specified.`
-      }
-    ],
-    temperature: 0.4,
-    max_tokens: 800
-  });
-
-  try {
-    const content = JSON.parse(response.choices[0].message.content || '{}');
-    return {
-      id: 'one-pager-recap',
-      type: 'One-Pager Recap',
-      title: 'Content Session Recap',
-      content: JSON.stringify(content)
-    };
-  } catch (error) {
-    console.error('Failed to parse one-pager content:', error);
-    return {
-      id: 'one-pager-recap',
-      type: 'One-Pager Recap',
-      title: 'Content Session Recap',
-      content: response.choices[0].message.content || ''
-    };
-  }
-};
-
-// Generate Visual Infographic using DALL-E
-const generateVisualInfographic = async (
-  insights: string[],
-  contentData: ContentData,
-  brandData?: BrandData | null
-): Promise<GeneratedAsset> => {
-  const openai = getOpenAIClient();
-  
-  try {
-    // Create a comprehensive visual prompt for the infographic
-    const brandColors = brandData?.primaryColor && brandData?.secondaryColor 
-      ? `using brand colors ${brandData.primaryColor} and ${brandData.secondaryColor}` 
-      : 'using professional emerald (#10b981) and teal (#14b8a6) colors';
-    
-    const companyName = brandData?.companyName || 'Professional Content';
-    
-    // Take the top 4 insights for the infographic
-    const topInsights = insights.slice(0, 4);
-    
-    const visualPrompt = `Create a professional business infographic titled "${contentData.description}" for ${contentData.persona}. 
-    
-    Design requirements:
-    - Clean, modern corporate design ${brandColors}
-    - Include 4 key sections/boxes for main insights
-    - Professional typography with clear hierarchy
-    - Icons and visual elements that represent business concepts
-    - Minimal text overlay - focus on visual design structure
-    - Company branding space for "${companyName}"
-    - Layout: vertical infographic format, well-organized sections
-    - Style: corporate, professional, high-quality business presentation
-    - Include subtle geometric patterns and professional gradients
-    - Ensure readability and visual balance
-    
-    The infographic should look like it belongs in a professional business presentation or marketing material.`;
-
-    const response = await openai.images.generate({
-      model: 'dall-e-3',
-      prompt: visualPrompt,
-      n: 1,
-      size: '1024x1792', // Vertical infographic format
-      quality: 'hd',
-      style: 'natural'
-    });
-
-    const imageUrl = response.data[0]?.url;
-    
-    if (!imageUrl) {
-      throw new Error('Failed to generate infographic image');
-    }
-
-    // Create content that includes both the image and key insights
-    const infographicContent = {
-      imageUrl: imageUrl,
-      title: `${contentData.description} - Key Insights`,
-      insights: topInsights,
-      targetAudience: contentData.persona,
-      companyName: brandData?.companyName
-    };
-
-    return {
-      id: 'visual-infographic',
-      type: 'Visual Infographic',
-      title: 'Professional Content Infographic',
-      content: JSON.stringify(infographicContent),
-      imageUrl: imageUrl
-    };
-
-  } catch (error) {
-    console.error('Visual infographic generation failed:', error);
-    
-    // Return a fallback asset with error information
-    return {
-      id: 'visual-infographic',
-      type: 'Visual Infographic',
-      title: 'Professional Content Infographic',
-      content: JSON.stringify({
-        error: 'Failed to generate visual infographic',
-        insights: insights.slice(0,4),
-        fallbackMessage: 'Visual generation temporarily unavailable. Key insights are provided below.'
-      })
-    };
-  }
-};
-
 // Main function to generate all assets
 export const generateMarketingAssets = async (
   transcript: string,
@@ -1085,18 +874,6 @@ export const generateMarketingAssets = async (
       onProgress?.('Extracting most insightful quotes...', 75);
       const quoteCards = await generateQuoteCards(insights, contentData, brandData);
       allAssets.push(...quoteCards);
-    }
-    
-    if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('one-pager'))) {
-      onProgress?.('Generating comprehensive one-pager recap...', 90);
-      const onePager = await generateOnePagerRecap(transcript, contentData, brandData);
-      allAssets.push(onePager);
-    }
-    
-    if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('visual infographic'))) {
-      onProgress?.('Creating professional visual infographic...', 95);
-      const visualInfographic = await generateVisualInfographic(insights, contentData, brandData);
-      allAssets.push(visualInfographic);
     }
     
     onProgress?.('Finalizing your campaign-ready assets...', 100);
