@@ -33,6 +33,14 @@ const UploadForm: React.FC<UploadFormProps> = ({
   // Increased file size limit to 100MB
   const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
 
+  // Step definitions with descriptions
+  const steps = [
+    { number: 1, title: 'Upload', description: 'Choose content type' },
+    { number: 2, title: 'Describe', description: 'Tell us about your content' },
+    { number: 3, title: 'Select', description: 'Pick marketing assets' },
+    { number: 4, title: 'Generate', description: 'Optional brand settings' }
+  ];
+
   const assetTypes = [
     { 
       name: 'LinkedIn Posts', 
@@ -305,32 +313,87 @@ const UploadForm: React.FC<UploadFormProps> = ({
   );
 
   const renderStepIndicator = () => (
-    <div className="flex items-center justify-center mb-8">
-      {[1, 2, 3, 4].map((step) => (
-        <React.Fragment key={step}>
-          <button
-            type="button"
-            onClick={() => goToStep(step)}
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-200 ${
-              step === currentStep
-                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg'
-                : completedSteps.includes(step)
-                ? 'bg-emerald-500 text-white'
-                : step < currentStep
-                ? 'bg-emerald-100 text-emerald-700 cursor-pointer hover:bg-emerald-200'
-                : 'bg-slate-200 text-slate-500'
-            }`}
-            disabled={step > currentStep && !completedSteps.includes(step - 1)}
-          >
-            {completedSteps.includes(step) ? <Check className="w-5 h-5" /> : step}
-          </button>
-          {step < 4 && (
-            <div className={`w-12 h-1 mx-2 rounded ${
-              completedSteps.includes(step) ? 'bg-emerald-500' : 'bg-slate-200'
-            }`} />
-          )}
-        </React.Fragment>
-      ))}
+    <div className="mb-8">
+      {/* Desktop Step Indicator */}
+      <div className="hidden md:flex items-center justify-center">
+        {steps.map((step, index) => (
+          <React.Fragment key={step.number}>
+            <button
+              type="button"
+              onClick={() => goToStep(step.number)}
+              className={`flex flex-col items-center transition-all duration-200 ${
+                step.number <= currentStep || completedSteps.includes(step.number - 1)
+                  ? 'cursor-pointer'
+                  : 'cursor-not-allowed'
+              }`}
+              disabled={step.number > currentStep && !completedSteps.includes(step.number - 1)}
+            >
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-200 mb-2 ${
+                step.number === currentStep
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg'
+                  : completedSteps.includes(step.number)
+                  ? 'bg-emerald-500 text-white'
+                  : step.number < currentStep
+                  ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                  : 'bg-slate-200 text-slate-500'
+              }`}>
+                {completedSteps.includes(step.number) ? <Check className="w-5 h-5" /> : step.number}
+              </div>
+              <div className="text-center">
+                <div className={`text-sm font-semibold ${
+                  step.number === currentStep
+                    ? 'text-emerald-700'
+                    : completedSteps.includes(step.number)
+                    ? 'text-emerald-600'
+                    : 'text-slate-600'
+                }`}>
+                  {step.title}
+                </div>
+                <div className={`text-xs ${
+                  step.number === currentStep
+                    ? 'text-emerald-600'
+                    : completedSteps.includes(step.number)
+                    ? 'text-emerald-500'
+                    : 'text-slate-500'
+                }`}>
+                  {step.description}
+                </div>
+              </div>
+            </button>
+            {index < steps.length - 1 && (
+              <div className={`w-16 h-1 mx-4 rounded transition-all duration-200 ${
+                completedSteps.includes(step.number) ? 'bg-emerald-500' : 'bg-slate-200'
+              }`} />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* Mobile Step Indicator */}
+      <div className="md:hidden">
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-sm font-medium text-slate-600">
+            Step {currentStep} of {steps.length}
+          </div>
+          <div className="text-sm text-slate-500">
+            {Math.round((currentStep / steps.length) * 100)}% Complete
+          </div>
+        </div>
+        <div className="w-full bg-slate-200 rounded-full h-2 mb-4">
+          <div 
+            className="bg-gradient-to-r from-emerald-500 to-teal-500 h-2 rounded-full transition-all duration-300"
+            style={{ width: `${(currentStep / steps.length) * 100}%` }}
+          />
+        </div>
+        <div className="text-center">
+          <div className="text-lg font-semibold text-slate-900">
+            {steps[currentStep - 1].title}
+          </div>
+          <div className="text-sm text-slate-600">
+            {steps[currentStep - 1].description}
+          </div>
+        </div>
+      </div>
     </div>
   );
 
@@ -371,7 +434,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
             </p>
           </div>
 
-          {/* Step Indicator */}
+          {/* Enhanced Step Indicator */}
           {renderStepIndicator()}
 
           <form onSubmit={handleSubmit} className="space-y-8">
