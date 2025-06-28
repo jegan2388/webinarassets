@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Zap, Brain, FileText, MessageSquare, Mail, Quote, Loader2, Sparkles, AlertCircle } from 'lucide-react';
+import { Zap, Brain, FileText, MessageSquare, Mail, Quote, Loader2, Sparkles, AlertCircle, Globe, Type } from 'lucide-react';
 import { ContentData } from '../App';
 
 interface ProcessingViewProps {
@@ -16,38 +16,69 @@ const ProcessingView: React.FC<ProcessingViewProps> = ({
   const [displayProgress, setDisplayProgress] = useState(0);
   const [previewAsset, setPreviewAsset] = useState<string | null>(null);
 
-  const wittySteps = [
-    {
-      icon: <FileText className="w-6 h-6" />,
-      title: "Transcribing Audio",
-      description: "Converting your content to text using advanced AI",
-      status: "Listening to every word (even the 'ums')..."
-    },
-    {
-      icon: <Brain className="w-6 h-6" />,
-      title: "Analyzing Content",
-      description: "Understanding key themes, insights, and messaging",
-      status: "Finding the golden nuggets in your content..."
-    },
-    {
-      icon: <MessageSquare className="w-6 h-6" />,
-      title: "Writing Spicy Subject Lines",
-      description: "Crafting engaging social media content",
-      status: "Writing LinkedIn posts that actually get engagement..."
-    },
-    {
-      icon: <Mail className="w-6 h-6" />,
-      title: "Designing Quote Cards Marketers Will Actually Use",
-      description: "Generating personalized email sequences",
-      status: "Creating visuals that don't look like stock photos..."
-    },
-    {
-      icon: <Quote className="w-6 h-6" />,
-      title: "Unleashing the AI Creativity",
-      description: "Creating shareable visual content and sales snippets",
-      status: "Putting the finishing touches on your campaign magic..."
-    }
-  ];
+  // Determine if this is file (webinar/audio) or text (blog/article) content
+  const isFileContent = contentData.contentType === 'file';
+  const isTextContent = contentData.contentType === 'text';
+
+  // Dynamic processing steps based on content type
+  const getProcessingSteps = () => {
+    const baseSteps = [
+      // Step 1: Content Processing (different for file vs text)
+      isFileContent ? {
+        icon: <FileText className="w-6 h-6" />,
+        title: "Transcribing Audio",
+        description: "Converting your recording to text using advanced AI",
+        status: "Listening to every word (even the 'ums')..."
+      } : {
+        icon: <Type className="w-6 h-6" />,
+        title: "Extracting Text Content",
+        description: "Analyzing your article/blog content for key insights",
+        status: "Reading through your content and identifying key themes..."
+      },
+      
+      // Step 2: Content Analysis (same for both)
+      {
+        icon: <Brain className="w-6 h-6" />,
+        title: "Analyzing Content",
+        description: "Understanding key themes, insights, and messaging",
+        status: "Finding the golden nuggets in your content..."
+      },
+      
+      // Step 3: Social Media Content (adapted for content type)
+      {
+        icon: <MessageSquare className="w-6 h-6" />,
+        title: isFileContent ? "Writing Spicy Subject Lines" : "Crafting Engaging Social Posts",
+        description: isFileContent ? "Crafting engaging social media content" : "Creating LinkedIn posts and social content",
+        status: isFileContent 
+          ? "Writing LinkedIn posts that actually get engagement..."
+          : "Turning your insights into scroll-stopping social content..."
+      },
+      
+      // Step 4: Email & Visual Content (adapted for content type)
+      {
+        icon: <Mail className="w-6 h-6" />,
+        title: isFileContent ? "Designing Quote Cards Marketers Will Actually Use" : "Creating Email Sequences That Convert",
+        description: isFileContent ? "Generating personalized email sequences" : "Building nurture sequences and sales emails",
+        status: isFileContent
+          ? "Creating visuals that don't look like stock photos..."
+          : "Writing emails that people actually want to read..."
+      },
+      
+      // Step 5: Final Polish (adapted for content type)
+      {
+        icon: <Quote className="w-6 h-6" />,
+        title: "Unleashing the AI Creativity",
+        description: isFileContent 
+          ? "Creating shareable visual content and video clips"
+          : "Generating quote cards and Twitter threads",
+        status: "Putting the finishing touches on your campaign magic..."
+      }
+    ];
+
+    return baseSteps;
+  };
+
+  const wittySteps = getProcessingSteps();
 
   // Smooth progress animation
   useEffect(() => {
@@ -63,15 +94,16 @@ const ProcessingView: React.FC<ProcessingViewProps> = ({
     return () => clearInterval(interval);
   }, [progress]);
 
-  // Show preview asset early
+  // Show preview asset early with content-type specific preview
   useEffect(() => {
     if (progress > 30 && !previewAsset) {
-      // Mock LinkedIn post preview
-      const mockPost = `🚀 Just discovered a game-changing insight from our latest content on "${contentData.description}"
+      if (isFileContent) {
+        // Mock LinkedIn post preview for webinar content
+        const mockPost = `🚀 Just wrapped up an incredible session on "${contentData.description}"
 
 The biggest takeaway? Most ${contentData.persona?.toLowerCase() || 'teams'} are missing this one crucial step that could 3x their results.
 
-Here's what we learned:
+Here's what we covered:
 → [Key insight will be generated from your actual content]
 → [Specific strategy mentioned in your content]
 → [Actionable tip your audience can implement today]
@@ -79,10 +111,31 @@ Here's what we learned:
 What's your experience with this? Drop a comment below! 👇
 
 #Marketing #B2B #Strategy`;
-      
-      setPreviewAsset(mockPost);
+        
+        setPreviewAsset(mockPost);
+      } else {
+        // Mock LinkedIn post preview for blog/article content
+        const mockPost = `📝 Just published a deep dive on "${contentData.description}"
+
+After researching this topic extensively, here's what surprised me most:
+
+The conventional wisdom around this is completely backwards.
+
+Most ${contentData.persona?.toLowerCase() || 'professionals'} focus on the wrong metrics entirely.
+
+Here's what actually moves the needle:
+→ [Quality insights from your article]
+→ [Specific frameworks you mentioned]
+→ [Actionable tips readers can implement today]
+
+The full breakdown is in my latest article. What's been your experience?
+
+#ThoughtLeadership #ContentStrategy #B2B #Marketing`;
+        
+        setPreviewAsset(mockPost);
+      }
     }
-  }, [progress, contentData, previewAsset]);
+  }, [progress, contentData, previewAsset, isFileContent]);
 
   // Determine current step index based on progress
   const getCurrentStepIndex = () => {
@@ -103,11 +156,26 @@ What's your experience with this? Drop a comment below! 👇
             <Sparkles className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-            Remixing Your Content Into Campaign Magic...
+            Remixing Your {isFileContent ? 'Recording' : 'Article'} Into Campaign Magic...
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
             Our AI is analyzing <span className="font-semibold text-blue-600">"{contentData.description}"</span> for <span className="font-semibold text-indigo-600">{contentData.persona?.toLowerCase() || 'your audience'}</span>
           </p>
+
+          {/* Content Type Indicator */}
+          <div className="inline-flex items-center space-x-2 bg-white/60 backdrop-blur-sm text-slate-700 px-4 py-2 rounded-full text-sm font-medium mb-6 border border-white/20">
+            {isFileContent ? (
+              <>
+                <FileText className="w-4 h-4" />
+                <span>Processing Audio/Video Content</span>
+              </>
+            ) : (
+              <>
+                <Globe className="w-4 h-4" />
+                <span>Processing Article/Blog Content</span>
+              </>
+            )}
+          </div>
 
           {/* Progress Bar */}
           <div className="max-w-2xl mx-auto mb-8">
@@ -225,9 +293,22 @@ What's your experience with this? Drop a comment below! 👇
                    asset.includes('Email') ? '📧' : 
                    asset.includes('Quote') ? '💬' : 
                    asset.includes('Sales') ? '🎯' : 
+                   asset.includes('Video') ? '🎬' :
+                   asset.includes('Twitter') ? '🐦' :
                    asset.includes('Infographic') ? '📊' : '📄'}
                 </div>
                 <p className="text-sm font-medium text-gray-900">{asset}</p>
+                {/* Show content-type specific badges */}
+                {asset.includes('Video') && isFileContent && (
+                  <span className="text-xs bg-cyan-100 text-cyan-700 px-2 py-1 rounded-full mt-1 inline-block">
+                    Webinar Clips
+                  </span>
+                )}
+                {asset.includes('Twitter') && isTextContent && (
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full mt-1 inline-block">
+                    Blog Thread
+                  </span>
+                )}
               </div>
             ))}
           </div>
