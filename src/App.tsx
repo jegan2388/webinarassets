@@ -8,6 +8,7 @@ import { transcribeAudio } from './services/transcription';
 import { generateMarketingAssets } from './services/assetGeneration';
 import { extractBrandElements, BrandData } from './services/brandExtraction';
 import { supabase } from './lib/supabase';
+import OpenAI from 'openai';
 
 export interface ContentData {
   file?: File;
@@ -46,6 +47,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string>('');
   const [currentWebinarRequestId, setCurrentWebinarRequestId] = useState<string | null>(null);
+  const [openAITokenUsage, setOpenAITokenUsage] = useState<OpenAI.CompletionUsage | null>(null);
 
   const handleStartUpload = () => {
     setCurrentStep('upload');
@@ -128,7 +130,7 @@ function App() {
       setProcessingProgress(35);
       
       // Step 2: Generate marketing assets with brand data
-      const assets = await generateMarketingAssets(
+      const { assets, tokenUsage } = await generateMarketingAssets(
         transcript, 
         formData,
         extractedBrandData,
@@ -143,6 +145,7 @@ function App() {
       }
       
       setGeneratedAssets(assets);
+      setOpenAITokenUsage(tokenUsage);
       
       // Update the webinar request with generated assets and transcript
       if (currentWebinarRequestId) {
@@ -216,6 +219,7 @@ function App() {
     setProcessingProgress(0);
     setUserEmail('');
     setCurrentWebinarRequestId(null);
+    setOpenAITokenUsage(null);
   };
 
   const renderCurrentStep = () => {
@@ -259,6 +263,7 @@ function App() {
             brandData={brandData} 
             onBack={handleBackToLanding}
             userEmail={userEmail}
+            openAITokenUsage={openAITokenUsage}
           />
         );
       default:

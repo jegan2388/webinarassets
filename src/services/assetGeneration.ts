@@ -436,7 +436,7 @@ What's your experience with this approach? Reply and let me know! 👇
 };
 
 // Extract key insights from content transcript
-const extractInsights = async (transcript: string, description: string, contentType: 'file' | 'text'): Promise<string[]> => {
+const extractInsights = async (transcript: string, description: string, contentType: 'file' | 'text'): Promise<{ insights: string[], usage: OpenAI.CompletionUsage | null }> => {
   const openai = getOpenAIClient();
   
   const contentTypeContext = contentType === 'text' ? 'blog post or article' : 'webinar or presentation';
@@ -476,10 +476,13 @@ const extractInsights = async (transcript: string, description: string, contentT
 
   try {
     const insights = JSON.parse(response.choices[0].message.content || '[]');
-    return Array.isArray(insights) ? insights : [];
+    return {
+      insights: Array.isArray(insights) ? insights : [],
+      usage: response.usage || null
+    };
   } catch (error) {
     console.error('Failed to parse insights:', error);
-    return [];
+    return { insights: [], usage: response.usage || null };
   }
 };
 
@@ -488,7 +491,7 @@ const generateTwitterThread = async (
   insights: string[], 
   contentData: ContentData,
   brandData?: BrandData | null
-): Promise<GeneratedAsset[]> => {
+): Promise<{ assets: GeneratedAsset[], usage: OpenAI.CompletionUsage | null }> => {
   const openai = getOpenAIClient();
   
   const brandContext = brandData?.companyName 
@@ -553,12 +556,15 @@ const generateTwitterThread = async (
 
   const threadContent = response.choices[0].message.content || '';
 
-  return [{
-    id: 'twitter-thread-1',
-    type: 'Twitter Thread',
-    title: 'Engaging Twitter Thread',
-    content: threadContent
-  }];
+  return {
+    assets: [{
+      id: 'twitter-thread-1',
+      type: 'Twitter Thread',
+      title: 'Engaging Twitter Thread',
+      content: threadContent
+    }],
+    usage: response.usage || null
+  };
 };
 
 // Generate LinkedIn posts with content-type awareness
@@ -566,12 +572,18 @@ const generateLinkedInPosts = async (
   insights: string[], 
   contentData: ContentData,
   brandData?: BrandData | null
-): Promise<GeneratedAsset[]> => {
+): Promise<{ assets: GeneratedAsset[], usage: OpenAI.CompletionUsage | null }> => {
   const openai = getOpenAIClient();
   
   const posts: GeneratedAsset[] = [];
   const isWebinar = contentData.contentType === 'file';
   const isBlog = contentData.contentType === 'text';
+  
+  let totalUsage: OpenAI.CompletionUsage = {
+    prompt_tokens: 0,
+    completion_tokens: 0,
+    total_tokens: 0
+  };
   
   // Generate 2-3 different LinkedIn posts
   for (let i = 0; i < Math.min(3, insights.length); i++) {
@@ -661,9 +673,16 @@ const generateLinkedInPosts = async (
       title: `Engaging LinkedIn Post ${i + 1}`,
       content: postContent
     });
+
+    // Aggregate usage
+    if (response.usage) {
+      totalUsage.prompt_tokens += response.usage.prompt_tokens;
+      totalUsage.completion_tokens += response.usage.completion_tokens;
+      totalUsage.total_tokens += response.usage.total_tokens;
+    }
   }
   
-  return posts;
+  return { assets: posts, usage: totalUsage };
 };
 
 // Generate Sales Outreach Emails with improved best practices
@@ -671,12 +690,18 @@ const generateSalesOutreachEmails = async (
   insights: string[], 
   contentData: ContentData,
   brandData?: BrandData | null
-): Promise<GeneratedAsset[]> => {
+): Promise<{ assets: GeneratedAsset[], usage: OpenAI.CompletionUsage | null }> => {
   const openai = getOpenAIClient();
   
   const emails: GeneratedAsset[] = [];
   const isWebinar = contentData.contentType === 'file';
   const isBlog = contentData.contentType === 'text';
+  
+  let totalUsage: OpenAI.CompletionUsage = {
+    prompt_tokens: 0,
+    completion_tokens: 0,
+    total_tokens: 0
+  };
   
   const brandContext = brandData?.companyName 
     ? `Company: ${brandData.companyName}. ` 
@@ -757,6 +782,12 @@ const generateSalesOutreachEmails = async (
     content: coldResponse.choices[0].message.content || ''
   });
 
+  if (coldResponse.usage) {
+    totalUsage.prompt_tokens += coldResponse.usage.prompt_tokens;
+    totalUsage.completion_tokens += coldResponse.usage.completion_tokens;
+    totalUsage.total_tokens += coldResponse.usage.total_tokens;
+  }
+
   // Warm follow-up email
   const warmResponse = await openai.chat.completions.create({
     model: 'gpt-4',
@@ -820,8 +851,14 @@ const generateSalesOutreachEmails = async (
     title: 'Warm Engagement Follow-up',
     content: warmResponse.choices[0].message.content || ''
   });
+
+  if (warmResponse.usage) {
+    totalUsage.prompt_tokens += warmResponse.usage.prompt_tokens;
+    totalUsage.completion_tokens += warmResponse.usage.completion_tokens;
+    totalUsage.total_tokens += warmResponse.usage.total_tokens;
+  }
   
-  return emails;
+  return { assets: emails, usage: totalUsage };
 };
 
 // Generate Marketing Nurture Emails with non-pushy approach
@@ -829,12 +866,18 @@ const generateMarketingNurtureEmails = async (
   insights: string[], 
   contentData: ContentData,
   brandData?: BrandData | null
-): Promise<GeneratedAsset[]> => {
+): Promise<{ assets: GeneratedAsset[], usage: OpenAI.CompletionUsage | null }> => {
   const openai = getOpenAIClient();
   
   const emails: GeneratedAsset[] = [];
   const isWebinar = contentData.contentType === 'file';
   const isBlog = contentData.contentType === 'text';
+  
+  let totalUsage: OpenAI.CompletionUsage = {
+    prompt_tokens: 0,
+    completion_tokens: 0,
+    total_tokens: 0
+  };
   
   const brandContext = brandData?.companyName 
     ? `Company: ${brandData.companyName}. ` 
@@ -917,6 +960,12 @@ const generateMarketingNurtureEmails = async (
     content: educationalResponse.choices[0].message.content || ''
   });
 
+  if (educationalResponse.usage) {
+    totalUsage.prompt_tokens += educationalResponse.usage.prompt_tokens;
+    totalUsage.completion_tokens += educationalResponse.usage.completion_tokens;
+    totalUsage.total_tokens += educationalResponse.usage.total_tokens;
+  }
+
   // Resource sharing email
   const resourceResponse = await openai.chat.completions.create({
     model: 'gpt-4',
@@ -980,8 +1029,14 @@ const generateMarketingNurtureEmails = async (
     title: 'Resource Sharing Email',
     content: resourceResponse.choices[0].message.content || ''
   });
+
+  if (resourceResponse.usage) {
+    totalUsage.prompt_tokens += resourceResponse.usage.prompt_tokens;
+    totalUsage.completion_tokens += resourceResponse.usage.completion_tokens;
+    totalUsage.total_tokens += resourceResponse.usage.total_tokens;
+  }
   
-  return emails;
+  return { assets: emails, usage: totalUsage };
 };
 
 // Generate quote cards with brand-aware styling
@@ -989,7 +1044,7 @@ const generateQuoteCards = async (
   insights: string[], 
   contentData: ContentData,
   brandData?: BrandData | null
-): Promise<GeneratedAsset[]> => {
+): Promise<{ assets: GeneratedAsset[], usage: OpenAI.CompletionUsage | null }> => {
   const openai = getOpenAIClient();
   
   const response = await openai.chat.completions.create({
@@ -1037,17 +1092,20 @@ const generateQuoteCards = async (
 
   try {
     const quotes = JSON.parse(response.choices[0].message.content || '[]');
-    return quotes.map((quote: string, index: number) => ({
-      id: `quote-${index + 1}`,
-      type: 'Quote Cards',
-      title: `Insightful Quote ${index + 1}`,
-      content: quote,
-      preview: 'quote-card-preview',
-      brandData: brandData // Include brand data for styling
-    }));
+    return {
+      assets: quotes.map((quote: string, index: number) => ({
+        id: `quote-${index + 1}`,
+        type: 'Quote Cards',
+        title: `Insightful Quote ${index + 1}`,
+        content: quote,
+        preview: 'quote-card-preview',
+        brandData: brandData // Include brand data for styling
+      })),
+      usage: response.usage || null
+    };
   } catch (error) {
     console.error('Failed to parse quotes:', error);
-    return [];
+    return { assets: [], usage: response.usage || null };
   }
 };
 
@@ -1056,7 +1114,7 @@ const generateVideoRepurposingIdeas = async (
   insights: string[], 
   contentData: ContentData,
   brandData?: BrandData | null
-): Promise<GeneratedAsset[]> => {
+): Promise<{ assets: GeneratedAsset[], usage: OpenAI.CompletionUsage | null }> => {
   const openai = getOpenAIClient();
   
   const isWebinar = contentData.contentType === 'file';
@@ -1122,12 +1180,15 @@ const generateVideoRepurposingIdeas = async (
 
   const videoIdeas = response.choices[0].message.content || '';
 
-  return [{
-    id: 'video-repurposing-strategy',
-    type: 'Video Repurposing Ideas',
-    title: 'Short Video Content Strategy',
-    content: videoIdeas
-  }];
+  return {
+    assets: [{
+      id: 'video-repurposing-strategy',
+      type: 'Video Repurposing Ideas',
+      title: 'Short Video Content Strategy',
+      content: videoIdeas
+    }],
+    usage: response.usage || null
+  };
 };
 
 // Main function to generate all assets
@@ -1136,7 +1197,7 @@ export const generateMarketingAssets = async (
   contentData: ContentData,
   brandData?: BrandData | null,
   onProgress?: (step: string, progress: number) => void
-): Promise<GeneratedAsset[]> => {
+): Promise<{ assets: GeneratedAsset[], tokenUsage: OpenAI.CompletionUsage | null }> => {
   try {
     // Check if OpenAI API key is available
     const hasApiKey = !!import.meta.env.VITE_OPENAI_API_KEY;
@@ -1151,13 +1212,13 @@ export const generateMarketingAssets = async (
       await new Promise(resolve => setTimeout(resolve, 2000));
       onProgress?.('Finalizing your demo assets...', 100);
       
-      return generateMockAssets(contentData);
+      return { assets: generateMockAssets(contentData), tokenUsage: null };
     }
 
     onProgress?.('Analyzing content for key insights...', 15);
     
     // Extract key insights from transcript
-    const insights = await extractInsights(transcript, contentData.description, contentData.contentType);
+    const { insights, usage: insightsUsage } = await extractInsights(transcript, contentData.description, contentData.contentType);
     
     if (insights.length === 0) {
       throw new Error('Could not extract meaningful insights from the content. Please ensure your content contains substantial discussion or valuable information.');
@@ -1166,48 +1227,83 @@ export const generateMarketingAssets = async (
     onProgress?.('Generating high-quality marketing assets...', 35);
     
     const allAssets: GeneratedAsset[] = [];
+    let totalUsage: OpenAI.CompletionUsage = {
+      prompt_tokens: insightsUsage?.prompt_tokens || 0,
+      completion_tokens: insightsUsage?.completion_tokens || 0,
+      total_tokens: insightsUsage?.total_tokens || 0
+    };
     
     // Generate assets based on selected types
     if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('linkedin posts'))) {
       onProgress?.('Creating engaging LinkedIn posts...', 45);
-      const linkedInPosts = await generateLinkedInPosts(insights, contentData, brandData);
+      const { assets: linkedInPosts, usage: linkedInUsage } = await generateLinkedInPosts(insights, contentData, brandData);
       allAssets.push(...linkedInPosts);
+      if (linkedInUsage) {
+        totalUsage.prompt_tokens += linkedInUsage.prompt_tokens;
+        totalUsage.completion_tokens += linkedInUsage.completion_tokens;
+        totalUsage.total_tokens += linkedInUsage.total_tokens;
+      }
     }
     
     if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('sales outreach emails'))) {
       onProgress?.('Writing direct, value-focused sales emails...', 55);
-      const salesEmails = await generateSalesOutreachEmails(insights, contentData, brandData);
+      const { assets: salesEmails, usage: salesUsage } = await generateSalesOutreachEmails(insights, contentData, brandData);
       allAssets.push(...salesEmails);
+      if (salesUsage) {
+        totalUsage.prompt_tokens += salesUsage.prompt_tokens;
+        totalUsage.completion_tokens += salesUsage.completion_tokens;
+        totalUsage.total_tokens += salesUsage.total_tokens;
+      }
     }
     
     if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('marketing nurture emails'))) {
       onProgress?.('Creating educational nurture emails...', 65);
-      const nurtureEmails = await generateMarketingNurtureEmails(insights, contentData, brandData);
+      const { assets: nurtureEmails, usage: nurtureUsage } = await generateMarketingNurtureEmails(insights, contentData, brandData);
       allAssets.push(...nurtureEmails);
+      if (nurtureUsage) {
+        totalUsage.prompt_tokens += nurtureUsage.prompt_tokens;
+        totalUsage.completion_tokens += nurtureUsage.completion_tokens;
+        totalUsage.total_tokens += nurtureUsage.total_tokens;
+      }
     }
     
     if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('quote'))) {
       onProgress?.('Extracting most insightful quotes...', 75);
-      const quoteCards = await generateQuoteCards(insights, contentData, brandData);
+      const { assets: quoteCards, usage: quotesUsage } = await generateQuoteCards(insights, contentData, brandData);
       allAssets.push(...quoteCards);
+      if (quotesUsage) {
+        totalUsage.prompt_tokens += quotesUsage.prompt_tokens;
+        totalUsage.completion_tokens += quotesUsage.completion_tokens;
+        totalUsage.total_tokens += quotesUsage.total_tokens;
+      }
     }
     
     if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('video repurposing'))) {
       onProgress?.('Creating video repurposing strategy...', 85);
-      const videoIdeas = await generateVideoRepurposingIdeas(insights, contentData, brandData);
+      const { assets: videoIdeas, usage: videoUsage } = await generateVideoRepurposingIdeas(insights, contentData, brandData);
       allAssets.push(...videoIdeas);
+      if (videoUsage) {
+        totalUsage.prompt_tokens += videoUsage.prompt_tokens;
+        totalUsage.completion_tokens += videoUsage.completion_tokens;
+        totalUsage.total_tokens += videoUsage.total_tokens;
+      }
     }
     
     // Generate Twitter Thread (only for blog content)
     if (contentData.selectedAssets.some(asset => asset.toLowerCase().includes('twitter thread')) && contentData.contentType === 'text') {
       onProgress?.('Creating engaging Twitter thread...', 90);
-      const twitterThread = await generateTwitterThread(insights, contentData, brandData);
+      const { assets: twitterThread, usage: twitterUsage } = await generateTwitterThread(insights, contentData, brandData);
       allAssets.push(...twitterThread);
+      if (twitterUsage) {
+        totalUsage.prompt_tokens += twitterUsage.prompt_tokens;
+        totalUsage.completion_tokens += twitterUsage.completion_tokens;
+        totalUsage.total_tokens += twitterUsage.total_tokens;
+      }
     }
     
     onProgress?.('Finalizing your campaign-ready assets...', 100);
     
-    return allAssets;
+    return { assets: allAssets, tokenUsage: totalUsage };
     
   } catch (error) {
     console.error('Asset generation error:', error);
@@ -1221,7 +1317,7 @@ export const generateMarketingAssets = async (
       await new Promise(resolve => setTimeout(resolve, 1500));
       onProgress?.('Finalizing your demo assets...', 100);
       
-      return generateMockAssets(contentData);
+      return { assets: generateMockAssets(contentData), tokenUsage: null };
     }
     
     throw error;

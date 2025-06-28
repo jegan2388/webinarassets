@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, BarChart3, UserCheck, TrendingUp, Zap, AlertCircle, Video, Clock, Play, Twitter } from 'lucide-react';
+import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, BarChart3, UserCheck, TrendingUp, Zap, AlertCircle, Video, Clock, Play, Twitter, Coffee, DollarSign, Heart } from 'lucide-react';
 import { GeneratedAsset } from '../App';
 import { BrandData } from '../services/brandExtraction';
+import OpenAI from 'openai';
 
 interface OutputViewProps {
   assets: GeneratedAsset[];
   brandData?: BrandData | null;
   userEmail?: string;
+  openAITokenUsage?: OpenAI.CompletionUsage | null;
   onBack: () => void;
 }
 
@@ -14,12 +16,25 @@ const OutputView: React.FC<OutputViewProps> = ({
   assets, 
   brandData, 
   userEmail,
+  openAITokenUsage,
   onBack
 }) => {
   const [copiedAsset, setCopiedAsset] = useState<string | null>(null);
 
   // Check if this is a demo (no API key)
   const isDemoMode = !import.meta.env.VITE_OPENAI_API_KEY;
+
+  // Calculate estimated cost based on token usage
+  const calculateEstimatedCost = (usage: OpenAI.CompletionUsage): number => {
+    // GPT-4 pricing (approximate as of 2024)
+    const inputCostPer1K = 0.03; // $0.03 per 1K input tokens
+    const outputCostPer1K = 0.06; // $0.06 per 1K output tokens
+    
+    const inputCost = (usage.prompt_tokens / 1000) * inputCostPer1K;
+    const outputCost = (usage.completion_tokens / 1000) * outputCostPer1K;
+    
+    return inputCost + outputCost;
+  };
 
   const handleCopyToClipboard = async (content: string, assetId: string) => {
     try {
@@ -319,6 +334,80 @@ const OutputView: React.FC<OutputViewProps> = ({
               <RefreshCw className="w-5 h-5" />
               <span>Create More Assets</span>
             </button>
+          </div>
+        </div>
+
+        {/* Token Usage and Cost Information */}
+        {openAITokenUsage && !isDemoMode && (
+          <div className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-white/20 shadow-lg mb-12">
+            <div className="text-center">
+              <div className="flex items-center justify-center space-x-2 mb-4">
+                <BarChart3 className="w-5 h-5 text-slate-600" />
+                <h3 className="text-lg font-semibold text-slate-900">Processing Details</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-slate-900">{openAITokenUsage.total_tokens.toLocaleString()}</div>
+                  <div className="text-sm text-slate-600">Total Tokens Used</div>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-emerald-600">${calculateEstimatedCost(openAITokenUsage).toFixed(3)}</div>
+                  <div className="text-sm text-slate-600">Estimated API Cost</div>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-teal-600">{assets.length}</div>
+                  <div className="text-sm text-slate-600">Assets Generated</div>
+                </div>
+              </div>
+              
+              <div className="text-xs text-slate-500">
+                <div>Input tokens: {openAITokenUsage.prompt_tokens.toLocaleString()} • Output tokens: {openAITokenUsage.completion_tokens.toLocaleString()}</div>
+                <div className="mt-1">Cost calculated using GPT-4 pricing: $0.03/1K input tokens, $0.06/1K output tokens</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Buy Me a Coffee Section */}
+        <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-8 rounded-3xl border border-orange-200 shadow-lg mb-12">
+          <div className="text-center">
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <Coffee className="w-8 h-8 text-orange-600" />
+              <Heart className="w-6 h-6 text-red-500" />
+            </div>
+            
+            <h3 className="text-2xl font-bold text-slate-900 mb-4">
+              Enjoying the assets?
+            </h3>
+            
+            <p className="text-slate-700 mb-6 max-w-2xl mx-auto leading-relaxed">
+              This tool is currently in development and offered for free. If you found it valuable, 
+              consider supporting its continued development by buying us a coffee! 
+              {openAITokenUsage && !isDemoMode && (
+                <span className="block mt-2 text-sm text-slate-600">
+                  Your generation used approximately <strong>${calculateEstimatedCost(openAITokenUsage).toFixed(3)}</strong> in AI processing costs.
+                </span>
+              )}
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <a
+                href="https://coff.ee/rjegan2388c"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center space-x-2"
+              >
+                <Coffee className="w-5 h-5" />
+                <span>Buy Me a Coffee</span>
+                <ExternalLink className="w-4 h-4" />
+              </a>
+              
+              <div className="text-sm text-slate-500 flex items-center space-x-2">
+                <DollarSign className="w-4 h-4" />
+                <span>Any amount helps keep this tool free and improving</span>
+              </div>
+            </div>
           </div>
         </div>
 
