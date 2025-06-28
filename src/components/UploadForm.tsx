@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, ArrowLeft, Check, FileVideo, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, UserCheck, TrendingUp, Brain, Video, Twitter } from 'lucide-react';
+import { Upload, ArrowLeft, Check, FileVideo, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, UserCheck, TrendingUp, Brain, Video, Twitter, ArrowRight, Info, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { ContentData } from '../App';
 
 interface UploadFormProps {
@@ -24,6 +24,11 @@ const UploadForm: React.FC<UploadFormProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [combinedDescription, setCombinedDescription] = useState('');
   const [articleUrl, setArticleUrl] = useState('');
+
+  // Progressive disclosure state
+  const [currentStep, setCurrentStep] = useState(1);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [showTooltip, setShowTooltip] = useState<string | null>(null);
 
   // Increased file size limit to 100MB
   const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
@@ -77,6 +82,22 @@ const UploadForm: React.FC<UploadFormProps> = ({
   const availableAssets = assetTypes.filter(asset => 
     asset.availableFor.includes(uploadType)
   );
+
+  // Step validation functions
+  const isStep1Valid = () => {
+    return uploadType && (
+      (uploadType === 'file' && formData.file) ||
+      (uploadType === 'text' && isValidUrl(articleUrl))
+    );
+  };
+
+  const isStep2Valid = () => {
+    return combinedDescription.trim().length > 0;
+  };
+
+  const isStep3Valid = () => {
+    return formData.selectedAssets.length > 0;
+  };
 
   // Detect content platform from URL
   const detectContentPlatform = (url: string): string => {
@@ -188,6 +209,31 @@ const UploadForm: React.FC<UploadFormProps> = ({
     }));
   };
 
+  const handleNextStep = () => {
+    if (currentStep === 1 && isStep1Valid()) {
+      setCompletedSteps(prev => [...prev, 1]);
+      setCurrentStep(2);
+    } else if (currentStep === 2 && isStep2Valid()) {
+      setCompletedSteps(prev => [...prev, 2]);
+      setCurrentStep(3);
+    } else if (currentStep === 3 && isStep3Valid()) {
+      setCompletedSteps(prev => [...prev, 3]);
+      setCurrentStep(4);
+    }
+  };
+
+  const handlePrevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const goToStep = (step: number) => {
+    if (step <= currentStep || completedSteps.includes(step - 1)) {
+      setCurrentStep(step);
+    }
+  };
+
   // Parse combined description to extract persona and funnel stage (simplified)
   const parseDescription = (description: string) => {
     // Simple keyword matching - in production, you'd use GPT for this
@@ -231,11 +277,6 @@ const UploadForm: React.FC<UploadFormProps> = ({
     onSubmit(updatedFormData);
   };
 
-  const isFormValid = combinedDescription && (
-    (uploadType === 'file' && formData.file) ||
-    (uploadType === 'text' && isValidUrl(articleUrl))
-  ) && formData.selectedAssets.length > 0;
-
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -243,6 +284,55 @@ const UploadForm: React.FC<UploadFormProps> = ({
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
+
+  const renderTooltip = (content: string, id: string) => (
+    <div className="relative inline-block">
+      <button
+        type="button"
+        onMouseEnter={() => setShowTooltip(id)}
+        onMouseLeave={() => setShowTooltip(null)}
+        className="ml-2 text-slate-400 hover:text-slate-600 transition-colors"
+      >
+        <HelpCircle className="w-4 h-4" />
+      </button>
+      {showTooltip === id && (
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 bg-slate-900 text-white text-xs rounded-lg p-3 z-10">
+          {content}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-900"></div>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderStepIndicator = () => (
+    <div className="flex items-center justify-center mb-8">
+      {[1, 2, 3, 4].map((step) => (
+        <React.Fragment key={step}>
+          <button
+            type="button"
+            onClick={() => goToStep(step)}
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-200 ${
+              step === currentStep
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg'
+                : completedSteps.includes(step)
+                ? 'bg-emerald-500 text-white'
+                : step < currentStep
+                ? 'bg-emerald-100 text-emerald-700 cursor-pointer hover:bg-emerald-200'
+                : 'bg-slate-200 text-slate-500'
+            }`}
+            disabled={step > currentStep && !completedSteps.includes(step - 1)}
+          >
+            {completedSteps.includes(step) ? <Check className="w-5 h-5" /> : step}
+          </button>
+          {step < 4 && (
+            <div className={`w-12 h-1 mx-2 rounded ${
+              completedSteps.includes(step) ? 'bg-emerald-500' : 'bg-slate-200'
+            }`} />
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  );
 
   return (
     <div className="bg-gradient-to-br from-slate-50 via-white to-emerald-50 min-h-screen py-8">
@@ -281,302 +371,422 @@ const UploadForm: React.FC<UploadFormProps> = ({
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Upload Type Toggle */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-4">
-                What type of content do you want to remix?
-              </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleUploadTypeChange('file')}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
-                    uploadType === 'file'
-                      ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
-                      : 'border-slate-200 hover:border-slate-300 bg-white/60'
-                  }`}
-                >
-                  <FileVideo className="w-5 h-5 mb-2" />
-                  <div className="font-medium">Upload File</div>
-                  <div className="text-sm text-slate-600">MP4, MP3, WAV, M4A (up to 100MB)</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleUploadTypeChange('text')}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
-                    uploadType === 'text'
-                      ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
-                      : 'border-slate-200 hover:border-slate-300 bg-white/60'
-                  }`}
-                >
-                  <FileText className="w-5 h-5 mb-2" />
-                  <div className="font-medium">Article/Blog Link</div>
-                  <div className="text-sm text-slate-600">Medium, LinkedIn, blog posts</div>
-                </button>
-              </div>
-            </div>
+          {/* Step Indicator */}
+          {renderStepIndicator()}
 
-            {/* Content Input Based on Type */}
-            {uploadType === 'file' ? (
-              <div>
-                <label className="block text-sm font-semibold text-slate-900 mb-4">
-                  Upload your content recording
-                  <span className="text-sm font-normal text-slate-600 ml-2">
-                    (Maximum file size: {formatFileSize(MAX_FILE_SIZE)})
-                  </span>
-                </label>
-                <div
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 ${
-                    isDragging
-                      ? 'border-emerald-400 bg-emerald-50'
-                      : formData.file
-                      ? 'border-emerald-400 bg-emerald-50'
-                      : 'border-slate-300 hover:border-slate-400 bg-white/60'
-                  }`}
-                >
-                  {formData.file ? (
-                    <div className="text-emerald-700">
-                      <Check className="w-12 h-12 mx-auto mb-3" />
-                      <p className="font-semibold text-lg">{formData.file.name}</p>
-                      <p className="text-sm text-slate-600 mt-1">
-                        {formatFileSize(formData.file.size)} • Ready to process
-                      </p>
-                      {formData.file.size > MAX_FILE_SIZE && (
-                        <p className="text-red-600 text-sm mt-2">
-                          ⚠️ File exceeds {formatFileSize(MAX_FILE_SIZE)} limit
-                        </p>
-                      )}
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Step 1: Content Type & Upload */}
+            <div className={`transition-all duration-300 ${
+              currentStep === 1 ? 'opacity-100' : currentStep > 1 ? 'opacity-60' : 'opacity-30'
+            }`}>
+              <div className="flex items-center mb-4">
+                <h2 className="text-xl font-bold text-slate-900">
+                  Step 1: Choose Your Content Type
+                </h2>
+                {completedSteps.includes(1) && (
+                  <Check className="w-5 h-5 text-emerald-600 ml-2" />
+                )}
+              </div>
+
+              {currentStep >= 1 && (
+                <div className="space-y-6">
+                  {/* Upload Type Toggle */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-900 mb-4">
+                      What type of content do you want to remix?
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => handleUploadTypeChange('file')}
+                        className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                          uploadType === 'file'
+                            ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
+                            : 'border-slate-200 hover:border-slate-300 bg-white/60'
+                        }`}
+                      >
+                        <FileVideo className="w-5 h-5 mb-2" />
+                        <div className="font-medium">Upload File</div>
+                        <div className="text-sm text-slate-600">MP4, MP3, WAV, M4A (up to 100MB)</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUploadTypeChange('text')}
+                        className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                          uploadType === 'text'
+                            ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
+                            : 'border-slate-200 hover:border-slate-300 bg-white/60'
+                        }`}
+                      >
+                        <FileText className="w-5 h-5 mb-2" />
+                        <div className="font-medium">Article/Blog Link</div>
+                        <div className="text-sm text-slate-600">Medium, LinkedIn, blog posts</div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Content Input Based on Type */}
+                  {uploadType === 'file' ? (
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-900 mb-4">
+                        Upload your content recording
+                        <span className="text-sm font-normal text-slate-600 ml-2">
+                          (Maximum file size: {formatFileSize(MAX_FILE_SIZE)})
+                        </span>
+                      </label>
+                      <div
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                        className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 ${
+                          isDragging
+                            ? 'border-emerald-400 bg-emerald-50'
+                            : formData.file
+                            ? 'border-emerald-400 bg-emerald-50'
+                            : 'border-slate-300 hover:border-slate-400 bg-white/60'
+                        }`}
+                      >
+                        {formData.file ? (
+                          <div className="text-emerald-700">
+                            <Check className="w-12 h-12 mx-auto mb-3" />
+                            <p className="font-semibold text-lg">{formData.file.name}</p>
+                            <p className="text-sm text-slate-600 mt-1">
+                              {formatFileSize(formData.file.size)} • Ready to process
+                            </p>
+                            {formData.file.size > MAX_FILE_SIZE && (
+                              <p className="text-red-600 text-sm mt-2">
+                                ⚠️ File exceeds {formatFileSize(MAX_FILE_SIZE)} limit
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <div>
+                            <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                            <p className="text-lg font-semibold text-slate-700 mb-2">
+                              Drop your content file here
+                            </p>
+                            <p className="text-slate-500 mb-6">
+                              or click to browse your files
+                            </p>
+                            <input
+                              type="file"
+                              accept="video/*,audio/*"
+                              onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+                              className="hidden"
+                              id="file-upload"
+                            />
+                            <label
+                              htmlFor="file-upload"
+                              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer inline-flex items-center space-x-2"
+                            >
+                              <Upload className="w-4 h-4" />
+                              <span>Choose File</span>
+                            </label>
+                            <p className="text-xs text-slate-500 mt-4">
+                              Supported formats: MP4, MP3, WAV, M4A, WebM, MOV, AVI
+                              <br />
+                              Maximum file size: {formatFileSize(MAX_FILE_SIZE)}
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <div>
-                      <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                      <p className="text-lg font-semibold text-slate-700 mb-2">
-                        Drop your content file here
-                      </p>
-                      <p className="text-slate-500 mb-6">
-                        or click to browse your files
-                      </p>
-                      <input
-                        type="file"
-                        accept="video/*,audio/*"
-                        onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
-                        className="hidden"
-                        id="file-upload"
-                      />
-                      <label
-                        htmlFor="file-upload"
-                        className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer inline-flex items-center space-x-2"
-                      >
-                        <Upload className="w-4 h-4" />
-                        <span>Choose File</span>
+                      <label htmlFor="article-url" className="block text-sm font-semibold text-slate-900 mb-4">
+                        <FileText className="w-4 h-4 inline mr-2" />
+                        Article or Blog Post URL
+                        {renderTooltip("Paste the URL of any publicly accessible blog post or article. We support Medium, Substack, LinkedIn Articles, and most blog platforms.", "article-url-help")}
                       </label>
-                      <p className="text-xs text-slate-500 mt-4">
-                        Supported formats: MP4, MP3, WAV, M4A, WebM, MOV, AVI
-                        <br />
-                        Maximum file size: {formatFileSize(MAX_FILE_SIZE)}
-                      </p>
+                      <div className="relative">
+                        <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                        <input
+                          type="url"
+                          id="article-url"
+                          value={articleUrl}
+                          onChange={(e) => setArticleUrl(e.target.value)}
+                          placeholder="https://medium.com/@author/article or any blog post URL"
+                          className="w-full px-4 py-3 pl-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/60"
+                          required
+                        />
+                      </div>
+                      {articleUrl && (
+                        <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                          <div className="flex items-center space-x-2">
+                            <FileText className="w-4 h-4 text-purple-600" />
+                            <span className="text-sm font-medium text-purple-900">
+                              Detected: {detectContentPlatform(articleUrl)}
+                            </span>
+                            {isValidUrl(articleUrl) ? (
+                              <Check className="w-4 h-4 text-emerald-600" />
+                            ) : (
+                              <AlertCircle className="w-4 h-4 text-red-600" />
+                            )}
+                          </div>
+                          {!isValidUrl(articleUrl) && (
+                            <p className="text-red-600 text-xs mt-1">Please enter a valid URL</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {currentStep === 1 && (
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={handleNextStep}
+                        disabled={!isStep1Valid()}
+                        className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                      >
+                        <span>Next: Describe Your Content</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Step 2: Content Description */}
+            {currentStep >= 2 && (
+              <div className={`transition-all duration-300 ${
+                currentStep === 2 ? 'opacity-100' : currentStep > 2 ? 'opacity-60' : 'opacity-30'
+              }`}>
+                <div className="flex items-center mb-4">
+                  <h2 className="text-xl font-bold text-slate-900">
+                    Step 2: Describe Your Content
+                  </h2>
+                  {completedSteps.includes(2) && (
+                    <Check className="w-5 h-5 text-emerald-600 ml-2" />
+                  )}
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <label htmlFor="combined-description" className="block text-sm font-semibold text-slate-900 mb-4">
+                      Tell us about your content and who it's for
+                      {renderTooltip("Include your content topic, target audience, and key takeaways. Example: 'This is a B2B lead generation webinar for marketing teams showing how to increase conversion rates by 40% using our new automation platform.'", "description-help")}
+                    </label>
+                    <textarea
+                      id="combined-description"
+                      value={combinedDescription}
+                      onChange={(e) => setCombinedDescription(e.target.value)}
+                      placeholder="e.g., This is a B2B lead generation webinar for marketing teams showing how to increase conversion rates by 40% using our new automation platform. We covered advanced strategies for nurturing prospects in the consideration stage..."
+                      rows={4}
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/60 resize-none"
+                      required
+                    />
+                    <p className="text-sm text-slate-500 mt-2">
+                      Include your content topic, target audience, and key takeaways. Our AI will automatically categorize this for optimal asset generation.
+                    </p>
+                  </div>
+
+                  {currentStep === 2 && (
+                    <div className="flex justify-between">
+                      <button
+                        type="button"
+                        onClick={handlePrevStep}
+                        className="bg-white/60 backdrop-blur-sm border-2 border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center space-x-2"
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                        <span>Back</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleNextStep}
+                        disabled={!isStep2Valid()}
+                        className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                      >
+                        <span>Next: Select Assets</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
                     </div>
                   )}
                 </div>
               </div>
-            ) : (
-              <div>
-                <label htmlFor="article-url" className="block text-sm font-semibold text-slate-900 mb-4">
-                  <FileText className="w-4 h-4 inline mr-2" />
-                  Article or Blog Post URL
-                </label>
-                <div className="relative">
-                  <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    type="url"
-                    id="article-url"
-                    value={articleUrl}
-                    onChange={(e) => setArticleUrl(e.target.value)}
-                    placeholder="https://medium.com/@author/article or any blog post URL"
-                    className="w-full px-4 py-3 pl-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/60"
-                    required
-                  />
+            )}
+
+            {/* Step 3: Asset Selection */}
+            {currentStep >= 3 && (
+              <div className={`transition-all duration-300 ${
+                currentStep === 3 ? 'opacity-100' : currentStep > 3 ? 'opacity-60' : 'opacity-30'
+              }`}>
+                <div className="flex items-center mb-4">
+                  <h2 className="text-xl font-bold text-slate-900">
+                    Step 3: Select Marketing Assets
+                  </h2>
+                  {completedSteps.includes(3) && (
+                    <Check className="w-5 h-5 text-emerald-600 ml-2" />
+                  )}
                 </div>
-                {articleUrl && (
-                  <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
-                    <div className="flex items-center space-x-2">
-                      <FileText className="w-4 h-4 text-purple-600" />
-                      <span className="text-sm font-medium text-purple-900">
-                        Detected: {detectContentPlatform(articleUrl)}
-                      </span>
-                      {isValidUrl(articleUrl) ? (
-                        <Check className="w-4 h-4 text-emerald-600" />
-                      ) : (
-                        <AlertCircle className="w-4 h-4 text-red-600" />
+
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-900 mb-4">
+                      <TrendingUp className="w-4 h-4 inline mr-2" />
+                      Select the marketing assets you want to generate
+                      {uploadType === 'text' && (
+                        <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                          Includes Twitter Thread for blogs!
+                        </span>
                       )}
+                      {uploadType === 'file' && (
+                        <span className="ml-2 text-xs bg-cyan-100 text-cyan-700 px-2 py-1 rounded-full">
+                          Includes Video Repurposing for webinars!
+                        </span>
+                      )}
+                      {renderTooltip("Choose the types of marketing assets you need. Each asset is optimized for different stages of your marketing funnel and various platforms.", "assets-help")}
+                    </label>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {availableAssets.map((asset) => (
+                        <label
+                          key={asset.name}
+                          className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                            formData.selectedAssets.includes(asset.name)
+                              ? `${asset.color} border-current`
+                              : 'border-slate-200 hover:border-slate-300 bg-white/60'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.selectedAssets.includes(asset.name)}
+                            onChange={() => handleAssetToggle(asset.name)}
+                            className="sr-only"
+                          />
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                              formData.selectedAssets.includes(asset.name)
+                                ? 'border-emerald-600 bg-emerald-600'
+                                : 'border-slate-300'
+                            }`}>
+                              {formData.selectedAssets.includes(asset.name) && (
+                                <Check className="w-3 h-3 text-white" />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2 mb-1">
+                                {asset.icon}
+                                <span className="font-medium text-slate-900">{asset.name}</span>
+                                {asset.name === 'Twitter Thread' && (
+                                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                                    Blog Only
+                                  </span>
+                                )}
+                                {asset.name === 'Video Repurposing Ideas' && (
+                                  <span className="text-xs bg-cyan-100 text-cyan-700 px-2 py-1 rounded-full">
+                                    Webinar Only
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm text-slate-600">{asset.description}</p>
+                            </div>
+                          </div>
+                        </label>
+                      ))}
                     </div>
-                    {!isValidUrl(articleUrl) && (
-                      <p className="text-red-600 text-xs mt-1">Please enter a valid URL</p>
+                    
+                    {formData.selectedAssets.length === 0 && (
+                      <p className="text-sm text-red-600 mt-2">Please select at least one asset type</p>
                     )}
                   </div>
-                )}
-                <p className="text-sm text-slate-500 mt-2">
-                  <strong>Supported platforms:</strong> Medium, Substack, LinkedIn Articles, HubSpot Blog, WordPress, Ghost, Notion, Dev.to, Hashnode, and most blog platforms.
-                </p>
-                <div className="mt-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                  <div className="flex items-center space-x-2">
-                    <AlertCircle className="w-4 h-4 text-emerald-600" />
-                    <span className="text-sm font-medium text-emerald-900">How it works:</span>
-                  </div>
-                  <p className="text-emerald-800 text-xs mt-1">
-                    We'll extract the text content from your article/blog post and use it to generate marketing assets. Make sure the URL is publicly accessible.
-                  </p>
+
+                  {currentStep === 3 && (
+                    <div className="flex justify-between">
+                      <button
+                        type="button"
+                        onClick={handlePrevStep}
+                        className="bg-white/60 backdrop-blur-sm border-2 border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center space-x-2"
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                        <span>Back</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleNextStep}
+                        disabled={!isStep3Valid()}
+                        className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                      >
+                        <span>Next: Optional Settings</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* Combined Description */}
-            <div>
-              <label htmlFor="combined-description" className="block text-sm font-semibold text-slate-900 mb-4">
-                Tell us about your content and who it's for
-              </label>
-              <textarea
-                id="combined-description"
-                value={combinedDescription}
-                onChange={(e) => setCombinedDescription(e.target.value)}
-                placeholder="e.g., This is a B2B lead generation webinar for marketing teams showing how to increase conversion rates by 40% using our new automation platform. We covered advanced strategies for nurturing prospects in the consideration stage..."
-                rows={4}
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/60 resize-none"
-                required
-              />
-              <p className="text-sm text-slate-500 mt-2">
-                Include your content topic, target audience, and key takeaways. Our AI will automatically categorize this for optimal asset generation.
-              </p>
-            </div>
+            {/* Step 4: Optional Settings & Submit */}
+            {currentStep >= 4 && (
+              <div className="transition-all duration-300 opacity-100">
+                <div className="flex items-center mb-4">
+                  <h2 className="text-xl font-bold text-slate-900">
+                    Step 4: Optional Brand Settings
+                  </h2>
+                </div>
 
-            {/* Company Website URL */}
-            <div>
-              <label htmlFor="company-website" className="block text-sm font-semibold text-slate-900 mb-4">
-                <Globe className="w-4 h-4 inline mr-2" />
-                Company Website (Optional)
-              </label>
-              <div className="relative">
-                <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input
-                  type="url"
-                  id="company-website"
-                  value={formData.companyWebsiteUrl || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, companyWebsiteUrl: e.target.value }))}
-                  placeholder="https://yourcompany.com"
-                  className="w-full px-4 py-3 pl-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/60"
-                />
-              </div>
-              <p className="text-sm text-slate-500 mt-2">
-                We'll extract your brand colors and logo to create branded quote cards and visuals
-              </p>
-            </div>
-
-            {/* Asset Selection */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-4">
-                <TrendingUp className="w-4 h-4 inline mr-2" />
-                Select the marketing assets you want to generate
-                {uploadType === 'text' && (
-                  <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                    Includes Twitter Thread for blogs!
-                  </span>
-                )}
-                {uploadType === 'file' && (
-                  <span className="ml-2 text-xs bg-cyan-100 text-cyan-700 px-2 py-1 rounded-full">
-                    Includes Video Repurposing for webinars!
-                  </span>
-                )}
-              </label>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {availableAssets.map((asset) => (
-                  <label
-                    key={asset.name}
-                    className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
-                      formData.selectedAssets.includes(asset.name)
-                        ? `${asset.color} border-current`
-                        : 'border-slate-200 hover:border-slate-300 bg-white/60'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formData.selectedAssets.includes(asset.name)}
-                      onChange={() => handleAssetToggle(asset.name)}
-                      className="sr-only"
-                    />
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                        formData.selectedAssets.includes(asset.name)
-                          ? 'border-emerald-600 bg-emerald-600'
-                          : 'border-slate-300'
-                      }`}>
-                        {formData.selectedAssets.includes(asset.name) && (
-                          <Check className="w-3 h-3 text-white" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          {asset.icon}
-                          <span className="font-medium text-slate-900">{asset.name}</span>
-                          {asset.name === 'Twitter Thread' && (
-                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                              Blog Only
-                            </span>
-                          )}
-                          {asset.name === 'Video Repurposing Ideas' && (
-                            <span className="text-xs bg-cyan-100 text-cyan-700 px-2 py-1 rounded-full">
-                              Webinar Only
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-slate-600">{asset.description}</p>
-                      </div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-              
-              {formData.selectedAssets.length === 0 && (
-                <p className="text-sm text-red-600 mt-2">Please select at least one asset type</p>
-              )}
-            </div>
-
-            {/* API Key Notice */}
-            {!import.meta.env.VITE_OPENAI_API_KEY && (
-              <div className="bg-white/60 backdrop-blur-sm p-6 border-yellow-200 bg-yellow-50 rounded-2xl border-2">
-                <div className="flex items-center space-x-3">
-                  <AlertCircle className="w-6 h-6 text-yellow-600 flex-shrink-0" />
+                <div className="space-y-6">
+                  {/* Company Website URL */}
                   <div>
-                    <h3 className="font-semibold text-yellow-900">API Key Required</h3>
-                    <p className="text-yellow-700 text-sm mt-1">
-                      Add your OpenAI API key to the environment variables to enable asset generation.
-                      Create a <code>.env</code> file with: <code>VITE_OPENAI_API_KEY=your_key_here</code>
+                    <label htmlFor="company-website" className="block text-sm font-semibold text-slate-900 mb-4">
+                      <Globe className="w-4 h-4 inline mr-2" />
+                      Company Website (Optional)
+                      {renderTooltip("We'll extract your brand colors and logo to create branded quote cards and visuals. This helps maintain brand consistency across all generated assets.", "website-help")}
+                    </label>
+                    <div className="relative">
+                      <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                      <input
+                        type="url"
+                        id="company-website"
+                        value={formData.companyWebsiteUrl || ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, companyWebsiteUrl: e.target.value }))}
+                        placeholder="https://yourcompany.com"
+                        className="w-full px-4 py-3 pl-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/60"
+                      />
+                    </div>
+                    <p className="text-sm text-slate-500 mt-2">
+                      We'll extract your brand colors and logo to create branded quote cards and visuals
                     </p>
                   </div>
+
+                  {/* API Key Notice */}
+                  {!import.meta.env.VITE_OPENAI_API_KEY && (
+                    <div className="bg-white/60 backdrop-blur-sm p-6 border-yellow-200 bg-yellow-50 rounded-2xl border-2">
+                      <div className="flex items-center space-x-3">
+                        <AlertCircle className="w-6 h-6 text-yellow-600 flex-shrink-0" />
+                        <div>
+                          <h3 className="font-semibold text-yellow-900">API Key Required</h3>
+                          <p className="text-yellow-700 text-sm mt-1">
+                            Add your OpenAI API key to the environment variables to enable asset generation.
+                            Create a <code>.env</code> file with: <code>VITE_OPENAI_API_KEY=your_key_here</code>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Submit Button */}
+                  <div className="flex justify-between pt-6">
+                    <button
+                      type="button"
+                      onClick={handlePrevStep}
+                      className="bg-white/60 backdrop-blur-sm border-2 border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center space-x-2"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      <span>Back</span>
+                    </button>
+                    <button
+                      type="submit"
+                      className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold text-lg py-4 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center space-x-2"
+                    >
+                      <TrendingUp className="w-5 h-5" />
+                      <span>Generate Marketing Assets</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
-
-            {/* Submit Button */}
-            <div className="pt-6">
-              <button
-                type="submit"
-                disabled={!isFormValid}
-                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold text-lg py-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
-              >
-                <TrendingUp className="w-5 h-5" />
-                <span>Generate Marketing Assets</span>
-              </button>
-              {!isFormValid && (
-                <p className="text-sm text-slate-500 text-center mt-3">
-                  Please fill in all required fields and select at least one asset type
-                </p>
-              )}
-            </div>
           </form>
         </div>
       </div>
