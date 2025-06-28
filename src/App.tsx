@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import LandingPage from './components/LandingPage';
 import UploadForm from './components/UploadForm';
 import ProcessingView from './components/ProcessingView';
+import EmailCaptureView from './components/EmailCaptureView';
 import OutputView from './components/OutputView';
 import { transcribeAudio } from './services/transcription';
 import { generateMarketingAssets } from './services/assetGeneration';
@@ -29,7 +30,7 @@ export interface GeneratedAsset {
 }
 
 function App() {
-  const [currentStep, setCurrentStep] = useState<'landing' | 'upload' | 'processing' | 'output'>('landing');
+  const [currentStep, setCurrentStep] = useState<'landing' | 'upload' | 'processing' | 'emailCapture' | 'output'>('landing');
   const [contentData, setContentData] = useState<ContentData>({
     description: '',
     persona: '',
@@ -42,6 +43,7 @@ function App() {
   const [processingStep, setProcessingStep] = useState<string>('');
   const [processingProgress, setProcessingProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string>('');
 
   const handleStartUpload = () => {
     setCurrentStep('upload');
@@ -109,7 +111,8 @@ function App() {
       }
       
       setGeneratedAssets(assets);
-      setCurrentStep('output');
+      // Instead of going directly to output, go to email capture
+      setCurrentStep('emailCapture');
       
     } catch (err) {
       console.error('Processing error:', err);
@@ -121,6 +124,11 @@ function App() {
         setError(null);
       }, 5000);
     }
+  };
+
+  const handleEmailSubmit = (email: string) => {
+    setUserEmail(email);
+    setCurrentStep('output');
   };
 
   const handleBackToLanding = () => {
@@ -137,6 +145,7 @@ function App() {
     setError(null);
     setProcessingStep('');
     setProcessingProgress(0);
+    setUserEmail('');
   };
 
   const renderCurrentStep = () => {
@@ -163,12 +172,22 @@ function App() {
             progress={processingProgress}
           />
         );
+      case 'emailCapture':
+        return (
+          <EmailCaptureView
+            assets={generatedAssets}
+            brandData={brandData}
+            onEmailSubmit={handleEmailSubmit}
+            onBack={handleBackToLanding}
+          />
+        );
       case 'output':
         return (
           <OutputView 
             assets={generatedAssets} 
             brandData={brandData} 
-            onBack={handleBackToLanding} 
+            onBack={handleBackToLanding}
+            userEmail={userEmail}
           />
         );
       default:

@@ -6,17 +6,17 @@ import { BrandData } from '../services/brandExtraction';
 interface OutputViewProps {
   assets: GeneratedAsset[];
   brandData?: BrandData | null;
+  userEmail?: string;
   onBack: () => void;
 }
 
 const OutputView: React.FC<OutputViewProps> = ({ 
   assets, 
   brandData, 
+  userEmail,
   onBack
 }) => {
   const [copiedAsset, setCopiedAsset] = useState<string | null>(null);
-  const [email, setEmail] = useState('');
-  const [showEmailCapture, setShowEmailCapture] = useState(false);
 
   // Check if this is a demo (no API key)
   const isDemoMode = !import.meta.env.VITE_OPENAI_API_KEY;
@@ -44,14 +44,6 @@ const OutputView: React.FC<OutputViewProps> = ({
     a.download = 'content-marketing-assets.txt';
     a.click();
     URL.revokeObjectURL(url);
-  };
-
-  const handleEmailSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email) {
-      handleDownloadAll();
-      setShowEmailCapture(false);
-    }
   };
 
   const getAssetIcon = (type: string) => {
@@ -262,6 +254,14 @@ const OutputView: React.FC<OutputViewProps> = ({
             )}
           </p>
           
+          {/* User Email Confirmation */}
+          {userEmail && (
+            <div className="inline-flex items-center space-x-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium mb-6 border border-emerald-200">
+              <Mail className="w-4 h-4" />
+              <span>Assets delivered to {userEmail}</span>
+            </div>
+          )}
+          
           {/* Demo Mode Notice */}
           {isDemoMode && (
             <div className="inline-flex items-center space-x-2 bg-yellow-50 text-yellow-700 px-4 py-2 rounded-full text-sm font-medium mb-6 border border-yellow-200">
@@ -447,46 +447,6 @@ const OutputView: React.FC<OutputViewProps> = ({
             <ExternalLink className="w-4 h-4" />
           </button>
         </div>
-
-        {/* Email Capture Modal */}
-        {showEmailCapture && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white/60 backdrop-blur-sm max-w-md w-full p-8 bg-white rounded-3xl border border-white/20">
-              <h3 className="text-2xl font-bold text-slate-900 mb-4">
-                Get Your Assets Delivered
-              </h3>
-              <p className="text-slate-600 mb-6">
-                Enter your email to download all assets and receive tips on using them effectively in your campaigns.
-              </p>
-              
-              <form onSubmit={handleEmailSubmit}>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/60 mb-4"
-                  required
-                />
-                <div className="flex space-x-3">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
-                  >
-                    Download Assets
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowEmailCapture(false)}
-                    className="bg-white/60 backdrop-blur-sm border-2 border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
