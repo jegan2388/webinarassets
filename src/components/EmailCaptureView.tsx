@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, ArrowLeft, Check, Sparkles, Gift, Download, Eye, Clock, Users, TrendingUp, Zap, AlertCircle, MessageSquare } from 'lucide-react';
+import { Mail, ArrowLeft, Check, Sparkles, Download, Clock, TrendingUp, Zap, AlertCircle, MessageSquare } from 'lucide-react';
 import { GeneratedAsset, ContentData } from '../App';
 import { BrandData } from '../services/brandExtraction';
 
@@ -160,50 +160,6 @@ const EmailCaptureView: React.FC<EmailCaptureViewProps> = ({
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Value Proposition */}
-        <div className="bg-white/60 backdrop-blur-sm p-8 rounded-3xl border border-white/20 shadow-lg mb-12">
-          <div className="text-center mb-8">
-            <Gift className="w-12 h-12 text-emerald-600 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">
-              What You're Getting
-            </h2>
-          </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="text-center p-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-                <Eye className="w-6 h-6 text-white" />
-              </div>
-              <h4 className="font-semibold text-slate-900 mb-2">Ready to Use</h4>
-              <p className="text-sm text-slate-600">Copy-paste ready content for immediate deployment</p>
-            </div>
-            
-            <div className="text-center p-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-                <Clock className="w-6 h-6 text-white" />
-              </div>
-              <h4 className="font-semibold text-slate-900 mb-2">Saves Hours</h4>
-              <p className="text-sm text-slate-600">What would take 4-6 hours, done in minutes</p>
-            </div>
-            
-            <div className="text-center p-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <h4 className="font-semibold text-slate-900 mb-2">Multi-Channel</h4>
-              <p className="text-sm text-slate-600">LinkedIn, email, social media, and more</p>
-            </div>
-            
-            <div className="text-center p-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <h4 className="font-semibold text-slate-900 mb-2">Proven Results</h4>
-              <p className="text-sm text-slate-600">Templates that drive engagement and conversions</p>
-            </div>
-          </div>
         </div>
 
         {/* Email Capture Form */}
