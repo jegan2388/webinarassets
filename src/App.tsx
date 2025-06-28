@@ -7,6 +7,7 @@ import OutputView from './components/OutputView';
 import { transcribeAudio } from './services/transcription';
 import { generateMarketingAssets } from './services/assetGeneration';
 import { extractBrandElements, BrandData } from './services/brandExtraction';
+import { supabase } from './lib/supabase';
 
 export interface ContentData {
   file?: File;
@@ -44,6 +45,7 @@ function App() {
   const [processingProgress, setProcessingProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string>('');
+  const [currentWebinarRequestId, setCurrentWebinarRequestId] = useState<string | null>(null);
 
   const handleStartUpload = () => {
     setCurrentStep('upload');
@@ -57,6 +59,36 @@ function App() {
     try {
       let transcript = '';
       let extractedBrandData: BrandData | null = null;
+      
+      // Create a webinar request record to track this session
+      // Note: In a real app with authentication, you'd use the actual user ID
+      // For now, we'll create a temporary record without authentication
+      const tempUserId = 'temp-user-' + Date.now(); // Temporary solution
+      
+      try {
+        const { data: webinarRequest, error: insertError } = await supabase
+          .from('webinar_requests')
+          .insert({
+            user_id: tempUserId, // This would be the actual authenticated user ID
+            form_data: formData,
+            payment_status: 'completed', // For free tier, mark as completed
+            subscription_tier: 'free',
+            content_type: formData.contentType,
+            amount_paid: 0
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.warn('Could not create webinar request record:', insertError);
+          // Continue without database tracking for demo purposes
+        } else {
+          setCurrentWebinarRequestId(webinarRequest.id);
+        }
+      } catch (dbError) {
+        console.warn('Database not available, continuing in demo mode:', dbError);
+        // Continue without database for demo purposes
+      }
       
       // Step 0: Extract brand elements if website URL provided
       if (formData.companyWebsiteUrl) {
@@ -111,6 +143,25 @@ function App() {
       }
       
       setGeneratedAssets(assets);
+      
+      // Update the webinar request with generated assets and transcript
+      if (currentWebinarRequestId) {
+        try {
+          await supabase
+            .from('webinar_requests')
+            .update({
+              assets_json: assets,
+              transcript: transcript,
+              brand_data: extractedBrandData,
+              processed_at: new Date().toISOString()
+            })
+            .eq('id', currentWebinarRequestId);
+        } catch (updateError) {
+          console.warn('Could not update webinar request with assets:', updateError);
+          // Continue anyway since assets are generated
+        }
+      }
+      
       // Instead of going directly to output, go to email capture
       setCurrentStep('emailCapture');
       
@@ -126,8 +177,26 @@ function App() {
     }
   };
 
-  const handleEmailSubmit = (email: string) => {
+  const handleEmailSubmit = async (email: string) => {
     setUserEmail(email);
+    
+    // Store the email in the database if we have a webinar request ID
+    if (currentWebinarRequestId) {
+      try {
+        await supabase
+          .from('webinar_requests')
+          .update({
+            delivery_email: email
+          })
+          .eq('id', currentWebinarRequestId);
+        
+        console.log('Email stored successfully for webinar request:', currentWebinarRequestId);
+      } catch (error) {
+        console.warn('Could not store email in database:', error);
+        // Continue anyway since the email is captured in state
+      }
+    }
+    
     setCurrentStep('output');
   };
 
@@ -146,6 +215,7 @@ function App() {
     setProcessingStep('');
     setProcessingProgress(0);
     setUserEmail('');
+    setCurrentWebinarRequestId(null);
   };
 
   const renderCurrentStep = () => {

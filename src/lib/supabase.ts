@@ -62,6 +62,7 @@ export interface ContentRequest {
   assets_json?: any
   transcript?: string
   brand_data?: any
+  delivery_email?: string
 }
 
 export interface Database {
