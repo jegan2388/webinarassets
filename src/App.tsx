@@ -65,7 +65,7 @@ function App() {
       // Create a webinar request record to track this session
       // Note: In a real app with authentication, you'd use the actual user ID
       // For now, we'll create a temporary record without authentication
-      const tempUserId = 'temp-user-' + Date.now(); // Temporary solution
+      const tempUserId = crypto.randomUUID(); // Generate a valid UUID
       
       try {
         const { data: webinarRequest, error: insertError } = await supabase
