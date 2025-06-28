@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Copy, Download, RefreshCw, ArrowLeft, Mail, Share2, Check, Sparkles, ExternalLink, Palette, FileText, BarChart3, UserCheck, TrendingUp, Zap, AlertCircle, Video, Clock, Play, Twitter, Coffee, DollarSign, Heart } from 'lucide-react';
 import { GeneratedAsset } from '../App';
 import { BrandData } from '../services/brandExtraction';
+import { generateDocx } from '../utils/docxGenerator';
 import OpenAI from 'openai';
 
 interface OutputViewProps {
@@ -20,6 +21,7 @@ const OutputView: React.FC<OutputViewProps> = ({
   onBack
 }) => {
   const [copiedAsset, setCopiedAsset] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Check if this is a demo (no API key)
   const isDemoMode = !import.meta.env.VITE_OPENAI_API_KEY;
@@ -46,19 +48,17 @@ const OutputView: React.FC<OutputViewProps> = ({
     }
   };
 
-  const handleDownloadAll = () => {
-    // Create downloadable content
-    const content = assets.map(asset => 
-      `${asset.type}: ${asset.title}\n\n${asset.content}\n\n---\n\n`
-    ).join('');
+  const handleDownloadAll = async () => {
+    setIsDownloading(true);
     
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'content-marketing-assets.txt';
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      await generateDocx(assets, brandData, userEmail);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to generate document. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const getAssetIcon = (type: string) => {
@@ -269,14 +269,6 @@ const OutputView: React.FC<OutputViewProps> = ({
             )}
           </p>
           
-          {/* User Email Confirmation */}
-          {userEmail && (
-            <div className="inline-flex items-center space-x-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium mb-6 border border-emerald-200">
-              <Mail className="w-4 h-4" />
-              <span>Assets delivered to {userEmail}</span>
-            </div>
-          )}
-          
           {/* Demo Mode Notice */}
           {isDemoMode && (
             <div className="inline-flex items-center space-x-2 bg-yellow-50 text-yellow-700 px-4 py-2 rounded-full text-sm font-medium mb-6 border border-yellow-200">
@@ -284,12 +276,6 @@ const OutputView: React.FC<OutputViewProps> = ({
               <span>Demo Mode - Sample assets generated for preview</span>
             </div>
           )}
-          
-          {/* Powered by AI Badge */}
-          <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium mb-8 border border-emerald-200">
-            <Zap className="w-4 h-4" />
-            <span>Powered by AI</span>
-          </div>
           
           {/* Brand Data Summary */}
           {brandData && (brandData.primaryColor || brandData.companyName) && (
@@ -322,10 +308,20 @@ const OutputView: React.FC<OutputViewProps> = ({
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={handleDownloadAll}
-              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold text-lg px-8 py-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center space-x-2 justify-center"
+              disabled={isDownloading}
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold text-lg px-8 py-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center space-x-2 justify-center"
             >
-              <Download className="w-5 h-5" />
-              <span>Download All Assets</span>
+              {isDownloading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Generating Document...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-5 h-5" />
+                  <span>Download as Word Document</span>
+                </>
+              )}
             </button>
             <button
               onClick={onBack}
