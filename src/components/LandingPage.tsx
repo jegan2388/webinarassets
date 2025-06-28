@@ -73,7 +73,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload }) => {
                 <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </button>
               <p className="text-sm text-slate-500 mt-3">
-                No sign-up required • Get results in minutes
+                Get results in minutes
               </p>
             </div>
 

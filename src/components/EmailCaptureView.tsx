@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Mail, ArrowLeft, Check, Sparkles, Gift, Download, Eye, Clock, Users, TrendingUp, Zap, AlertCircle } from 'lucide-react';
-import { GeneratedAsset } from '../App';
+import { Mail, ArrowLeft, Check, Sparkles, Gift, Download, Eye, Clock, Users, TrendingUp, Zap, AlertCircle, MessageSquare } from 'lucide-react';
+import { GeneratedAsset, ContentData } from '../App';
 import { BrandData } from '../services/brandExtraction';
 
 interface EmailCaptureViewProps {
   assets: GeneratedAsset[];
   brandData?: BrandData | null;
+  contentData: ContentData;
   onEmailSubmit: (email: string) => void;
   onBack: () => void;
 }
@@ -13,6 +14,7 @@ interface EmailCaptureViewProps {
 const EmailCaptureView: React.FC<EmailCaptureViewProps> = ({
   assets,
   brandData,
+  contentData,
   onEmailSubmit,
   onBack
 }) => {
@@ -52,6 +54,9 @@ const EmailCaptureView: React.FC<EmailCaptureViewProps> = ({
         return '📄';
     }
   };
+
+  // Find the first LinkedIn post to preview
+  const linkedInPost = assets.find(asset => asset.type.toLowerCase().includes('linkedin'));
 
   // Group assets by type for display
   const assetCounts = assets.reduce((acc, asset) => {
@@ -107,6 +112,36 @@ const EmailCaptureView: React.FC<EmailCaptureViewProps> = ({
             </div>
           )}
         </div>
+
+        {/* LinkedIn Post Preview */}
+        {linkedInPost && (
+          <div className="max-w-2xl mx-auto mb-12">
+            <div className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-white/20 shadow-lg">
+              <div className="flex items-center space-x-2 mb-4">
+                <MessageSquare className="w-5 h-5 text-emerald-600" />
+                <span className="font-semibold text-emerald-900">Sneak Peek: Your LinkedIn Post</span>
+                <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">
+                  Ready to Post!
+                </span>
+              </div>
+              
+              <div className="bg-white p-4 rounded-lg border border-slate-200 mb-4">
+                <pre className="whitespace-pre-wrap text-sm text-slate-800 font-medium leading-relaxed">
+                  {linkedInPost.content.length > 300 
+                    ? linkedInPost.content.substring(0, 300) + '...' 
+                    : linkedInPost.content
+                  }
+                </pre>
+              </div>
+              
+              <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-200">
+                <p className="text-sm text-emerald-800">
+                  ✨ <strong>Based on your content about "{contentData.description}"</strong> - This is just one of your {assets.length} custom-tailored assets! Enter your email below to unlock everything.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Asset Preview Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
@@ -180,7 +215,7 @@ const EmailCaptureView: React.FC<EmailCaptureViewProps> = ({
                 Get Instant Access
               </h3>
               <p className="text-slate-600">
-                Enter your email to view and download all your marketing assets
+                Enter your email to view and download all {assets.length} marketing assets
               </p>
             </div>
             

@@ -247,6 +247,7 @@ function App() {
           <EmailCaptureView
             assets={generatedAssets}
             brandData={brandData}
+            contentData={contentData}
             onEmailSubmit={handleEmailSubmit}
             onBack={handleBackToLanding}
           />
