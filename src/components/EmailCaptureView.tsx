@@ -167,7 +167,7 @@ const EmailCaptureView: React.FC<EmailCaptureViewProps> = ({
           <div className="text-center mb-8">
             <Gift className="w-12 h-12 text-emerald-600 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-slate-900 mb-4">
-              What You're Getting (Worth $200+ if hired out)
+              What You're Getting
             </h2>
           </div>
           
