@@ -62,30 +62,34 @@ function App() {
       let transcript = '';
       let extractedBrandData: BrandData | null = null;
       
-      // Create a webinar request record to track this session
-      // Note: In a real app with authentication, you'd use the actual user ID
-      // For now, we'll create a temporary record without authentication
-      const tempUserId = crypto.randomUUID(); // Generate a valid UUID
-      
+      // Check if user is authenticated before creating webinar request
       try {
-        const { data: webinarRequest, error: insertError } = await supabase
-          .from('webinar_requests')
-          .insert({
-            user_id: tempUserId, // This would be the actual authenticated user ID
-            form_data: formData,
-            payment_status: 'completed', // For free tier, mark as completed
-            subscription_tier: 'free',
-            content_type: formData.contentType,
-            amount_paid: 0
-          })
-          .select()
-          .single();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (user && !authError) {
+          // User is authenticated, create webinar request record
+          const { data: webinarRequest, error: insertError } = await supabase
+            .from('webinar_requests')
+            .insert({
+              user_id: user.id,
+              form_data: formData,
+              payment_status: 'completed', // For free tier, mark as completed
+              subscription_tier: 'free',
+              content_type: formData.contentType,
+              amount_paid: 0
+            })
+            .select()
+            .single();
 
-        if (insertError) {
-          console.warn('Could not create webinar request record:', insertError);
-          // Continue without database tracking for demo purposes
+          if (insertError) {
+            console.warn('Could not create webinar request record:', insertError);
+            // Continue without database tracking for demo purposes
+          } else {
+            setCurrentWebinarRequestId(webinarRequest.id);
+          }
         } else {
-          setCurrentWebinarRequestId(webinarRequest.id);
+          console.log('No authenticated user found, continuing in demo mode without database tracking');
+          // Continue without database tracking for unauthenticated users
         }
       } catch (dbError) {
         console.warn('Database not available, continuing in demo mode:', dbError);
@@ -147,7 +151,7 @@ function App() {
       setGeneratedAssets(assets);
       setOpenAITokenUsage(tokenUsage);
       
-      // Update the webinar request with generated assets and transcript
+      // Update the webinar request with generated assets and transcript (only if we have a request ID)
       if (currentWebinarRequestId) {
         try {
           await supabase
