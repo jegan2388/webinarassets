@@ -427,10 +427,10 @@ const UploadForm: React.FC<UploadFormProps> = ({
               <Brain className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-3">
-              Upload Your Content
+              Let's Create Your Marketing Assets
             </h1>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Transform any content into targeted marketing assets that resonate with your audience
+              Just a few steps to turn your content into campaign-ready materials
             </p>
           </div>
 
@@ -444,7 +444,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
             }`}>
               <div className="flex items-center mb-4">
                 <h2 className="text-xl font-bold text-slate-900">
-                  Step 1: Choose Your Content Type
+                  1. What content do you have?
                 </h2>
                 {completedSteps.includes(1) && (
                   <Check className="w-5 h-5 text-emerald-600 ml-2" />
@@ -456,7 +456,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                   {/* Upload Type Toggle */}
                   <div>
                     <label className="block text-sm font-semibold text-slate-900 mb-4">
-                      What type of content do you want to remix?
+                      Choose your content type
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <button
@@ -469,7 +469,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                         }`}
                       >
                         <FileVideo className="w-5 h-5 mb-2" />
-                        <div className="font-medium">Upload File</div>
+                        <div className="font-medium">Upload Audio or Video</div>
                         <div className="text-sm text-slate-600">MP4, MP3, WAV, M4A (up to 100MB)</div>
                       </button>
                       <button
@@ -482,7 +482,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                         }`}
                       >
                         <FileText className="w-5 h-5 mb-2" />
-                        <div className="font-medium">Article/Blog Link</div>
+                        <div className="font-medium">Paste Article or Blog URL</div>
                         <div className="text-sm text-slate-600">Medium, LinkedIn, blog posts</div>
                       </button>
                     </div>
@@ -492,7 +492,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                   {uploadType === 'file' ? (
                     <div>
                       <label className="block text-sm font-semibold text-slate-900 mb-4">
-                        Upload your content recording
+                        Upload your recording
                         <span className="text-sm font-normal text-slate-600 ml-2">
                           (Maximum file size: {formatFileSize(MAX_FILE_SIZE)})
                         </span>
@@ -526,7 +526,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                           <div>
                             <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
                             <p className="text-lg font-semibold text-slate-700 mb-2">
-                              Drop your content file here
+                              Drag & drop your file here
                             </p>
                             <p className="text-slate-500 mb-6">
                               or click to browse your files
@@ -558,7 +558,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                     <div>
                       <label htmlFor="article-url" className="block text-sm font-semibold text-slate-900 mb-4">
                         <FileText className="w-4 h-4 inline mr-2" />
-                        Article or Blog Post URL
+                        Paste your Article or Blog URL
                         {renderTooltip("Paste the URL of any publicly accessible blog post or article. We support Medium, Substack, LinkedIn Articles, and most blog platforms.", "article-url-help")}
                       </label>
                       <div className="relative">
@@ -568,7 +568,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                           id="article-url"
                           value={articleUrl}
                           onChange={(e) => setArticleUrl(e.target.value)}
-                          placeholder="https://medium.com/@author/article or any blog post URL"
+                          placeholder="https://medium.com/@author/article"
                           className="w-full px-4 py-3 pl-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/60"
                           required
                         />
@@ -602,7 +602,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                         disabled={!isStep1Valid()}
                         className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                       >
-                        <span>Next: Describe Your Content</span>
+                        <span>Next: Tell us about it</span>
                         <ArrowRight className="w-4 h-4" />
                       </button>
                     </div>
@@ -618,7 +618,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
               }`}>
                 <div className="flex items-center mb-4">
                   <h2 className="text-xl font-bold text-slate-900">
-                    Step 2: Describe Your Content
+                    2. Tell us about it
                   </h2>
                   {completedSteps.includes(2) && (
                     <Check className="w-5 h-5 text-emerald-600 ml-2" />
@@ -628,20 +628,20 @@ const UploadForm: React.FC<UploadFormProps> = ({
                 <div className="space-y-6">
                   <div>
                     <label htmlFor="combined-description" className="block text-sm font-semibold text-slate-900 mb-4">
-                      Tell us about your content and who it's for
-                      {renderTooltip("Include your content topic, target audience, and key takeaways. Example: 'This is a B2B lead generation webinar for marketing teams showing how to increase conversion rates by 40% using our new automation platform.'", "description-help")}
+                      Describe your content and who it's for
+                      {renderTooltip("Include your content topic, target audience, and key takeaways. This helps us create better, more targeted assets.", "description-help")}
                     </label>
                     <textarea
                       id="combined-description"
                       value={combinedDescription}
                       onChange={(e) => setCombinedDescription(e.target.value)}
-                      placeholder="e.g., This is a B2B lead generation webinar for marketing teams showing how to increase conversion rates by 40% using our new automation platform. We covered advanced strategies for nurturing prospects in the consideration stage..."
+                      placeholder="e.g., This is a marketing webinar for small business owners about increasing email open rates. We covered 5 proven strategies that can boost engagement by 40%..."
                       rows={4}
                       className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/60 resize-none"
                       required
                     />
                     <p className="text-sm text-slate-500 mt-2">
-                      Include your content topic, target audience, and key takeaways. Our AI will automatically categorize this for optimal asset generation.
+                      Include your content topic, target audience, and key takeaways. Our AI will use this to create better assets.
                     </p>
                   </div>
 
@@ -661,7 +661,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                         disabled={!isStep2Valid()}
                         className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                       >
-                        <span>Next: Select Assets</span>
+                        <span>Next: What do you need?</span>
                         <ArrowRight className="w-4 h-4" />
                       </button>
                     </div>
@@ -677,7 +677,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
               }`}>
                 <div className="flex items-center mb-4">
                   <h2 className="text-xl font-bold text-slate-900">
-                    Step 3: Select Marketing Assets
+                    3. What do you need?
                   </h2>
                   {completedSteps.includes(3) && (
                     <Check className="w-5 h-5 text-emerald-600 ml-2" />
@@ -688,7 +688,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                   <div>
                     <label className="block text-sm font-semibold text-slate-900 mb-4">
                       <TrendingUp className="w-4 h-4 inline mr-2" />
-                      Select the marketing assets you want to generate
+                      Choose the marketing assets you want
                       {uploadType === 'text' && (
                         <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
                           Includes Twitter Thread for blogs!
@@ -771,7 +771,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                         disabled={!isStep3Valid()}
                         className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                       >
-                        <span>Next: Optional Settings</span>
+                        <span>Next: Add your brand (optional)</span>
                         <ArrowRight className="w-4 h-4" />
                       </button>
                     </div>
@@ -785,7 +785,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
               <div className="transition-all duration-300 opacity-100">
                 <div className="flex items-center mb-4">
                   <h2 className="text-xl font-bold text-slate-900">
-                    Step 4: Optional Brand Settings
+                    4. Add your brand (optional)
                   </h2>
                 </div>
 
@@ -844,7 +844,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
                       className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold text-lg py-4 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center space-x-2"
                     >
                       <TrendingUp className="w-5 h-5" />
-                      <span>Generate Marketing Assets</span>
+                      <span>Generate My Assets</span>
                     </button>
                   </div>
                 </div>

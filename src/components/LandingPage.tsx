@@ -51,14 +51,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload }) => {
             </div>
             
             <h1 className="text-5xl lg:text-6xl font-bold text-slate-900 mb-6 leading-tight">
-              Unlock Your Content's Full Potential.
+              Turn Your Content into Marketing Assets,
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 block mt-2">
-                Remix Your Webinars & Articles into Campaign-Ready Assets.
+                Instantly.
               </span>
             </h1>
             
             <p className="text-xl text-slate-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-              Instantly generate LinkedIn posts, sales emails, marketing nurture emails, quote cards, video ideas, and Twitter threads, all tailored for your audience and funnel stage.
+              Effortlessly create social posts, emails, and more from your existing webinars, articles, and text. 
+              No more starting from scratch—just upload and watch your content multiply.
             </p>
             
             {/* Single Primary CTA */}
@@ -68,11 +69,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload }) => {
                 className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold text-xl px-12 py-5 rounded-2xl transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:scale-105 flex items-center space-x-3 group"
               >
                 <Rocket className="w-6 h-6" />
-                <span>Start Remixing – Free</span>
+                <span>Start Creating – Free</span>
                 <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </button>
               <p className="text-sm text-slate-500 mt-3">
-                Get results in minutes
+                No credit card needed. Get your first assets in minutes.
               </p>
             </div>
 
@@ -86,7 +87,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload }) => {
                   <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-3 mx-auto shadow-lg">
                     <Upload className="w-8 h-8 text-white" />
                   </div>
-                  <h4 className="font-semibold text-slate-900 mb-1">Upload</h4>
+                  <h4 className="font-semibold text-slate-900 mb-1">Add Your Content</h4>
                   <p className="text-sm text-slate-600">Drop files or paste text</p>
                 </div>
                 <ArrowRight className="w-6 h-6 text-slate-300 mx-4" />
@@ -94,7 +95,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload }) => {
                   <div className="w-16 h-16 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center mb-3 mx-auto shadow-lg">
                     <Brain className="w-8 h-8 text-white" />
                   </div>
-                  <h4 className="font-semibold text-slate-900 mb-1">Analyze</h4>
+                  <h4 className="font-semibold text-slate-900 mb-1">AI Does the Work</h4>
                   <p className="text-sm text-slate-600">AI extracts key insights</p>
                 </div>
                 <ArrowRight className="w-6 h-6 text-slate-300 mx-4" />
@@ -102,8 +103,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload }) => {
                   <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mb-3 mx-auto shadow-lg">
                     <Target className="w-8 h-8 text-white" />
                   </div>
-                  <h4 className="font-semibold text-slate-900 mb-1">Generate</h4>
-                  <p className="text-sm text-slate-600">Get campaign-ready assets</p>
+                  <h4 className="font-semibold text-slate-900 mb-1">Get Your Assets</h4>
+                  <p className="text-sm text-slate-600">Campaign-ready materials</p>
                 </div>
               </div>
             </div>
@@ -159,7 +160,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload }) => {
               onClick={onStartUpload}
               className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold text-xl px-12 py-5 rounded-2xl transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:scale-105 inline-flex items-center space-x-3"
             >
-              <span>Start Remixing Now</span>
+              <span>Start Creating Now</span>
               <ArrowRight className="w-6 h-6" />
             </button>
           </div>
