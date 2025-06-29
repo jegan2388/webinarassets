@@ -4,6 +4,7 @@ import UploadForm from './components/UploadForm';
 import ProcessingView from './components/ProcessingView';
 import EmailCaptureView from './components/EmailCaptureView';
 import OutputView from './components/OutputView';
+import BoltBadge from './components/BoltBadge';
 import { transcribeAudio } from './services/transcription';
 import { generateMarketingAssets } from './services/assetGeneration';
 import { supabase } from './lib/supabase';
@@ -259,6 +260,9 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Built with bolt.new Badge */}
+      <BoltBadge />
+      
       {/* Floating Help Button for Judges */}
       <div className="fixed bottom-6 right-6 z-50 group">
         <div className="relative">
