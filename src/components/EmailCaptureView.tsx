@@ -113,7 +113,7 @@ const EmailCaptureView: React.FC<EmailCaptureViewProps> = ({
           )}
         </div>
 
-        {/* LinkedIn Post Preview */}
+        {/* LinkedIn Post Preview - FIXED: Show full content without truncation */}
         {linkedInPost && (
           <div className="max-w-2xl mx-auto mb-12">
             <div className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-white/20 shadow-lg">
@@ -127,10 +127,7 @@ const EmailCaptureView: React.FC<EmailCaptureViewProps> = ({
               
               <div className="bg-white p-4 rounded-lg border border-slate-200 mb-4">
                 <pre className="whitespace-pre-wrap text-sm text-slate-800 font-medium leading-relaxed">
-                  {linkedInPost.content.length > 300 
-                    ? linkedInPost.content.substring(0, 300) + '...' 
-                    : linkedInPost.content
-                  }
+                  {linkedInPost.content}
                 </pre>
               </div>
               
