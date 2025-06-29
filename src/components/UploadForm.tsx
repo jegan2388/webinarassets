@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, ArrowLeft, Check, FileVideo, MessageSquare, Mail, Quote, AlertCircle, Globe, FileText, UserCheck, TrendingUp, Brain, Video, Twitter, ArrowRight, Info, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Upload, ArrowLeft, Check, FileVideo, MessageSquare, Mail, Quote, AlertCircle, FileText, UserCheck, TrendingUp, Brain, Video, Twitter, ArrowRight, Info, HelpCircle } from 'lucide-react';
 import { ContentData } from '../App';
 
 interface UploadFormProps {
@@ -37,8 +37,7 @@ const UploadForm: React.FC<UploadFormProps> = ({
   const steps = [
     { number: 1, title: 'Upload', description: 'Choose content type' },
     { number: 2, title: 'Describe', description: 'Tell us about your content' },
-    { number: 3, title: 'Select', description: 'Pick marketing assets' },
-    { number: 4, title: 'Generate', description: 'Optional brand settings' }
+    { number: 3, title: 'Select', description: 'Pick marketing assets' }
   ];
 
   const assetTypes = [
@@ -224,9 +223,6 @@ const UploadForm: React.FC<UploadFormProps> = ({
     } else if (currentStep === 2 && isStep2Valid()) {
       setCompletedSteps(prev => [...prev, 2]);
       setCurrentStep(3);
-    } else if (currentStep === 3 && isStep3Valid()) {
-      setCompletedSteps(prev => [...prev, 3]);
-      setCurrentStep(4);
     }
   };
 
@@ -562,14 +558,13 @@ const UploadForm: React.FC<UploadFormProps> = ({
                         {renderTooltip("Paste the URL of any publicly accessible blog post or article. We support Medium, Substack, LinkedIn Articles, and most blog platforms.", "article-url-help")}
                       </label>
                       <div className="relative">
-                        <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                         <input
                           type="url"
                           id="article-url"
                           value={articleUrl}
                           onChange={(e) => setArticleUrl(e.target.value)}
                           placeholder="https://medium.com/@author/article"
-                          className="w-full px-4 py-3 pl-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/60"
+                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/60"
                           required
                         />
                       </div>
@@ -670,18 +665,13 @@ const UploadForm: React.FC<UploadFormProps> = ({
               </div>
             )}
 
-            {/* Step 3: Asset Selection */}
+            {/* Step 3: Asset Selection & Submit */}
             {currentStep >= 3 && (
-              <div className={`transition-all duration-300 ${
-                currentStep === 3 ? 'opacity-100' : currentStep > 3 ? 'opacity-60' : 'opacity-30'
-              }`}>
+              <div className="transition-all duration-300 opacity-100">
                 <div className="flex items-center mb-4">
                   <h2 className="text-xl font-bold text-slate-900">
                     3. What do you need?
                   </h2>
-                  {completedSteps.includes(3) && (
-                    <Check className="w-5 h-5 text-emerald-600 ml-2" />
-                  )}
                 </div>
 
                 <div className="space-y-6">
@@ -755,64 +745,6 @@ const UploadForm: React.FC<UploadFormProps> = ({
                     )}
                   </div>
 
-                  {currentStep === 3 && (
-                    <div className="flex justify-between">
-                      <button
-                        type="button"
-                        onClick={handlePrevStep}
-                        className="bg-white/60 backdrop-blur-sm border-2 border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center space-x-2"
-                      >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span>Back</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleNextStep}
-                        disabled={!isStep3Valid()}
-                        className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                      >
-                        <span>Next: Add your brand (optional)</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Step 4: Optional Settings & Submit */}
-            {currentStep >= 4 && (
-              <div className="transition-all duration-300 opacity-100">
-                <div className="flex items-center mb-4">
-                  <h2 className="text-xl font-bold text-slate-900">
-                    4. Add your brand (optional)
-                  </h2>
-                </div>
-
-                <div className="space-y-6">
-                  {/* Company Website URL */}
-                  <div>
-                    <label htmlFor="company-website" className="block text-sm font-semibold text-slate-900 mb-4">
-                      <Globe className="w-4 h-4 inline mr-2" />
-                      Company Website (Optional)
-                      {renderTooltip("We'll extract your brand colors and logo to create branded quote cards and visuals. This helps maintain brand consistency across all generated assets.", "website-help")}
-                    </label>
-                    <div className="relative">
-                      <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                      <input
-                        type="url"
-                        id="company-website"
-                        value={formData.companyWebsiteUrl || ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, companyWebsiteUrl: e.target.value }))}
-                        placeholder="https://yourcompany.com"
-                        className="w-full px-4 py-3 pl-12 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 bg-white/60"
-                      />
-                    </div>
-                    <p className="text-sm text-slate-500 mt-2">
-                      We'll extract your brand colors and logo to create branded quote cards and visuals
-                    </p>
-                  </div>
-
                   {/* API Key Notice */}
                   {!import.meta.env.VITE_OPENAI_API_KEY && (
                     <div className="bg-white/60 backdrop-blur-sm p-6 border-yellow-200 bg-yellow-50 rounded-2xl border-2">
@@ -841,7 +773,8 @@ const UploadForm: React.FC<UploadFormProps> = ({
                     </button>
                     <button
                       type="submit"
-                      className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold text-lg py-4 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center space-x-2"
+                      disabled={!isStep3Valid()}
+                      className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold text-lg py-4 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center space-x-2"
                     >
                       <TrendingUp className="w-5 h-5" />
                       <span>Generate My Assets</span>

@@ -6,7 +6,6 @@ import EmailCaptureView from './components/EmailCaptureView';
 import OutputView from './components/OutputView';
 import { transcribeAudio } from './services/transcription';
 import { generateMarketingAssets } from './services/assetGeneration';
-import { extractBrandElements, BrandData } from './services/brandExtraction';
 import { supabase } from './lib/supabase';
 import OpenAI from 'openai';
 
@@ -17,7 +16,6 @@ export interface ContentData {
   funnelStage: string;
   selectedAssets: string[];
   youtubeUrl?: string;
-  companyWebsiteUrl?: string;
   textContent?: string;
   contentType: 'file' | 'text';
 }
@@ -41,7 +39,6 @@ function App() {
     contentType: 'file'
   });
   const [generatedAssets, setGeneratedAssets] = useState<GeneratedAsset[]>([]);
-  const [brandData, setBrandData] = useState<BrandData | null>(null);
   const [processingStep, setProcessingStep] = useState<string>('');
   const [processingProgress, setProcessingProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +57,6 @@ function App() {
     
     try {
       let transcript = '';
-      let extractedBrandData: BrandData | null = null;
       
       // Check if user is authenticated before creating webinar request
       try {
@@ -96,20 +92,6 @@ function App() {
         // Continue without database for demo purposes
       }
       
-      // Step 0: Extract brand elements if website URL provided
-      if (formData.companyWebsiteUrl) {
-        setProcessingStep('Extracting brand elements from your website...');
-        setProcessingProgress(5);
-        
-        extractedBrandData = await extractBrandElements(formData.companyWebsiteUrl);
-        setBrandData(extractedBrandData);
-        
-        if (extractedBrandData.error) {
-          console.warn('Brand extraction failed:', extractedBrandData.error);
-          // Continue without brand data rather than failing completely
-        }
-      }
-      
       // Step 1: Get transcript based on content type
       if (formData.contentType === 'text' && formData.textContent) {
         // Use text content directly as transcript
@@ -133,11 +115,11 @@ function App() {
       setProcessingStep('Analyzing content and generating assets...');
       setProcessingProgress(35);
       
-      // Step 2: Generate marketing assets with brand data
+      // Step 2: Generate marketing assets
       const { assets, tokenUsage } = await generateMarketingAssets(
         transcript, 
         formData,
-        extractedBrandData,
+        null, // No brand data
         (step, progress) => {
           setProcessingStep(step);
           setProcessingProgress(progress);
@@ -159,7 +141,6 @@ function App() {
             .update({
               assets_json: assets,
               transcript: transcript,
-              brand_data: extractedBrandData,
               processed_at: new Date().toISOString()
             })
             .eq('id', currentWebinarRequestId);
@@ -217,7 +198,6 @@ function App() {
       contentType: 'file'
     });
     setGeneratedAssets([]);
-    setBrandData(null);
     setError(null);
     setProcessingStep('');
     setProcessingProgress(0);
@@ -254,7 +234,6 @@ function App() {
         return (
           <EmailCaptureView
             assets={generatedAssets}
-            brandData={brandData}
             contentData={contentData}
             onEmailSubmit={handleEmailSubmit}
             onBack={handleBackToLanding}
@@ -264,7 +243,6 @@ function App() {
         return (
           <OutputView 
             assets={generatedAssets} 
-            brandData={brandData} 
             onBack={handleBackToLanding}
             userEmail={userEmail}
             openAITokenUsage={openAITokenUsage}
