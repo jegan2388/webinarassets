@@ -51,15 +51,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartUpload }) => {
             </div>
             
             <h1 className="text-5xl lg:text-6xl font-bold text-slate-900 mb-6 leading-tight">
-              Stop Creating Content From Scratch.
+              Unlock Your Content's Full Potential.
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 block mt-2">
-                Remix What You Already Have.
+                Remix Your Webinars & Articles into Campaign-Ready Assets.
               </span>
             </h1>
             
             <p className="text-xl text-slate-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-              Turn your existing webinars, blog posts, and recordings into a complete marketing campaign. 
-              Get LinkedIn posts, sales emails, quote cards, and more — all optimized for your audience.
+              Instantly generate LinkedIn posts, sales emails, marketing nurture emails, quote cards, video ideas, and Twitter threads, all tailored for your audience and funnel stage.
             </p>
             
             {/* Single Primary CTA */}
